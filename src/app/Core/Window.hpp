@@ -11,6 +11,7 @@ struct Config {
     uint32_t width;
     uint32_t height;
 
+    uint8_t samples = 8;
     bool resizable = false;  // This can be converted to a flag bit type thing when additional features are required.
 };
 
