@@ -1,11 +1,18 @@
 add_executable(
     flox Application.cpp
+    Flock.hpp
+    Flock.cpp
 
     # CORE
     Core/Window.hpp
     Core/Window.cpp
     Core/Event.hpp
     Core/Event.cpp
+
+    # MATH
+    Math/Vector.hpp
+    Math/Vector.cpp
+    Math/Constants.hpp
 )
 
 target_include_directories(flox PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
