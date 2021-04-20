@@ -44,7 +44,7 @@ public:
 
         uint64_t flockSize = 8;
         try {
-            std::ifstream file("flock.txt");
+            std::ifstream file("flox.txt");
             if (!file) {
                 throw std::ios_base::failure("");
             }
@@ -61,7 +61,7 @@ public:
             }
         } catch(std::ios_base::failure &fb) {
             //std::cout << fb.what() << ". Defaulting to 8 boids." << std::endl;
-            std::cout << "flock.txt not found. Defaulting to 8 boids." << std::endl;
+            std::cout << "flox.txt not found. Defaulting to 8 boids." << std::endl;
         } catch(std::invalid_argument &ia) {
             std::cout << "Could not convert contents of flock.txt. Defaulting to 8 boids." << std::endl;
         }
