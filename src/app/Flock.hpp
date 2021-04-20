@@ -8,13 +8,16 @@
 #include "Math/Vector.hpp"
 
 struct Boid {
+    static constexpr float scale = 5.0f;
+    static constexpr float maxSpeed = 25.0f;
+
     Vector position, velocity, acceleration;
 };
 
 
 class Flock {
-    // without any steering, this number can go above 200,000 before dipping below 60fps
-    static constexpr size_t flockSize = 8;
+    // without any steering, this number can go above 500,000 before dipping below 60fps
+    uint64_t flockSize;
 
     std::unique_ptr<Boid[]> m_primaryFlock = std::make_unique<Boid[]>(flockSize);
     std::unique_ptr<Boid[]> m_secondaryFlock = std::make_unique<Boid[]>(flockSize);
@@ -28,14 +31,15 @@ class Flock {
 
     lwvl::PrimitiveMode renderMode = lwvl::PrimitiveMode::Lines;
     uint32_t indexCount = 10;
+    Vector bounds;
 
 public:
 
-    explicit Flock(float aspect);
+    explicit Flock(size_t flock_size, float aspect);
     void changeRenderMode(lwvl::PrimitiveMode mode);
     void update(float dt);
     void draw();
 
 private:
-    void configureRendering(float aspect);
+    void configureRendering();
 };

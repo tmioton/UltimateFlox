@@ -25,6 +25,7 @@ public:
     }
 
     int run() {
+#ifndef NDEBUG
         GLEventListener listener(
             [](
                 Source source, Type type,
@@ -36,14 +37,42 @@ public:
         );
 
         const auto setupStart = high_resolution_clock::now();
+#endif
 
         const auto width = static_cast<float>(m_window.config.width);
         const auto height = static_cast<float>(m_window.config.height);
-        Flock flock(width / height);
 
+        uint64_t flockSize = 8;
+        try {
+            std::ifstream file("flock.txt");
+            if (!file) {
+                throw std::ios_base::failure("");
+            }
+
+            std::stringstream output_stream;
+            std::string line;
+            while (std::getline(file, line)) {
+                if (line.length() == 0) {
+                    continue;
+                }
+
+                flockSize = std::stoull(line);
+                break;
+            }
+        } catch(std::ios_base::failure &fb) {
+            //std::cout << fb.what() << ". Defaulting to 8 boids." << std::endl;
+            std::cout << "flock.txt not found. Defaulting to 8 boids." << std::endl;
+        } catch(std::invalid_argument &ia) {
+            std::cout << "Could not convert contents of flock.txt. Defaulting to 8 boids." << std::endl;
+        }
+
+        Flock flock(flockSize, width / height);
+
+#ifndef NDEBUG
         std::cout << "Setup took " << delta(setupStart) << " seconds." << std::endl;
         auto secondStart = high_resolution_clock::now();
-        auto frameStart = secondStart;
+#endif
+        auto frameStart = high_resolution_clock::now();
 
         bool paused = false;
         for (uint32_t frameCount = 0; !m_window.shouldClose(); frameCount++) {
@@ -87,16 +116,16 @@ public:
 
             // Framerate display
             if ((frameCount & 63) == 0) {
+#ifndef NDEBUG
                 double fps = static_cast<double>(frameCount) / delta(secondStart);
                 std::cout << "Average framerate for last " << frameCount << " frames: " << fps << std::endl;
 
                 // Reset time variables.
                 secondStart = high_resolution_clock::now();
+#endif
                 frameCount = 0;
             }
-
         }
-
         return 0;
     }
 };

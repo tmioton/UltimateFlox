@@ -2,44 +2,38 @@
 #include "Flock.hpp"
 
 
-Flock::Flock(float aspect) {
-    // Setup boid starting locations
-    constexpr float tauOverSize = constants::tau / static_cast<float>(flockSize);
+Flock::Flock(size_t flock_size, float aspect) : flockSize(flock_size), bounds{aspect >= 1.0f ? 100.0f * aspect : 100.0f, aspect < 1.0f ? 100.0f * aspect : 100.0f} {
+    // Set up boid starting locations
+    const float tauOverSize = constants::tau / static_cast<float>(flockSize);
     for (size_t i = 0; i < flockSize; i++) {
         Boid &boid = m_primaryFlock[i];
         auto angle = static_cast<float>(i) * tauOverSize;
         Vector offsets {cosf(angle), sinf(angle)};
         boid.position = 50.0f * offsets;
         boid.velocity = 10.0f * offsets + angle;
-        boid.velocity.magnitude(10.0f);
+        boid.velocity.magnitude(Boid::maxSpeed);
+        boid.acceleration.y = -1.0f;
     }
 
-    configureRendering(aspect);
+    // Set up boid batch rendering
+    configureRendering();
 }
 
-void Flock::configureRendering(float aspect) {
+void Flock::configureRendering() {
     // Construct shader
     lwvl::VertexShader vertexSource{lwvl::VertexShader::readFile("Data/Shaders/boid.vert")};
     lwvl::FragmentShader fragmentSource{lwvl::FragmentShader::readFile("Data/Shaders/boid.frag")};
     boidShader.link(vertexSource, fragmentSource);
 
     boidShader.bind();
-    boidShader.uniform("scale").set1f(10.0f);
+    boidShader.uniform("scale").set1f(Boid::scale);
+    boidShader.uniform("projection").set2DOrthographic(bounds.y, -bounds.y, bounds.x, -bounds.x);
+
     //boidShader.uniform("color").set3f(1.00000f, 0.00000f, 0.00000f);  // Red
     //boidShader.uniform("color").set3f(0.05098f, 0.19608f, 0.30196f);  // Prussian Blue
     //boidShader.uniform("color").set3f(0.30980f, 0.00392f, 0.27843f);  // Tyrian Purple
     boidShader.uniform("color").set3f(0.71373f, 0.09020f, 0.29412f);  // Pictoral Carmine
     //boidShader.uniform("color").set3f(0.76471f, 0.92157f, 0.47059f);  // Yellow Green Crayon
-
-    if (aspect > 1.0f) {
-        boidShader.uniform("projection").set2DOrthographic(
-            100.0f, -100.0f, 100.0f * aspect, -100.0f * aspect
-        );
-    } else {
-        boidShader.uniform("projection").set2DOrthographic(
-            100.0f / aspect, -100.0f / aspect, 100.0f, -100.0f
-        );
-    }
 
     arrayBuffer.bind();
     arrayBuffer.instances(flockSize);
@@ -83,6 +77,21 @@ void Flock::update(float dt) {
     for (size_t i = 0; i < flockSize; i++) {
         m_secondaryFlock[i] = m_primaryFlock[i];
         Boid &currentBoid = m_secondaryFlock[i];
+
+        Vector centerSteer;
+        // Precursor to Rectangle class
+        if (currentBoid.position.x - Boid::scale <= -bounds.x
+            || currentBoid.position.x + Boid::scale >= bounds.x
+            || currentBoid.position.y - Boid::scale <= -bounds.y
+            || currentBoid.position.y + Boid::scale >= bounds.y
+        ) {
+            centerSteer -= currentBoid.position;
+            centerSteer.magnitude(Boid::maxSpeed);
+            centerSteer -= currentBoid.velocity;
+        }
+
+        //currentBoid.acceleration += {0.0f, -0.25f};
+        currentBoid.acceleration += centerSteer;
 
         currentBoid.velocity += currentBoid.acceleration;
         currentBoid.position += currentBoid.velocity * dt;
