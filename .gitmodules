@@ -1,4 +1,4 @@
-[submodule "vendor/GLFW"]
+[submodule "GLFW"]
 	path = vendor/GLFW
 	url = https://github.com/glfw/glfw.git
 [submodule "Glad"]
