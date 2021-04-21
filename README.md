@@ -1,5 +1,5 @@
 # UltimateFlox
-2D flocking simulation using GLFW and Glad - Your very own bird box.
+2D flocking simulation using GLFW and Glad - your very own bird box.
 
 Use the ```1``` key to switch to line rendering mode.<br>
 Use the ```2``` key to switch to filled rendering mode.<br>
