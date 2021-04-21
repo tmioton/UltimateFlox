@@ -74,8 +74,8 @@ public:
 
 #ifndef NDEBUG
         std::cout << "Setup took " << delta(setupStart) << " seconds." << std::endl;
-#endif
         auto secondStart = high_resolution_clock::now();
+#endif
         auto frameStart = high_resolution_clock::now();
 
         bool paused = false;
