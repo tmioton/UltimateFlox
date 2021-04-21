@@ -21,7 +21,7 @@ struct Boid {
 
 
 class Flock {
-    static constexpr float worldBound = 150.0f;
+    static constexpr float worldBound = 200.0f;
 
     // without any steering, this number can go above 500,000 before dipping below 60fps
     uint64_t flockSize;
