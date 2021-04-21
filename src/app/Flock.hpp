@@ -7,6 +7,23 @@
 #include "Math/Constants.hpp"
 #include "Math/Vector.hpp"
 
+
+constexpr float defaultModel[8] = {
+    1.0, 0.0,
+    -0.7071067811865475f, 0.7071067811865476f,
+    -0.5, 0.0,
+    -0.7071067811865477f, -0.7071067811865475f,
+};
+
+constexpr float spaceshipModel[10] = {
+    1.0, 0.0,
+    -0.7071067811865475f, 0.7071067811865476f,
+    -0.7071067811865477f, -0.7071067811865475f,
+    -0.35355339059327373f, 0.35355339059327373f,
+    -0.35355339059327373f, -0.35355339059327373f
+};
+
+
 struct Boid {
     static constexpr float scale = 5.0f;
     static constexpr float maxSpeed = 100.0f;
@@ -47,7 +64,7 @@ class Flock {
 public:
 
     explicit Flock(size_t flock_size, float aspect);
-    void changeRenderMode(lwvl::PrimitiveMode mode);
+    void changeRenderMode(uint8_t mode);
     void update(float dt);
     void draw();
 

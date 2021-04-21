@@ -48,14 +48,8 @@ void Flock::configureRendering() {
 
     // Boid model vertex buffer
     vertexBuffer.bind();
-    const float piOver4 = constants::pi * 0.25f;
-    std::array<float, 8> vertexData{
-        cosf(0.0f), sinf(0.0f),
-        cosf(3.0f * piOver4), sinf(3.0f * piOver4),
-        0.5f * cosf(constants::pi), 0.5f * sinf(constants::pi),
-        cosf(5.0f * piOver4), sinf(5.0f * piOver4)
-    };
-    vertexBuffer.construct(vertexData.begin(), vertexData.end());
+    vertexBuffer.construct<float>(nullptr, 10);  // Create a buffer of 10 floats
+    vertexBuffer.update(defaultModel, 8);  // Fill it with 8
     arrayBuffer.attribute(2, GL_FLOAT, 2 * sizeof(float), 0);
 
     // Boid model indexing buffer
@@ -186,26 +180,50 @@ void Flock::draw() {
     );
 }
 
-void Flock::changeRenderMode(lwvl::PrimitiveMode mode) {
+static void loadDefaultModel(lwvl::ArrayBuffer &buffer) {
+    buffer.bind();
+    buffer.update(defaultModel, 8);
+}
+
+static void loadSpaceshipModel(lwvl::ArrayBuffer &buffer) {
+    buffer.bind();
+    buffer.update(spaceshipModel, 10);
+}
+
+void Flock::changeRenderMode(uint8_t mode) {
     switch(mode) {
-        case lwvl::PrimitiveMode::Lines: {
-            renderMode = mode;
+        case 0: {
+            renderMode = lwvl::PrimitiveMode::Lines;
             indexCount = 10;
             std::array<uint8_t, 10> indexData {
                 0, 1, 1, 2, 2, 3, 2, 0, 3, 0
             };
             indexBuffer.bind();
             indexBuffer.update(indexData.begin(), indexData.end());
+            loadDefaultModel(vertexBuffer);
             return;
         }
-        case lwvl::PrimitiveMode::TriangleFan: {
-            renderMode = mode;
+        case 1: {
+            renderMode = lwvl::PrimitiveMode::TriangleFan;
             indexCount = 4;
             std::array<uint8_t, 4> indexData {
                 0, 1, 2, 3
             };
             indexBuffer.bind();
             indexBuffer.update(indexData.begin(), indexData.end());
+            loadDefaultModel(vertexBuffer);
+            return;
+        }
+        case 2: {
+            renderMode = lwvl::PrimitiveMode::Lines;
+            indexCount = 6;
+            indexBuffer.bind();
+            std::array<uint8_t, 6> indexData {
+                0, 1, 0, 2, 3, 4
+            };
+            indexBuffer.bind();
+            indexBuffer.update(indexData.begin(), indexData.end());
+            loadSpaceshipModel(vertexBuffer);
             return;
         }
         default:

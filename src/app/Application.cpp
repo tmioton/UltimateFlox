@@ -101,9 +101,11 @@ public:
                     } else if (key_event.key == GLFW_KEY_SPACE) {
                         paused ^= true;
                     } else if (key_event.key == GLFW_KEY_1) {
-                        flock.changeRenderMode(lwvl::PrimitiveMode::Lines);
+                        flock.changeRenderMode(0);
                     } else if (key_event.key == GLFW_KEY_2) {
-                        flock.changeRenderMode(lwvl::PrimitiveMode::TriangleFan);
+                        flock.changeRenderMode(1);
+                    } else if (key_event.key == GLFW_KEY_3) {
+                        flock.changeRenderMode(2);
                     }
                 }
             }
