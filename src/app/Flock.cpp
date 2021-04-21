@@ -1,8 +1,15 @@
 #include "pch.hpp"
 #include "Flock.hpp"
 
+Vector Boid::steer(Vector vec) const {
+    vec.magnitude(Boid::maxSpeed);
+    vec -= velocity;
+    vec.magnitude(Boid::maxForce);
+    return vec;
+}
 
-Flock::Flock(size_t flock_size, float aspect) : flockSize(flock_size), bounds{aspect >= 1.0f ? 100.0f * aspect : 100.0f, aspect < 1.0f ? 100.0f * aspect : 100.0f} {
+
+Flock::Flock(size_t flock_size, float aspect) : flockSize(flock_size), bounds{aspect >= 1.0f ? worldBound * aspect : worldBound, aspect < 1.0f ? worldBound * aspect : worldBound} {
     // Set up boid starting locations
     const float tauOverSize = constants::tau / static_cast<float>(flockSize);
     for (size_t i = 0; i < flockSize; i++) {
@@ -30,6 +37,7 @@ void Flock::configureRendering() {
     boidShader.uniform("projection").set2DOrthographic(bounds.y, -bounds.y, bounds.x, -bounds.x);
 
     //boidShader.uniform("color").set3f(1.00000f, 0.00000f, 0.00000f);  // Red
+    //boidShader.uniform("color").set3f(1.00000f, 1.00000f, 1.00000f);  // White
     //boidShader.uniform("color").set3f(0.05098f, 0.19608f, 0.30196f);  // Prussian Blue
     //boidShader.uniform("color").set3f(0.30980f, 0.00392f, 0.27843f);  // Tyrian Purple
     boidShader.uniform("color").set3f(0.71373f, 0.09020f, 0.29412f);  // Pictoral Carmine
@@ -86,12 +94,61 @@ void Flock::update(float dt) {
             || currentBoid.position.y + Boid::scale >= bounds.y
         ) {
             centerSteer -= currentBoid.position;
-            centerSteer.magnitude(Boid::maxSpeed);
-            centerSteer -= currentBoid.velocity;
+            centerSteer = currentBoid.steer(centerSteer);
         }
 
-        //currentBoid.acceleration += {0.0f, -0.25f};
-        currentBoid.acceleration += centerSteer;
+        // Desire to move at full speed
+        Vector fullSpeed = currentBoid.velocity;
+        fullSpeed = currentBoid.steer(fullSpeed);
+
+        Vector separation;  // Desire to separate from flockmates
+        Vector alignment;  // Desire to align with the direction of other flockmates
+        Vector cohesion;  // Desire to shrink the distance between self and flockmates
+        size_t cohesiveTotal = 0;
+        size_t disruptiveTotal = 0;
+        for(size_t j = 0; j < flockSize; j++) {
+            if (i == j) {
+                continue;
+            }
+
+            const Boid& otherBoid = m_primaryFlock[j];
+
+            const float d = currentBoid.position.distance(otherBoid.position);
+            if (d < Boid::disruptiveRadius && d > 0.0f) {
+                Vector diff = currentBoid.position - otherBoid.position;
+                separation += diff / (d * d);
+                disruptiveTotal++;
+            }
+
+            if (d < Boid::cohesiveRadius) {
+                alignment += otherBoid.velocity;
+                cohesion += otherBoid.position;
+                cohesiveTotal++;
+            }
+        }
+
+        if (disruptiveTotal > 0) {
+            separation /= static_cast<float>(cohesiveTotal);
+            separation = currentBoid.steer(separation);
+        }
+
+        if (cohesiveTotal > 0) {
+            const float countFactor = 1.0f / static_cast<float>(cohesiveTotal);
+            alignment *= countFactor;
+            alignment = currentBoid.steer(alignment);
+
+            cohesion *= countFactor;
+            cohesion -= currentBoid.position;
+            cohesion = currentBoid.steer(cohesion);
+        }
+
+        currentBoid.acceleration += centerSteer * 1.0f;
+        currentBoid.acceleration += fullSpeed * 0.00625f;
+        currentBoid.acceleration += separation * 1.0f;
+        currentBoid.acceleration += alignment * 0.8f;
+        currentBoid.acceleration += cohesion * 0.2f;
+
+        currentBoid.acceleration.magnitude(Boid::maxForce);
 
         currentBoid.velocity += currentBoid.acceleration;
         currentBoid.position += currentBoid.velocity * dt;
@@ -104,9 +161,9 @@ void Flock::update(float dt) {
         // In terms of calculating a rotation,
         // sqrt seems to be faster than atan2
         // and saves cos and sin computations on the gpu
-        float mag = currentBoid.velocity.magnitude();
-        offsetArray[i * 4 + 2] = currentBoid.velocity.x / mag;
-        offsetArray[i * 4 + 3] = currentBoid.velocity.y / mag;
+        float magFactor = 1.0f / currentBoid.velocity.magnitude();
+        offsetArray[i * 4 + 2] = currentBoid.velocity.x * magFactor;
+        offsetArray[i * 4 + 3] = currentBoid.velocity.y * magFactor;
     }
 
     offsetBuffer.bind();
@@ -155,4 +212,3 @@ void Flock::changeRenderMode(lwvl::PrimitiveMode mode) {
             return;
     }
 }
-

@@ -8,6 +8,9 @@ struct Vector {
     [[nodiscard]] float magnitude() const;
     void magnitude(float value);
 
+    // The downfall of fps
+    [[nodiscard]] float distance(Vector other) const;
+
     // Operators
     Vector& operator+=(const Vector& other);
     Vector& operator+=(float scalar);

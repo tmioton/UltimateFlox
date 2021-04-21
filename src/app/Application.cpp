@@ -12,6 +12,10 @@ using namespace lwvl::debug;
 using namespace std::chrono;
 
 
+// Ideas:
+//   . Background texture displaying the path of the boid?
+
+
 class Application {
     Window m_window;
 
@@ -42,7 +46,7 @@ public:
         const auto width = static_cast<float>(m_window.config.width);
         const auto height = static_cast<float>(m_window.config.height);
 
-        uint64_t flockSize = 8;
+        uint64_t flockSize = 512;
         try {
             std::ifstream file("flox.txt");
             if (!file) {
@@ -70,8 +74,8 @@ public:
 
 #ifndef NDEBUG
         std::cout << "Setup took " << delta(setupStart) << " seconds." << std::endl;
-        auto secondStart = high_resolution_clock::now();
 #endif
+        auto secondStart = high_resolution_clock::now();
         auto frameStart = high_resolution_clock::now();
 
         bool paused = false;
@@ -133,8 +137,11 @@ public:
 
 int main() {
     try {
-        Application app(384, 384);
+        Application app(800, 600);
         return app.run();
+    } catch (const std::bad_alloc &e) {
+        std::cout << "Unable to allocate memory for program. Exiting." << std::endl;
+        return -1;
     } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;
         return -1;

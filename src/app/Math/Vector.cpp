@@ -116,3 +116,9 @@ void Vector::magnitude(float value) {
     x *= factor;
     y *= factor;
 }
+
+float Vector::distance(Vector other) const {
+    const float combX = other.x - x;
+    const float combY = other.y - y;
+    return sqrtf(combX * combX + combY * combY);
+}
