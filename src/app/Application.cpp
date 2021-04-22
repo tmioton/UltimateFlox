@@ -14,6 +14,8 @@ using namespace std::chrono;
 
 // Ideas:
 //   . Background texture displaying the path of the boid?
+//   . Compute shaders
+//   . Spatial partitioning
 
 
 class Application {
