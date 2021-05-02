@@ -103,9 +103,9 @@ public:
                     } else if (key_event.key == GLFW_KEY_SPACE) {
                         paused ^= true;
                     } else if (key_event.key == GLFW_KEY_1) {
-                        flock.changeRenderMode(RenderMode::Filled);
+                        flock.changeRenderMode(Flock::RenderMode::Filled);
                     } else if (key_event.key == GLFW_KEY_2) {
-                        flock.changeRenderMode(RenderMode::Classic);
+                        flock.changeRenderMode(Flock::RenderMode::Classic);
                     }
                 }
             }

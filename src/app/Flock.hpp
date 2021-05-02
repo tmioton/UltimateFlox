@@ -19,12 +19,6 @@ constexpr std::array<float, 8> defaultModel {
 constexpr uint64_t vertexBufferSize = defaultModel.size();
 
 
-enum class RenderMode : uint8_t {
-    Classic,
-    Filled
-};
-
-
 struct Boid {
     static constexpr float scale = 5.0f;
     static constexpr float maxSpeed = 100.0f;
@@ -39,6 +33,13 @@ struct Boid {
 
 
 class Flock {
+public:
+    enum class RenderMode : uint8_t {
+        Classic,
+        Filled
+    };
+private:
+
     static constexpr float worldBound = 250.0f;
 
     // without any steering, this number can go above 500,000 before dipping below 60fps
