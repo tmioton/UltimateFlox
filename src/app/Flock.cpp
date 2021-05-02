@@ -92,7 +92,7 @@ void Flock::update(float dt) {
         }
 
         // Desire to move at full speed
-        // This is be redundant when there are other boids nearby, but that's not always the case.
+        // This is be redundant when other forces are acting upon the boid, but that's not always the case.
         Vector fullSpeed = currentBoid.velocity;
         fullSpeed = currentBoid.steer(fullSpeed);
 
@@ -181,9 +181,9 @@ void Flock::draw() {
     );
 }
 
-void Flock::changeRenderMode(uint8_t mode) {
+void Flock::changeRenderMode(RenderMode mode) {
     switch(mode) {
-        case 0: {
+        case RenderMode::Classic: {
             renderMode = lwvl::PrimitiveMode::Lines;
             indexCount = 10;
             std::array<uint8_t, 10> indexData {
@@ -198,7 +198,7 @@ void Flock::changeRenderMode(uint8_t mode) {
             );
             return;
         }
-        case 1: {
+        case RenderMode::Filled: {
             renderMode = lwvl::PrimitiveMode::TriangleFan;
             indexCount = 4;
             std::array<uint8_t, 4> indexData {
@@ -210,22 +210,6 @@ void Flock::changeRenderMode(uint8_t mode) {
             vertexBuffer.update(
                 defaultModel.begin(),
                 defaultModel.end()
-            );
-            return;
-        }
-        case 2: {
-            renderMode = lwvl::PrimitiveMode::Lines;
-            indexCount = 6;
-            indexBuffer.bind();
-            std::array<uint8_t, 6> indexData {
-                0, 1, 0, 2, 3, 4
-            };
-            indexBuffer.bind();
-            indexBuffer.update(indexData.begin(), indexData.end());
-            vertexBuffer.bind();
-            vertexBuffer.update(
-                spaceshipModel.begin(),
-                spaceshipModel.end()
             );
             return;
         }

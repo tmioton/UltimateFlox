@@ -15,16 +15,14 @@ constexpr std::array<float, 8> defaultModel {
     -0.7071067811865477f, -0.7071067811865475f,
 };
 
-constexpr std::array<float, 10> spaceshipModel {
-    1.0, 0.0,
-    -0.7071067811865475f, 0.7071067811865476f,
-    -0.7071067811865477f, -0.7071067811865475f,
-    -0.35355339059327373f, 0.35355339059327373f,
-    -0.35355339059327373f, -0.35355339059327373f
-};
-
 // The maximum size of the vertex buffer.
-constexpr uint64_t vertexBufferSize = spaceshipModel.size();
+constexpr uint64_t vertexBufferSize = defaultModel.size();
+
+
+enum class RenderMode : uint8_t {
+    Classic,
+    Filled
+};
 
 
 struct Boid {
@@ -41,7 +39,7 @@ struct Boid {
 
 
 class Flock {
-    static constexpr float worldBound = 200.0f;
+    static constexpr float worldBound = 250.0f;
 
     // without any steering, this number can go above 500,000 before dipping below 60fps
     uint64_t flockSize;
@@ -67,7 +65,7 @@ class Flock {
 public:
 
     explicit Flock(size_t flock_size, float aspect);
-    void changeRenderMode(uint8_t mode);
+    void changeRenderMode(RenderMode mode);
     void update(float dt);
     void draw();
 
