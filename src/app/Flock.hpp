@@ -8,14 +8,14 @@
 #include "Math/Vector.hpp"
 
 
-constexpr float defaultModel[8] = {
+constexpr std::array<float, 8> defaultModel {
     1.0, 0.0,
     -0.7071067811865475f, 0.7071067811865476f,
     -0.5, 0.0,
     -0.7071067811865477f, -0.7071067811865475f,
 };
 
-constexpr float spaceshipModel[10] = {
+constexpr std::array<float, 10> spaceshipModel {
     1.0, 0.0,
     -0.7071067811865475f, 0.7071067811865476f,
     -0.7071067811865477f, -0.7071067811865475f,
@@ -23,13 +23,16 @@ constexpr float spaceshipModel[10] = {
     -0.35355339059327373f, -0.35355339059327373f
 };
 
+// The maximum size of the vertex buffer.
+constexpr uint64_t vertexBufferSize = spaceshipModel.size();
+
 
 struct Boid {
     static constexpr float scale = 5.0f;
     static constexpr float maxSpeed = 100.0f;
     static constexpr float maxForce = 3.0f;
     static constexpr float cohesiveRadius = 3.0f * scale;
-    static constexpr float disruptiveRadius = 1.75f * scale;
+    static constexpr float disruptiveRadius = 1.8f * scale;
 
     Vector position, velocity, acceleration;
 

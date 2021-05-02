@@ -48,8 +48,8 @@ void Flock::configureRendering() {
 
     // Boid model vertex buffer
     vertexBuffer.bind();
-    vertexBuffer.construct<float>(nullptr, 10);  // Create a buffer of 10 floats
-    vertexBuffer.update(defaultModel, 8);  // Fill it with 8
+    vertexBuffer.construct<float>(nullptr, vertexBufferSize);  // Create a buffer of 10 floats
+    vertexBuffer.construct(defaultModel.begin(), defaultModel.end());
     arrayBuffer.attribute(2, GL_FLOAT, 2 * sizeof(float), 0);
 
     // Boid model indexing buffer
@@ -92,6 +92,7 @@ void Flock::update(float dt) {
         }
 
         // Desire to move at full speed
+        // This is be redundant when there are other boids nearby, but that's not always the case.
         Vector fullSpeed = currentBoid.velocity;
         fullSpeed = currentBoid.steer(fullSpeed);
 
@@ -180,16 +181,6 @@ void Flock::draw() {
     );
 }
 
-static void loadDefaultModel(lwvl::ArrayBuffer &buffer) {
-    buffer.bind();
-    buffer.update(defaultModel, 8);
-}
-
-static void loadSpaceshipModel(lwvl::ArrayBuffer &buffer) {
-    buffer.bind();
-    buffer.update(spaceshipModel, 10);
-}
-
 void Flock::changeRenderMode(uint8_t mode) {
     switch(mode) {
         case 0: {
@@ -200,7 +191,11 @@ void Flock::changeRenderMode(uint8_t mode) {
             };
             indexBuffer.bind();
             indexBuffer.update(indexData.begin(), indexData.end());
-            loadDefaultModel(vertexBuffer);
+            vertexBuffer.bind();
+            vertexBuffer.update(
+                defaultModel.begin(),
+                defaultModel.end()
+            );
             return;
         }
         case 1: {
@@ -211,7 +206,11 @@ void Flock::changeRenderMode(uint8_t mode) {
             };
             indexBuffer.bind();
             indexBuffer.update(indexData.begin(), indexData.end());
-            loadDefaultModel(vertexBuffer);
+            vertexBuffer.bind();
+            vertexBuffer.update(
+                defaultModel.begin(),
+                defaultModel.end()
+            );
             return;
         }
         case 2: {
@@ -223,7 +222,11 @@ void Flock::changeRenderMode(uint8_t mode) {
             };
             indexBuffer.bind();
             indexBuffer.update(indexData.begin(), indexData.end());
-            loadSpaceshipModel(vertexBuffer);
+            vertexBuffer.bind();
+            vertexBuffer.update(
+                spaceshipModel.begin(),
+                spaceshipModel.end()
+            );
             return;
         }
         default:
