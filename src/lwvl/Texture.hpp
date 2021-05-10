@@ -118,7 +118,7 @@ namespace lwvl {
         template<TextureTarget target>
         class TextureBase {
         protected:
-            // Offsite Data - to avoid copying buffers on the GPU for simple copies of this class.
+            // Offsite Data - to avoid copying buffers on the GPU for shallow copies of this class.
             std::shared_ptr<TextureID> m_offsite_id = std::make_shared<TextureID>();
 
             // Local Data
