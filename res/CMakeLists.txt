@@ -3,6 +3,7 @@
 add_custom_target(resources)
 add_dependencies(flox resources)
 
+# Should probably be a macro.
 function(export_resources)
     # TODO: Check that the user passes these arguments and return() otherwise.
     cmake_parse_arguments(PARSE_ARGV 0 "EXPORT" "" "DIRECTORY" "DEPENDS")
@@ -23,7 +24,7 @@ function(export_resources)
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIRECTORY}
         COMMAND ${CMAKE_COMMAND} -E copy ${RESOURCE_IN} ${OUTPUT_DIRECTORY}
 
-        COMMENT "Copied ${EXPORT_DIRECTORY}/ to output"
+        COMMENT "Copied ${TARGET} to output"
     )
 endfunction()
 
