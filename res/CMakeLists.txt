@@ -5,8 +5,14 @@ add_dependencies(flox resources)
 
 # Should probably be a macro.
 function(export_resources)
-    # TODO: Check that the user passes these arguments and return() otherwise.
     cmake_parse_arguments(PARSE_ARGV 0 "EXPORT" "" "DIRECTORY" "DEPENDS")
+    if(NOT EXPORT_DIRECTORY)
+        message(FATAL_ERROR "No directory specified (with DIRECTORY keyword) in call to function 'export_resources'")
+        return()
+    elseif(NOT EXPORT_DEPENDS)
+        message(FATAL_ERROR "No dependencies specified (with DEPENDS keyword) in call to function 'export_resources'")
+        return()
+    endif()
 
     string(TOLOWER "${EXPORT_DIRECTORY}" TARGET)
 
