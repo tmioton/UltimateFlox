@@ -55,12 +55,6 @@ namespace lwvl {
     };
 
 
-    class shader_compilation_failure : public std::exception {
-    public:
-        explicit shader_compilation_failure(const std::string &msg);
-    };
-
-
     enum class ShaderType {
         Vertex = GL_VERTEX_SHADER,
         TessCtrl = GL_TESS_CONTROL_SHADER,

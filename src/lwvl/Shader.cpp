@@ -84,10 +84,6 @@ int lwvl::Uniform::location() const {
 }
 
 
-/* ****** Shader Compilation Error ****** */
-lwvl::shader_compilation_failure::shader_compilation_failure(const std::string &msg) : std::exception(msg.c_str()) {}
-
-
 /* ****** Shader ****** */
 int lwvl::ShaderProgram::uniformLocation(const std::string &name) const {
     const int location = glGetUniformLocation(m_id, name.c_str());
