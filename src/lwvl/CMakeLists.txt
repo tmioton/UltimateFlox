@@ -14,6 +14,8 @@ add_library(
     Texture.cpp
     VertexArray.hpp
     VertexArray.cpp
+    WorldBlock.hpp
+    WorldBlock.cpp
 )
 
 target_include_directories(lwvl PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
