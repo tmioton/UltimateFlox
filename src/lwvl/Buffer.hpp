@@ -7,7 +7,9 @@ namespace lwvl {
         enum class BufferTarget {
             Array = GL_ARRAY_BUFFER,
             Element = GL_ELEMENT_ARRAY_BUFFER,
-            Texture = GL_TEXTURE_BUFFER
+            Texture = GL_TEXTURE_BUFFER,
+            Uniform = GL_UNIFORM_BUFFER,
+            ShaderStorage = GL_SHADER_STORAGE_BUFFER,
         };
     }
 
@@ -110,4 +112,6 @@ namespace lwvl {
     typedef Buffer<details::BufferTarget::Array> ArrayBuffer;
     typedef Buffer<details::BufferTarget::Element> ElementBuffer;
     typedef Buffer<details::BufferTarget::Texture> TextureBuffer;
+    typedef Buffer<details::BufferTarget::Uniform> UniformBuffer;
+    typedef Buffer<details::BufferTarget::ShaderStorage> ShaderStorageBuffer;
 }
