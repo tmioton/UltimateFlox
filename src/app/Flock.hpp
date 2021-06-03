@@ -4,9 +4,8 @@
 #include "Buffer.hpp"
 #include "VertexArray.hpp"
 #include "Common.hpp"
-#include "Math/Constants.hpp"
-#include "Math/Vector.hpp"
 
+using Vector = glm::vec2;
 
 constexpr std::array<float, 8> defaultModel {
     1.0, 0.0,
@@ -22,13 +21,13 @@ constexpr uint64_t vertexBufferSize = defaultModel.size();
 struct Boid {
     static constexpr float scale = 5.0f;
     static constexpr float maxSpeed = 100.0f;
-    static constexpr float maxForce = 3.0f;
-    static constexpr float cohesiveRadius = 3.0f * scale;
+    static constexpr float maxForce = 2.0f;
+    static constexpr float cohesiveRadius = 2.75f * scale;
     static constexpr float disruptiveRadius = 1.8f * scale;
 
     Vector position, velocity, acceleration;
 
-    [[nodiscard]] Vector steer(Vector vec) const;
+    [[nodiscard]] Vector steer(Vector const& vec) const;
 };
 
 
@@ -60,7 +59,7 @@ private:
 
     //lwvl::PrimitiveMode renderMode = lwvl::PrimitiveMode::Lines;  // Classic Flox render mode
     lwvl::PrimitiveMode renderMode = lwvl::PrimitiveMode::TriangleFan;
-    uint32_t indexCount = 10;
+    int32_t indexCount = 10;
     Vector bounds;
 
 public:

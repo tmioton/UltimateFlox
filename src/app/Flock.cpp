@@ -1,24 +1,33 @@
 #include "pch.hpp"
 #include "Flock.hpp"
 
-Vector Boid::steer(Vector vec) const {
-    vec.magnitude(Boid::maxSpeed);
-    vec -= velocity;
-    vec.magnitude(Boid::maxForce);
-    return vec;
+
+static Vector magnitude(Vector const& vec, float mag) {
+    const float x = vec.x;
+    const float y = vec.y;
+    const float l2 = x * x + y * y;
+    if (l2 != 0.0f) {
+        return vec * glm::fastInverseSqrt(l2) * mag;
+    } else {
+        return vec;
+    }
+}
+
+
+Vector Boid::steer(Vector const& vec) const {
+    return magnitude(magnitude(vec, Boid::maxSpeed) - velocity, Boid::maxForce);
 }
 
 
 Flock::Flock(size_t flock_size, float aspect) : flockSize(flock_size), bounds{aspect >= 1.0f ? worldBound * aspect : worldBound, aspect < 1.0f ? worldBound * aspect : worldBound} {
     // Set up boid starting locations
-    const float tauOverSize = constants::tau / static_cast<float>(flockSize);
+    const float tauOverSize = glm::two_pi<float>() / static_cast<float>(flockSize);
     for (size_t i = 0; i < flockSize; i++) {
         Boid &boid = m_primaryFlock[i];
         auto angle = static_cast<float>(i) * tauOverSize;
         Vector offsets {cosf(angle), sinf(angle)};
         boid.position = 50.0f * offsets;
-        boid.velocity = 10.0f * offsets + angle;
-        boid.velocity.magnitude(Boid::maxSpeed);
+        boid.velocity = magnitude(10.0f * offsets + angle, Boid::maxSpeed);
         boid.acceleration.y = -1.0f;
     }
 
@@ -70,7 +79,7 @@ void Flock::configureRendering() {
         offsetArray[i * 4 + 3] = boid.velocity.y;
     }
 
-    offsetBuffer.construct(offsetArray.get(), 4 * flockSize);
+    offsetBuffer.construct(offsetArray.get(), int32_t(4 * flockSize));
     arrayBuffer.attribute(2, GL_FLOAT, 4 * sizeof(float), 0, 1);
     arrayBuffer.attribute(2, GL_FLOAT, 4 * sizeof(float), 2 * sizeof(float), 1);
 }
@@ -80,7 +89,7 @@ void Flock::update(float dt) {
         m_secondaryFlock[i] = m_primaryFlock[i];
         Boid &currentBoid = m_secondaryFlock[i];
 
-        Vector centerSteer;
+        Vector centerSteer {0.0f, 0.0f};
         // Precursor to Rectangle class
         if (currentBoid.position.x - Boid::scale <= -bounds.x
             || currentBoid.position.x + Boid::scale >= bounds.x
@@ -96,9 +105,9 @@ void Flock::update(float dt) {
         Vector fullSpeed = currentBoid.velocity;
         fullSpeed = currentBoid.steer(fullSpeed);
 
-        Vector separation;  // Desire to separate from flockmates
-        Vector alignment;  // Desire to align with the direction of other flockmates
-        Vector cohesion;  // Desire to shrink the distance between self and flockmates
+        Vector separation {0.0f, 0.0f};  // Desire to separate from flockmates
+        Vector alignment {0.0f, 0.0f};  // Desire to align with the direction of other flockmates
+        Vector cohesion {0.0f, 0.0f};  // Desire to shrink the distance between self and flockmates
         size_t cohesiveTotal = 0;
         size_t disruptiveTotal = 0;
         for(size_t j = 0; j < flockSize; j++) {
@@ -108,7 +117,7 @@ void Flock::update(float dt) {
 
             const Boid& otherBoid = m_primaryFlock[j];
 
-            const float d = currentBoid.position.distance(otherBoid.position);
+            const float d = glm::fastDistance(currentBoid.position, otherBoid.position);
             if (d < Boid::disruptiveRadius && d > 0.0f) {
                 Vector diff = currentBoid.position - otherBoid.position;
                 separation += diff / (d * d);
@@ -137,13 +146,13 @@ void Flock::update(float dt) {
             cohesion = currentBoid.steer(cohesion);
         }
 
-        currentBoid.acceleration += centerSteer * 1.0f;
+        currentBoid.acceleration += centerSteer * 0.8f;
         currentBoid.acceleration += fullSpeed * 0.00625f;
         currentBoid.acceleration += separation * 1.0f;
-        currentBoid.acceleration += alignment * 0.8f;
-        currentBoid.acceleration += cohesion * 0.2f;
+        currentBoid.acceleration += alignment * 0.6f;
+        currentBoid.acceleration += cohesion * 0.4f;
 
-        currentBoid.acceleration.magnitude(Boid::maxForce);
+        currentBoid.acceleration = magnitude(currentBoid.acceleration, Boid::maxForce);
 
         currentBoid.velocity += currentBoid.acceleration;
         currentBoid.position += currentBoid.velocity * dt;
@@ -156,13 +165,16 @@ void Flock::update(float dt) {
         // In terms of calculating a rotation,
         // sqrt seems to be faster than atan2
         // and saves cos and sin computations on the gpu
-        float magFactor = 1.0f / currentBoid.velocity.magnitude();
-        offsetArray[i * 4 + 2] = currentBoid.velocity.x * magFactor;
-        offsetArray[i * 4 + 3] = currentBoid.velocity.y * magFactor;
+        const float magX = currentBoid.velocity.x;
+        const float magY = currentBoid.velocity.y;
+        const float l2 = magX * magX + magY * magY;
+        const float magFactor = l2 != 0.0f ? glm::fastInverseSqrt(l2) : 0.0f;
+        offsetArray[i * 4 + 2] = magX * magFactor;
+        offsetArray[i * 4 + 3] = magY * magFactor;
     }
 
     offsetBuffer.bind();
-    offsetBuffer.update(offsetArray.get(), flockSize * 4);
+    offsetBuffer.update(offsetArray.get(), int32_t(4 * flockSize));
 
     // Move array pointers
     auto temp = std::move(m_primaryFlock);
