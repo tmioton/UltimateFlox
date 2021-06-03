@@ -30,9 +30,9 @@ Window::Window(uint32_t width, uint32_t height, const char *title, GLFWmonitor *
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-//#ifndef NDEBUG
+#ifndef NDEBUG
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-//#endif // !NDEBUG
+#endif // !NDEBUG
 
     glfwWindowHint(GLFW_SAMPLES, config.samples);
 
