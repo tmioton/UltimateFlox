@@ -38,6 +38,7 @@ Window::Window(uint32_t width, uint32_t height, const char *title, GLFWmonitor *
 
     glfwWindowHint(GLFW_RESIZABLE, config.resizable ? GLFW_TRUE : GLFW_FALSE);
     glfwWindowHint(GLFW_SCALE_TO_MONITOR, true);
+    glfwWindowHint(GLFW_REFRESH_RATE, 60);
 
     //glfwWindowHint(GLFW_SRGB_CAPABLE, true);
 
@@ -55,6 +56,7 @@ Window::Window(uint32_t width, uint32_t height, const char *title, GLFWmonitor *
     }
 
     glfwSetWindowUserPointer(m_window, this);
+    glfwSwapInterval(1);
 
     glfwSetKeyCallback(
         m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
