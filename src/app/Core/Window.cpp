@@ -30,13 +30,16 @@ Window::Window(uint32_t width, uint32_t height, const char *title, GLFWmonitor *
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-    //#ifndef NDEBUG
+//#ifndef NDEBUG
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-    //#endif // !NDEBUG
+//#endif // !NDEBUG
 
     glfwWindowHint(GLFW_SAMPLES, config.samples);
 
     glfwWindowHint(GLFW_RESIZABLE, config.resizable ? GLFW_TRUE : GLFW_FALSE);
+    glfwWindowHint(GLFW_SCALE_TO_MONITOR, true);
+
+    //glfwWindowHint(GLFW_SRGB_CAPABLE, true);
 
     /* Create a GLFW window and its OpenGL context. */
     m_window = glfwCreateWindow(width, height, title, monitor, nullptr);
