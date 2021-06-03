@@ -2,7 +2,6 @@
 #include "GLDebug.hpp"
 #include "Common.hpp"
 #include "Core/Window.hpp"
-#include "Math/Vector.hpp"
 #include "Flock.hpp"
 
 #include <chrono>
@@ -67,7 +66,7 @@ public:
             }
         } catch(std::ios_base::failure &fb) {
             //std::cout << fb.what() << ". Defaulting to 8 boids." << std::endl;
-            std::cout << "flox.txt not found. Defaulting to 8 boids." << std::endl;
+            std::cout << "flox.txt not found. Defaulting to " << flockSize << " boids." << std::endl;
         } catch(std::invalid_argument &ia) {
             std::cout << "Could not convert contents of flock.txt. Defaulting to 8 boids." << std::endl;
         }
