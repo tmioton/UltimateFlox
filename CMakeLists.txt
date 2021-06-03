@@ -17,7 +17,6 @@ set_target_properties(
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/
 )
 
-add_subdirectory(vendor/Glad)
-add_subdirectory(vendor/GLFW)
+add_subdirectory(vendor)
 add_subdirectory(src)
 add_subdirectory(res)

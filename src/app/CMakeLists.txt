@@ -26,6 +26,7 @@ target_precompile_headers(flox PRIVATE pch.hpp pch.cpp)
 target_link_libraries(flox PRIVATE OpenGL32)
 target_link_libraries(flox PRIVATE glad)
 target_link_libraries(flox PRIVATE glfw)
+#target_link_libraries(flox PRIVATE glm)
 
 # Link in LWVL
 target_link_libraries(flox PRIVATE lwvl)
