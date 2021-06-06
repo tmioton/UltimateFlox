@@ -105,6 +105,10 @@ public:
                         flock.changeRenderMode(Flock::RenderMode::Filled);
                     } else if (key_event.key == GLFW_KEY_2) {
                         flock.changeRenderMode(Flock::RenderMode::Classic);
+                    } else if (key_event.key == GLFW_KEY_B) {
+                        flock.toggleBoidRendering();
+                    } else if (key_event.key == GLFW_KEY_V) {
+                        flock.toggleVisionRendering();
                     }
                 }
             }

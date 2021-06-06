@@ -3,7 +3,7 @@
 add_custom_target(resources)
 add_dependencies(flox resources)
 
-# Should probably be a macro.
+# Maybe this should be a macro.
 function(export_resources)
     cmake_parse_arguments(PARSE_ARGV 0 "EXPORT" "" "DIRECTORY" "DEPENDS")
     if(NOT EXPORT_DIRECTORY)
@@ -38,5 +38,6 @@ export_resources(
     DIRECTORY Shaders
     DEPENDS
         boid.vert
-        boid.frag
+        vision.vert
+        default.frag
 )

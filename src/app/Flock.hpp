@@ -14,16 +14,44 @@ constexpr std::array<float, 8> defaultModel {
     -0.7071067811865477f, -0.7071067811865475f,
 };
 
+constexpr std::array<float, 34> visionModel {
+    1.0f, 0.0f,
+    0.92388f, 0.38268f,
+    0.70711f, 0.70711f,
+    0.38268f, 0.92388f,
+    0.0f, 1.0f,
+    -0.38268f, 0.92388f,
+    -0.70711f, 0.70711f,
+    -0.92388f, 0.38268f,
+    -1.0f, 0.0f,
+    -0.92388f, -0.38268f,
+    -0.70711f, -0.70711f,
+    -0.38268f, -0.92388f,
+    -0.0f, -1.0f,
+    0.38268f, -0.92388f,
+    0.70711f, -0.70711f,
+    0.92388f, -0.38268f,
+    1.0f, 0.0f,
+};
+
 // The maximum size of the vertex buffer.
 constexpr uint64_t vertexBufferSize = defaultModel.size();
 
 
 struct Boid {
     static constexpr float scale = 5.0f;
+
     static constexpr float maxSpeed = 100.0f;
-    static constexpr float maxForce = 2.0f;
-    static constexpr float cohesiveRadius = 2.75f * scale;
-    static constexpr float disruptiveRadius = 1.8f * scale;
+    static constexpr float maxForce = 3.0f;
+
+    static constexpr float disruptiveRadius = 1.5f * scale;
+    static constexpr float cohesiveRadius = 2.0f * disruptiveRadius;
+
+    static constexpr float primadonnaWeight = 0.8f;
+    static constexpr float alignmentWeight = 0.6f;
+    static constexpr float separationWeight = 1.0f;
+    static constexpr float cohesionWeight = 0.3f;
+    static constexpr float speedWeight = 0.2f;
 
     Vector position, velocity, acceleration;
 
@@ -39,7 +67,7 @@ public:
     };
 private:
 
-    static constexpr float worldBound = 250.0f;
+    static constexpr float worldBound = 200.0f;
 
     // without any steering, this number can go above 500,000 before dipping below 60fps
     uint64_t flockSize;
@@ -51,21 +79,33 @@ private:
     // At the flock sizes I want to hit, flockSize ^ 2 would be > 4TB of RAM to store this matrix.
     //std::unique_ptr<float[]> distanceMatrix = std::make_unique<float[]>(flockSize * flockSize);
 
+    // Boid Rendering
     lwvl::ShaderProgram boidShader;
-    lwvl::VertexArray arrayBuffer;
-    lwvl::ArrayBuffer vertexBuffer{lwvl::Usage::Static};
-    lwvl::ElementBuffer indexBuffer{lwvl::Usage::Static};
+    lwvl::VertexArray boidArrayBuffer;
+    lwvl::ArrayBuffer boidVertexBuffer{lwvl::Usage::Static};
+    lwvl::ElementBuffer boidIndexBuffer{lwvl::Usage::Static};
+
+    // Boid Vision Rendering
+    lwvl::ShaderProgram visionShader;
+    lwvl::VertexArray visionArrayBuffer;
+    lwvl::ArrayBuffer visionVertexBuffer{lwvl::Usage::Static};
+
+    // Object Position Buffer
     lwvl::ArrayBuffer offsetBuffer{lwvl::Usage::Stream};
 
     //lwvl::PrimitiveMode renderMode = lwvl::PrimitiveMode::Lines;  // Classic Flox render mode
     lwvl::PrimitiveMode renderMode = lwvl::PrimitiveMode::TriangleFan;
     int32_t indexCount = 10;
     Vector bounds;
+    bool renderVision = false;
+    bool renderBoids = true;
 
 public:
 
     explicit Flock(size_t flock_size, float aspect);
     void changeRenderMode(RenderMode mode);
+    void toggleVisionRendering();
+    void toggleBoidRendering();
     void update(float dt);
     void draw();
 
