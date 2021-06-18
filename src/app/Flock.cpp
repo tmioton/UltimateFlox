@@ -22,7 +22,7 @@ Vector Boid::steer(Vector const& vec) const {
 Flock::Flock(size_t flock_size, float aspect) : flockSize(flock_size), bounds{aspect >= 1.0f ? worldBound * aspect : worldBound, aspect < 1.0f ? worldBound * aspect : worldBound} {
     // Set up boid starting locations
     const float tauOverSize = glm::two_pi<float>() / static_cast<float>(flockSize);
-    for (size_t i = 0; i < flockSize; i++) {
+    for (ptrdiff_t i = 0; i < flockSize; i++) {
         Boid &boid = m_primaryFlock[i];
         auto angle = static_cast<float>(i) * tauOverSize;
         Vector offsets {cosf(angle), sinf(angle)};
@@ -142,7 +142,7 @@ void Flock::update(float dt) {
                 disruptiveTotal++;
             }
 
-            if (d < Boid::cohesiveRadius && d > 0.0f) {
+            if (d < Boid::cohesiveRadius) {
                 alignment += otherBoid.velocity;
                 cohesion += otherBoid.position;
                 cohesiveTotal++;

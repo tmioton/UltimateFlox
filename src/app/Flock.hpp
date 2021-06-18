@@ -35,7 +35,7 @@ constexpr std::array<float, 34> visionModel {
 };
 
 // The maximum size of the vertex buffer.
-constexpr uint64_t vertexBufferSize = defaultModel.size();
+constexpr size_t vertexBufferSize = defaultModel.size();
 
 
 struct Boid {
@@ -47,14 +47,17 @@ struct Boid {
     static constexpr float disruptiveRadius = 1.5f * scale;
     static constexpr float cohesiveRadius = 2.0f * disruptiveRadius;
 
+    // These weights get normalized, so they do not have to add to 1.
     static constexpr float primadonnaWeight = 0.8f;  // Desire to be on-screen. Must be stronger than alignment.
     static constexpr float alignmentWeight = 0.6f;   // Desire to move in the same direction as other boids.
     static constexpr float separationWeight = 1.0f;  // Desire to have personal space.
-    static constexpr float cohesionWeight = 0.3f;    // Desire to compress the flock size.
+    static constexpr float cohesionWeight = 0.6f;    // Desire to compress the flock size.
     static constexpr float speedWeight = 0.2f;       // Desire to move at full speed. Helps with separation.
 
+    // Non-static members
     Vector position, velocity, acceleration;
 
+    // Methods
     [[nodiscard]] Vector steer(Vector const& vec) const;
 };
 
@@ -70,7 +73,7 @@ private:
     static constexpr float worldBound = 200.0f;
 
     // without any steering, this number can go above 500,000 before dipping below 60fps
-    uint64_t flockSize;
+    size_t flockSize;
 
     std::unique_ptr<Boid[]> m_primaryFlock = std::make_unique<Boid[]>(flockSize);
     std::unique_ptr<Boid[]> m_secondaryFlock = std::make_unique<Boid[]>(flockSize);

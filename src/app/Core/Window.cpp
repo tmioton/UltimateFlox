@@ -18,7 +18,7 @@ void Window::terminate() {
 }
 
 
-Window::Window(uint32_t width, uint32_t height, const char *title, GLFWmonitor *monitor) : config({width, height}) {
+Window::Window(int width, int height, const char *title, GLFWmonitor *monitor) : config({width, height}) {
     m_events.reserve(eventStackCapacity);
 
     /* Initialize GLFW. */
@@ -62,15 +62,20 @@ Window::Window(uint32_t width, uint32_t height, const char *title, GLFWmonitor *
         m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
             Window *state = Window::getState(window);
             switch (action) {
-                case GLFW_PRESS:state->m_events.emplace_back(Event::Type::KeyPress, KeyboardEvent{key, scancode, mods});
+                case GLFW_PRESS:
+                    state->m_events.emplace_back(
+                        Event::Type::KeyPress, KeyboardEvent{key, scancode, mods}
+                    );
                     return;
                 case GLFW_RELEASE:
-                    state->m_events
-                         .emplace_back(Event::Type::KeyRelease, KeyboardEvent{key, scancode, mods});
+                    state->m_events.emplace_back(
+                        Event::Type::KeyRelease, KeyboardEvent{key, scancode, mods}
+                    );
                     return;
                 case GLFW_REPEAT:
-                    state->m_events
-                         .emplace_back(Event::Type::KeyRepeat, KeyboardEvent{key, scancode, mods});
+                    state->m_events.emplace_back(
+                        Event::Type::KeyRepeat, KeyboardEvent{key, scancode, mods}
+                    );
                     return;
                 default:return;
             }

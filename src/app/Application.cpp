@@ -21,7 +21,7 @@ class Application {
     Window m_window;
 
 public:
-    Application(uint32_t width, uint32_t height) : m_window(width, height, "UltimateFlox") {}
+    Application(int width, int height) : m_window(width, height, "UltimateFlox") {}
 
     static inline double delta(time_point<steady_clock> start) {
         return 0.000001 * static_cast<double>(duration_cast<microseconds>(
@@ -47,7 +47,7 @@ public:
         const auto width = static_cast<float>(m_window.config.width);
         const auto height = static_cast<float>(m_window.config.height);
 
-        uint64_t flockSize = 512;
+        size_t flockSize = 512;
         try {
             std::ifstream file("flox.txt");
             if (!file) {
@@ -80,7 +80,7 @@ public:
         auto frameStart = high_resolution_clock::now();
 
         bool paused = false;
-        for (uint32_t frameCount = 0; !m_window.shouldClose(); frameCount++) {
+        for (int frameCount = 0; !m_window.shouldClose(); frameCount++) {
             // Calculate the time since last frame
             const auto dt = static_cast<float>(delta(frameStart));
             frameStart = high_resolution_clock::now();

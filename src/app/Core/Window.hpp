@@ -8,8 +8,8 @@ extern constexpr size_t eventStackCapacity = 3;
 
 
 struct Config {
-    uint32_t width;
-    uint32_t height;
+    int width;
+    int height;
 
     uint8_t samples = 8;
     bool resizable = false;  // This can be converted to a flag bit type thing when additional features are required.
@@ -29,7 +29,7 @@ private:
     void terminate();
 
 public:
-    Window(uint32_t width, uint32_t height, const char *title, GLFWmonitor *monitor = nullptr);
+    Window(int width, int height, const char *title, GLFWmonitor *monitor = nullptr);
 
     bool shouldClose();
 
