@@ -195,12 +195,10 @@ void Flock::update(float dt) {
         // In terms of calculating a rotation,
         // sqrt seems to be faster than atan2
         // and saves cos and sin computations on the gpu
-        const float magX = currentBoid.velocity.x;
-        const float magY = currentBoid.velocity.y;
-        const float l2 = magX * magX + magY * magY;
-        const float magFactor = l2 != 0.0f ? glm::fastInverseSqrt(l2) : 0.0f;
-        offsetArray[i * 4 + 2] = magX * magFactor;
-        offsetArray[i * 4 + 3] = magY * magFactor;
+        const float l2 = glm::length2(currentBoid.velocity);
+        const Vector normal = l2 != 0.0f ? currentBoid.velocity * glm::fastInverseSqrt(l2) : Vector{0.0f, 0.0f};
+        offsetArray[i * 4 + 2] = normal.x;
+        offsetArray[i * 4 + 3] = normal.y;
     }
 
     offsetBuffer.bind();
