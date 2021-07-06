@@ -110,6 +110,9 @@ void Flock::configureRendering() {
 void Flock::update(float dt) {
     for (size_t i = 0; i < flockSize; i++) {
         m_secondaryFlock[i] = m_primaryFlock[i];
+    }
+
+    for (size_t i = 0; i < flockSize; i++) {
         Boid &currentBoid = m_secondaryFlock[i];
 
         Vector centerSteer {0.0f, 0.0f};
@@ -180,6 +183,10 @@ void Flock::update(float dt) {
         currentBoid.velocity += currentBoid.acceleration;
         currentBoid.position += currentBoid.velocity * dt;
         currentBoid.acceleration *= 0.0f;
+    }
+
+    for (size_t i = 0; i < flockSize; i++) {
+        Boid &currentBoid = m_secondaryFlock[i];
 
         // Update the offsets
         offsetArray[i * 4 + 0] = currentBoid.position.x;
