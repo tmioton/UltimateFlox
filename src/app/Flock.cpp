@@ -3,9 +3,7 @@
 
 
 static Vector magnitude(Vector const& vec, float mag) {
-    const float x = vec.x;
-    const float y = vec.y;
-    const float l2 = x * x + y * y;
+    const float l2 = glm::length2(vec);
     if (l2 != 0.0f) {
         return vec * glm::fastInverseSqrt(l2) * mag;
     } else {
@@ -15,7 +13,14 @@ static Vector magnitude(Vector const& vec, float mag) {
 
 
 Vector Boid::steer(Vector const& vec) const {
-    return magnitude(magnitude(vec, Boid::maxSpeed) - velocity, Boid::maxForce);
+    constexpr float maxF2 = Boid::maxForce * Boid::maxForce;
+    Vector steering = magnitude(vec, Boid::maxSpeed) - velocity;
+    const float l2 = glm::length2(steering);
+    if (l2 > maxF2 && l2 != 0.0f) {
+        return steering * glm::fastInverseSqrt(l2) * Boid::maxForce;
+    } else {
+        return steering;
+    }
 }
 
 
