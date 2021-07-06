@@ -42,9 +42,9 @@ Flock::Flock(size_t flock_size, float aspect) : flockSize(flock_size), bounds{as
 
 void Flock::configureRendering() {
     // Construct shader
-    lwvl::VertexShader vertexSource{lwvl::VertexShader::readFile("Data/Shaders/boid.vert")};
-    lwvl::FragmentShader fragmentSource{lwvl::FragmentShader::readFile("Data/Shaders/default.frag")};
-    boidShader.link(vertexSource, fragmentSource);
+    lwvl::VertexShader boidVertexModifier{lwvl::VertexShader::readFile("Data/Shaders/boid.vert")};
+    lwvl::FragmentShader boidFragmentModifier{lwvl::FragmentShader::readFile("Data/Shaders/boid.frag")};
+    boidShader.link(boidVertexModifier, boidFragmentModifier);
 
     boidShader.bind();
     boidShader.uniform("scale").set1f(Boid::scale);
@@ -57,8 +57,9 @@ void Flock::configureRendering() {
     boidShader.uniform("color").set3f(0.71373f, 0.09020f, 0.29412f);  // Pictoral Carmine
     //boidShader.uniform("color").set3f(0.76471f, 0.92157f, 0.47059f);  // Yellow Green Crayon
 
-    lwvl::VertexShader visionSource{lwvl::VertexShader::readFile("Data/Shaders/vision.vert")};
-    visionShader.link(visionSource, fragmentSource);
+    lwvl::VertexShader visionVertexModifier{lwvl::VertexShader::readFile("Data/Shaders/vision.vert")};
+    lwvl::FragmentShader visionFragmentModifier{lwvl::FragmentShader::readFile("Data/Shaders/vision.frag")};
+    visionShader.link(visionVertexModifier, visionFragmentModifier);
     visionShader.bind();
     visionShader.uniform("projection").set2DOrthographic(bounds.y, -bounds.y, bounds.x, -bounds.x);
 

@@ -5,6 +5,7 @@
 #include <glm/vec2.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/fast_square_root.hpp>
+#include <glm/gtx/norm.hpp>
 #include <cmath>
 #include <array>
 #include <iostream>

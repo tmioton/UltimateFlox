@@ -80,6 +80,9 @@ public:
         auto frameStart = high_resolution_clock::now();
 
         bool paused = false;
+
+        //glEnable(GL_BLEND);
+        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         for (int frameCount = 0; !m_window.shouldClose(); frameCount++) {
             // Calculate the time since last frame
             const auto dt = static_cast<float>(delta(frameStart));

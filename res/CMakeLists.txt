@@ -38,6 +38,7 @@ export_resources(
     DIRECTORY Shaders
     DEPENDS
         boid.vert
+        boid.frag
         vision.vert
-        default.frag
+        vision.frag
 )
