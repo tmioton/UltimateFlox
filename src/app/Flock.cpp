@@ -155,7 +155,7 @@ void Flock::update(float dt) {
         }
 
         if (disruptiveTotal > 0) {
-            separation /= static_cast<float>(cohesiveTotal);
+            separation /= static_cast<float>(disruptiveTotal);
             separation = currentBoid.steer(separation);
         }
 
