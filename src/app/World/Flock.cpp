@@ -3,10 +3,10 @@
 
 
 Flock::Flock(size_t flock_size, float aspect) :
-        flockSize(flock_size), bounds {
+    flockSize(flock_size), m_bounds {
             aspect >= 1.0f ? worldBound * aspect : worldBound,
             aspect < 1.0f ? worldBound * aspect : worldBound
-        }, renderer(flock_size, bounds)
+        }, m_renderer(flock_size, m_bounds)
 {
     // Set up boid starting locations
     const float tauOverSize = glm::two_pi<float>() / static_cast<float>(flockSize);
@@ -28,10 +28,10 @@ void Flock::update(float dt) {
 
         Vector centerSteer {0.0f, 0.0f};
         // Precursor to Rectangle class
-        if (currentBoid.position.x - Boid::scale <= -bounds.x
-            || currentBoid.position.x + Boid::scale >= bounds.x
-            || currentBoid.position.y - Boid::scale <= -bounds.y
-            || currentBoid.position.y + Boid::scale >= bounds.y
+        if (currentBoid.position.x - Boid::scale <= -m_bounds.x
+            || currentBoid.position.x + Boid::scale >= m_bounds.x
+            || currentBoid.position.y - Boid::scale <= -m_bounds.y
+            || currentBoid.position.y + Boid::scale >= m_bounds.y
         ) {
             centerSteer -= currentBoid.position;
             centerSteer = currentBoid.steer(centerSteer);
@@ -97,7 +97,7 @@ void Flock::update(float dt) {
     }
 
     // Update boid rendering
-    renderer.update(m_secondaryFlock);
+    m_renderer.update(m_secondaryFlock);
 
     // Move array pointers
     auto temp = std::move(m_primaryFlock);
@@ -108,17 +108,9 @@ void Flock::update(float dt) {
 }
 
 void Flock::draw() {
-    renderer.draw();
+    m_renderer.draw();
 }
 
-void Flock::changeRenderMode(BoidMode mode) {
-    renderer.changeRenderMode(mode);
-}
-
-void Flock::toggleVisionRendering() {
-    renderer.toggleVisionRendering();
-}
-
-void Flock::toggleBoidRendering() {
-    renderer.toggleBoidRendering();
+detail::BoidRenderer &Flock::renderer() {
+    return m_renderer;
 }

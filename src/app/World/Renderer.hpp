@@ -11,67 +11,71 @@ enum class BoidMode : uint8_t {
     Filled
 };
 
-constexpr std::array<float, 8> defaultModel {
-    1.0, 0.0,
-    -0.7071067811865475f, 0.7071067811865476f,
-    -0.5, 0.0,
-    -0.7071067811865477f, -0.7071067811865475f,
-};
+namespace detail {
+    constexpr std::array<float, 8> defaultModel{
+        1.0, 0.0,
+        -0.7071067811865475f, 0.7071067811865476f,
+        -0.5, 0.0,
+        -0.7071067811865477f, -0.7071067811865475f,
+    };
 
-constexpr std::array<float, 34> visionModel{
-    1.0f, 0.0f,
-    0.92388f, 0.38268f,
-    0.70711f, 0.70711f,
-    0.38268f, 0.92388f,
-    0.0f, 1.0f,
-    -0.38268f, 0.92388f,
-    -0.70711f, 0.70711f,
-    -0.92388f, 0.38268f,
-    -1.0f, 0.0f,
-    -0.92388f, -0.38268f,
-    -0.70711f, -0.70711f,
-    -0.38268f, -0.92388f,
-    -0.0f, -1.0f,
-    0.38268f, -0.92388f,
-    0.70711f, -0.70711f,
-    0.92388f, -0.38268f,
-    1.0f, 0.0f,
-};
+    constexpr std::array<float, 34> visionModel{
+        1.0f, 0.0f,
+        0.92388f, 0.38268f,
+        0.70711f, 0.70711f,
+        0.38268f, 0.92388f,
+        0.0f, 1.0f,
+        -0.38268f, 0.92388f,
+        -0.70711f, 0.70711f,
+        -0.92388f, 0.38268f,
+        -1.0f, 0.0f,
+        -0.92388f, -0.38268f,
+        -0.70711f, -0.70711f,
+        -0.38268f, -0.92388f,
+        -0.0f, -1.0f,
+        0.38268f, -0.92388f,
+        0.70711f, -0.70711f,
+        0.92388f, -0.38268f,
+        1.0f, 0.0f,
+    };
 
-class BoidRenderer {
-public:
-    BoidRenderer(size_t size, glm::vec2 bounds);
+    class BoidRenderer {
+    public:
+        BoidRenderer(size_t size, glm::vec2 bounds);
 
-    void changeRenderMode(BoidMode mode);
-    void toggleVisionRendering();
-    void toggleBoidRendering();
+        void changeRenderMode(BoidMode mode);
 
-    void update(BoidArray const &boids);
+        void toggleVisionRendering();
 
-    void draw();
+        void toggleBoidRendering();
 
-private:
-    size_t flockSize;
+        void update(BoidArray const &boids);
 
-    // This can be replaced with glMapBuffer when that abstraction is available.
-    std::unique_ptr<float[]> offsetStore = std::make_unique<float[]>(flockSize * 4);
+        void draw();
 
-    // Boid Rendering
-    lwvl::ShaderProgram boidModifier;
-    lwvl::VertexArray boidController;
-    lwvl::ArrayBuffer boidVertices{lwvl::Usage::Static};
-    lwvl::ElementBuffer boidIndices{lwvl::Usage::Static};
+    private:
+        size_t flockSize;
 
-    // Boid Vision Rendering
-    lwvl::ShaderProgram visionModifier;
-    lwvl::VertexArray visionController;
-    lwvl::ArrayBuffer visionVertices{lwvl::Usage::Static};
+        // This can be replaced with glMapBuffer when that abstraction is available.
+        std::unique_ptr<float[]> offsetStore = std::make_unique<float[]>(flockSize * 4);
 
-    // Offset Buffer
-    lwvl::ArrayBuffer offsets{lwvl::Usage::Stream};
+        // Boid Rendering
+        lwvl::ShaderProgram boidModifier;
+        lwvl::VertexArray boidController;
+        lwvl::ArrayBuffer boidVertices{lwvl::Usage::Static};
+        lwvl::ElementBuffer boidIndices{lwvl::Usage::Static};
 
-    lwvl::PrimitiveMode renderMode = lwvl::PrimitiveMode::TriangleFan;
-    int32_t indexCount = 10;
-    bool renderVision = false;
-    bool renderBoids = true;
-};
+        // Boid Vision Rendering
+        lwvl::ShaderProgram visionModifier;
+        lwvl::VertexArray visionController;
+        lwvl::ArrayBuffer visionVertices{lwvl::Usage::Static};
+
+        // Offset Buffer
+        lwvl::ArrayBuffer offsets{lwvl::Usage::Stream};
+
+        lwvl::PrimitiveMode renderMode = lwvl::PrimitiveMode::TriangleFan;
+        int32_t indexCount = 10;
+        bool renderVision = false;
+        bool renderBoids = true;
+    };
+}

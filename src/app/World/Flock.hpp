@@ -17,15 +17,13 @@ class Flock {
     BoidArray m_primaryFlock = std::make_unique<Boid[]>(flockSize);
     BoidArray m_secondaryFlock = std::make_unique<Boid[]>(flockSize);
 
-    Vector bounds;
-    BoidRenderer renderer;
+    Vector m_bounds;
+    detail::BoidRenderer m_renderer;
 
 public:
-
     explicit Flock(size_t flock_size, float aspect);
-    void changeRenderMode(BoidMode mode);
-    void toggleVisionRendering();
-    void toggleBoidRendering();
     void update(float dt);
     void draw();
+
+    detail::BoidRenderer& renderer();
 };

@@ -105,13 +105,13 @@ public:
                     } else if (key_event.key == GLFW_KEY_SPACE) {
                         paused ^= true;
                     } else if (key_event.key == GLFW_KEY_1) {
-                        flock.changeRenderMode(BoidMode::Filled);
+                        flock.renderer().changeRenderMode(BoidMode::Filled);
                     } else if (key_event.key == GLFW_KEY_2) {
-                        flock.changeRenderMode(BoidMode::Classic);
+                        flock.renderer().changeRenderMode(BoidMode::Classic);
                     } else if (key_event.key == GLFW_KEY_B) {
-                        flock.toggleBoidRendering();
+                        flock.renderer().toggleBoidRendering();
                     } else if (key_event.key == GLFW_KEY_V) {
-                        flock.toggleVisionRendering();
+                        flock.renderer().toggleVisionRendering();
                     }
                 }
             }
