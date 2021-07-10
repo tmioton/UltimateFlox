@@ -21,9 +21,14 @@ Flock::Flock(size_t flock_size, float aspect) :
 }
 
 void Flock::update(float dt) {
+    constexpr float disruptiveRadius = Boid::disruptiveRadius * Boid::disruptiveRadius;
+    constexpr float cohesiveRadius = Boid::cohesiveRadius * Boid::cohesiveRadius;
+
     for (size_t i = 0; i < flockSize; i++) {
         m_secondaryFlock[i] = m_primaryFlock[i];
+    }
 
+    for (size_t i = 0; i < flockSize; i++) {
         Boid &currentBoid = m_secondaryFlock[i];
 
         Vector centerSteer {0.0f, 0.0f};
@@ -47,6 +52,7 @@ void Flock::update(float dt) {
         Vector cohesion {0.0f, 0.0f};  // Desire to shrink the distance between self and flockmates
         size_t cohesiveTotal = 0;
         size_t disruptiveTotal = 0;
+
         for(size_t j = 0; j < flockSize; j++) {
             if (i == j) {
                 continue;
@@ -54,14 +60,14 @@ void Flock::update(float dt) {
 
             const Boid& otherBoid = m_primaryFlock[j];
 
-            const float d = glm::fastDistance(currentBoid.position, otherBoid.position);
-            if (d < Boid::disruptiveRadius && d > 0.0f) {
+            const float d2 = glm::distance2(currentBoid.position, otherBoid.position);
+            if (d2 < disruptiveRadius && d2 > 0.0f) {
                 Vector diff = currentBoid.position - otherBoid.position;
-                separation += diff / (d * d);
+                separation += diff / d2;
                 disruptiveTotal++;
             }
 
-            if (d < Boid::cohesiveRadius) {
+            if (d2 < cohesiveRadius) {
                 alignment += otherBoid.velocity;
                 cohesion += otherBoid.position;
                 cohesiveTotal++;
