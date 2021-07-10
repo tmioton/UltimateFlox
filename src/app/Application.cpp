@@ -2,7 +2,7 @@
 #include "GLDebug.hpp"
 #include "Common.hpp"
 #include "Core/Window.hpp"
-#include "Flock.hpp"
+#include "World/Flock.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -105,9 +105,9 @@ public:
                     } else if (key_event.key == GLFW_KEY_SPACE) {
                         paused ^= true;
                     } else if (key_event.key == GLFW_KEY_1) {
-                        flock.changeRenderMode(Flock::RenderMode::Filled);
+                        flock.changeRenderMode(BoidMode::Filled);
                     } else if (key_event.key == GLFW_KEY_2) {
-                        flock.changeRenderMode(Flock::RenderMode::Classic);
+                        flock.changeRenderMode(BoidMode::Classic);
                     } else if (key_event.key == GLFW_KEY_B) {
                         flock.toggleBoidRendering();
                     } else if (key_event.key == GLFW_KEY_V) {

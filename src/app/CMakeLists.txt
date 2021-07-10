@@ -2,8 +2,14 @@ target_sources(
     flox
     PRIVATE
         Application.cpp
-        Flock.hpp
-        Flock.cpp
+
+        # WORLD
+        World/Boid.hpp
+        World/Boid.cpp
+        World/Renderer.hpp
+        World/Renderer.cpp
+        World/Flock.hpp
+        World/Flock.cpp
 
         # CORE
         Core/Window.hpp
