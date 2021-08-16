@@ -1,10 +1,10 @@
 #pragma once
 
 #include "pch.hpp"
+#include "World.hpp"
 
 struct Boid;
 
-using Vector = glm::vec2;
 using BoidArray = std::unique_ptr<Boid[]>;
 
 Vector magnitude(Vector const& vec, float mag);

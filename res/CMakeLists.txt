@@ -39,6 +39,6 @@ export_resources(
     DEPENDS
         boid.vert
         boid.frag
+        default.frag
         vision.vert
-        vision.frag
 )

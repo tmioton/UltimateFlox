@@ -4,6 +4,7 @@ target_sources(
         Application.cpp
 
         # WORLD
+        World/World.hpp
         World/Boid.hpp
         World/Boid.cpp
         World/Renderer.hpp
@@ -16,8 +17,6 @@ target_sources(
         Core/Window.cpp
         Core/Event.hpp
         Core/Event.cpp
-
-        # MATH
 )
 
 target_include_directories(flox PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

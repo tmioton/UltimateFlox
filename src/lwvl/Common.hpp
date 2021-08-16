@@ -15,4 +15,11 @@ namespace lwvl {
     };
 
     void clear();
+
+    struct Viewport {
+        int x, y, width, height;
+    };
+
+    void viewport(Viewport);
+    Viewport viewport();
 }

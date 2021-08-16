@@ -37,16 +37,14 @@ public:
                 Severity severity, unsigned int id, int length,
                 const char *message, const void *userState
             ) {
-                std::cout << "[OpenGL] " << message << std::endl;
+                if (type != Type::OTHER) {
+                    std::cout << "[OpenGL] " << message << std::endl;
+                }
             }
         );
 
         const auto setupStart = high_resolution_clock::now();
 #endif
-
-        const auto width = static_cast<float>(m_window.config.width);
-        const auto height = static_cast<float>(m_window.config.height);
-
         size_t flockSize = 512;
         try {
             std::ifstream file("flox.txt");
@@ -71,7 +69,7 @@ public:
             std::cout << "Could not convert contents of flock.txt. Defaulting to 8 boids." << std::endl;
         }
 
-        Flock flock(flockSize, width / height);
+        Flock flock(flockSize, m_window.config.width, m_window.config.height);
 
 #ifndef NDEBUG
         std::cout << "Setup took " << delta(setupStart) << " seconds." << std::endl;

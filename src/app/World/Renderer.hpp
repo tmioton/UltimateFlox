@@ -1,10 +1,14 @@
 #pragma once
 
 #include "pch.hpp"
-#include "Boid.hpp"
 #include "Shader.hpp"
 #include "VertexArray.hpp"
 #include "Buffer.hpp"
+#include "Texture.hpp"
+#include "Framebuffer.hpp"
+
+#include "Boid.hpp"
+#include "World.hpp"
 
 enum class BoidMode : uint8_t {
     Classic,
@@ -41,7 +45,7 @@ namespace detail {
 
     class BoidRenderer {
     public:
-        BoidRenderer(size_t size, glm::vec2 bounds);
+        BoidRenderer(size_t size, int width, int height);
 
         void changeRenderMode(BoidMode mode);
 
@@ -49,7 +53,7 @@ namespace detail {
 
         void toggleBoidRendering();
 
-        void update(BoidArray const &boids);
+        void update(BoidArray const &current, BoidArray const &previous);
 
         void draw();
 
@@ -57,17 +61,17 @@ namespace detail {
         size_t flockSize;
 
         // This can be replaced with glMapBuffer when that abstraction is available.
-        std::unique_ptr<float[]> offsetStore = std::make_unique<float[]>(flockSize * 4);
+        std::unique_ptr<float[]> offsetStore{std::make_unique<float[]>(4 * flockSize)};
 
         // Boid Rendering
-        lwvl::ShaderProgram boidModifier;
-        lwvl::VertexArray boidController;
+        lwvl::ShaderProgram boidControl;
+        lwvl::VertexArray boidLayout;
         lwvl::ArrayBuffer boidVertices{lwvl::Usage::Static};
         lwvl::ElementBuffer boidIndices{lwvl::Usage::Static};
 
         // Boid Vision Rendering
-        lwvl::ShaderProgram visionModifier;
-        lwvl::VertexArray visionController;
+        lwvl::ShaderProgram visionControl;
+        lwvl::VertexArray visionLayout;
         lwvl::ArrayBuffer visionVertices{lwvl::Usage::Static};
 
         // Offset Buffer
