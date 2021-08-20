@@ -17,7 +17,5 @@ void main() {
 
     // ****** Color change based on speed. ******
     float a = length(velocity) / maxSpeed;
-//    final = vec4(mix(vec3(0.91765, 0.88235, 0.31765), color, a), 1.0);
-    final = vec4(mix(vec3(0.09804, 0.48235, 0.74118), color, a), 1.0);
-//    final = vec4(color, a);
+    final = vec4(mix(vec3(0.91765, 0.88235, 0.31765), color, a), 1.0);
 }
