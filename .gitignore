@@ -1,4 +1,4 @@
 CppCaptures/
 cmake-build-*/
 .idea/
-UltimateFlox.ngfx-proj
+*.ngfx-proj
