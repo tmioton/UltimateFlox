@@ -39,6 +39,8 @@ export_resources(
     DEPENDS
         boid.vert
         boid.frag
+        speeddebug.vert
+        speeddebug.frag
         default.frag
         vision.vert
 )

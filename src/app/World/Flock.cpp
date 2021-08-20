@@ -3,8 +3,7 @@
 
 
 Flock::Flock(size_t flock_size, int width, int height) :
-    flockSize(flock_size), m_bounds(calculateBounds(static_cast<float>(width) / static_cast<float>(height))),
-    m_renderer(flock_size, width, height)
+    flockSize(flock_size), m_bounds(calculateBounds(static_cast<float>(width) / static_cast<float>(height)))
 {
     // Set up boid starting locations
     const float tauOverSize = glm::two_pi<float>() / static_cast<float>(flockSize);
@@ -106,12 +105,6 @@ void Flock::update(float dt) {
     m_secondaryFlock = std::move(temp);
 }
 
-void Flock::draw() {
-    // Update boid rendering
-    m_renderer.update(m_primaryFlock, m_secondaryFlock);
-    m_renderer.draw();
-}
-
-detail::BoidRenderer &Flock::renderer() {
-    return m_renderer;
+BoidArray &Flock::boids() {
+    return m_primaryFlock;
 }

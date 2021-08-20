@@ -18,12 +18,10 @@ class Flock {
     BoidArray m_secondaryFlock = std::make_unique<Boid[]>(flockSize);
 
     Vector m_bounds;
-    detail::BoidRenderer m_renderer;
 
 public:
     explicit Flock(size_t flock_size, int width, int height);
     void update(float dt);
-    void draw();
 
-    detail::BoidRenderer& renderer();
+    BoidArray& boids();
 };

@@ -7,8 +7,12 @@ layout(location = 2) in vec2 velocity;
 uniform mat4 projection = mat4(1.0);
 uniform float scale = 10.0;
 
+layout(location = 1) out vec2 v_Velocity;
+
 void main() {
     vec2 rotation = velocity / length(velocity);
+    v_Velocity = velocity;
+
     mat4 model = mat4(
         scale * rotation.x,  scale * rotation.y, 0.0, 0.0,
         -scale * rotation.y, scale * rotation.x, 0.0, 0.0,

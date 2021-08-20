@@ -69,7 +69,12 @@ public:
             std::cout << "Could not convert contents of flock.txt. Defaulting to 8 boids." << std::endl;
         }
 
-        Flock flock(flockSize, m_window.config.width, m_window.config.height);
+        auto width = m_window.config.width;
+        auto height = m_window.config.height;
+        Flock flock(flockSize, width, height);
+        DataBufferUpdater bufferUpdater(flockSize);
+        BoidRenderer boidRenderer(flockSize, width, height, bufferUpdater.buffer());
+        VisionRenderer visionRenderer(flockSize, width, height, bufferUpdater.buffer());
 
 #ifndef NDEBUG
         std::cout << "Setup took " << delta(setupStart) << " seconds." << std::endl;
@@ -78,6 +83,9 @@ public:
         auto frameStart = high_resolution_clock::now();
 
         bool paused = false;
+        bool debugVisual = false;
+        bool renderBoids = true;
+        bool renderVision = false;
 
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -103,13 +111,20 @@ public:
                     } else if (key_event.key == GLFW_KEY_SPACE) {
                         paused ^= true;
                     } else if (key_event.key == GLFW_KEY_1) {
-                        flock.renderer().changeRenderMode(BoidMode::Filled);
+                        boidRenderer.changeRenderMode(BoidRenderer::RenderMode::Filled);
                     } else if (key_event.key == GLFW_KEY_2) {
-                        flock.renderer().changeRenderMode(BoidMode::Classic);
+                        boidRenderer.changeRenderMode(BoidRenderer::RenderMode::Classic);
                     } else if (key_event.key == GLFW_KEY_B) {
-                        flock.renderer().toggleBoidRendering();
+                        renderBoids ^= true;
                     } else if (key_event.key == GLFW_KEY_V) {
-                        flock.renderer().toggleVisionRendering();
+                        renderVision ^= true;
+                    } else if (key_event.key == GLFW_KEY_S) {
+                        debugVisual ^= true;
+                        if (debugVisual) {
+                            boidRenderer.changeControlMode(BoidRenderer::ControlMode::SpeedDebug);
+                        } else {
+                            boidRenderer.changeControlMode(BoidRenderer::ControlMode::Default);
+                        }
                     }
                 }
             }
@@ -120,8 +135,17 @@ public:
             }
 
             // Rendering
+            bufferUpdater.update(flock.boids());
             lwvl::clear();
-            flock.draw();
+
+            if (renderVision) {
+                visionRenderer.draw();
+            }
+
+            if (renderBoids) {
+                boidRenderer.draw();
+            }
+
             m_window.swapBuffers();
 
             // Framerate display
