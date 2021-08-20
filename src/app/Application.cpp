@@ -87,12 +87,22 @@ public:
         bool renderBoids = true;
         bool renderVision = false;
 
+#ifndef NDEBUG
+        double eventDurationAverage = 0.0;
+        double updateDurationAverage = 0.0;
+        double renderDurationAverage = 0.0;
+#endif
+
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         for (int frameCount = 0; !m_window.shouldClose(); frameCount++) {
             // Calculate the time since last frame
             const auto dt = static_cast<float>(delta(frameStart));
             frameStart = high_resolution_clock::now();
+
+#ifndef NDEBUG
+            auto averageStart = high_resolution_clock::now();
+#endif
 
             // Fill event stack
             Window::update();
@@ -129,10 +139,20 @@ public:
                 }
             }
 
+#ifndef NDEBUG
+            eventDurationAverage += delta(averageStart);
+            averageStart = high_resolution_clock::now();
+#endif
+
             // Update engine
             if (!paused) {
                 flock.update(dt);
             }
+
+#ifndef NDEBUG
+            updateDurationAverage += delta(averageStart);
+            averageStart = high_resolution_clock::now();
+#endif
 
             // Rendering
             bufferUpdater.update(flock.boids());
@@ -148,14 +168,27 @@ public:
 
             m_window.swapBuffers();
 
+#ifndef NDEBUG
+            renderDurationAverage += delta(averageStart);
+#endif
+
             // Framerate display
             if ((frameCount & 63) == 0) {
 #ifndef NDEBUG
                 double fps = static_cast<double>(frameCount) / delta(secondStart);
-                std::cout << "Average framerate for last " << frameCount << " frames: " << fps << std::endl;
+                std::cout << "Average framerate for last " << frameCount << " frames: " << fps << " | " << 1.0 / fps << 's' << std::endl;
+
+                const auto frameth = 1.0 / static_cast<double>(frameCount);
+                std::cout << "Event updates: " << eventDurationAverage * frameth << "s, ";
+                std::cout << "Flock updates: " << updateDurationAverage * frameth << "s, ";
+                std::cout << "Rendering: " << renderDurationAverage * frameth << 's' << std::endl;
+                std::cout << std::endl;
 
                 // Reset time variables.
                 secondStart = high_resolution_clock::now();
+                eventDurationAverage = 0.0;
+                updateDurationAverage = 0.0;
+                renderDurationAverage = 0.0;
 #endif
                 frameCount = 0;
             }
