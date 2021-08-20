@@ -26,7 +26,7 @@ struct Boid {
     static constexpr float speedWeight = 0.0625f;       // Desire to move at full speed. Helps with separation.
 
     // Non-static members
-    Vector position, velocity, acceleration;
+    Vector position, velocity;
 
     // Methods
     [[nodiscard]] Vector steer(Vector const& vec) const;

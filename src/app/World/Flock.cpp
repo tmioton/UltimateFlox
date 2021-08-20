@@ -13,7 +13,6 @@ Flock::Flock(size_t flock_size, int width, int height) :
         Vector offsets {cosf(angle), sinf(angle)};
         boid.position = 50.0f * offsets;
         boid.velocity = magnitude(10.0f * offsets + angle, Boid::maxSpeed);
-        boid.acceleration.y = -1.0f;
     }
 }
 
@@ -86,17 +85,17 @@ void Flock::update(float dt) {
             cohesion = currentBoid.steer(cohesion);
         }
 
-        currentBoid.acceleration += centerSteer * Boid::primadonnaWeight;
-        currentBoid.acceleration += fullSpeed * Boid::speedWeight;
-        currentBoid.acceleration += separation * Boid::separationWeight;
-        currentBoid.acceleration += alignment * Boid::alignmentWeight;
-        currentBoid.acceleration += cohesion * Boid::cohesionWeight;
+        Vector acceleration {0.0f, 0.0f};
+        acceleration += centerSteer * Boid::primadonnaWeight;
+        acceleration += fullSpeed * Boid::speedWeight;
+        acceleration += separation * Boid::separationWeight;
+        acceleration += alignment * Boid::alignmentWeight;
+        acceleration += cohesion * Boid::cohesionWeight;
 
-        currentBoid.acceleration = magnitude(currentBoid.acceleration, Boid::maxForce);
+        acceleration = magnitude(acceleration, Boid::maxForce);
 
-        currentBoid.velocity += currentBoid.acceleration;
+        currentBoid.velocity += acceleration;
         currentBoid.position += currentBoid.velocity * dt;
-        currentBoid.acceleration *= 0.0f;
     }
 
     // Move array pointers

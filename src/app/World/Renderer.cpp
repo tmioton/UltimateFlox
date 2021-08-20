@@ -68,7 +68,6 @@ BoidRenderer::BoidRenderer(size_t size, int width, int height, lwvl::ArrayBuffer
     offsetBuffer.bind();
     layout.attribute(2, GL_FLOAT, sizeof(Boid), 0, 1);
     layout.attribute(2, GL_FLOAT, sizeof(Boid), 2 * sizeof(float), 1);
-    layout.attribute(2, GL_FLOAT, sizeof(Boid), 4 * sizeof(float), 1);
 }
 
 void BoidRenderer::changeRenderMode(RenderMode mode) {
