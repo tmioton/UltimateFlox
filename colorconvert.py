@@ -17,6 +17,7 @@ def convert(code) -> int:
             print(f"Invalid hex code:\n{' '.join(codes)}\n{(' ' * (i * 4 + i))}^^^^", file=stderr)
             return 1
     print(f", ".join(map('{0}f'.format, values)))
+    return 0
 
 
 if __name__ == '__main__':
