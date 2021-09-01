@@ -42,6 +42,7 @@ public:
     explicit DataBufferUpdater(size_t size);
     lwvl::ArrayBuffer& buffer();
     void update(BoidArray const &array);
+    void resize(size_t size);
 
 private:
     // Don't need the offset store because we want to upload the boid data as-is
@@ -64,6 +65,7 @@ public:
     BoidRenderer(size_t size, int width, int height, lwvl::ArrayBuffer& offsetBuffer);
     void changeRenderMode(RenderMode mode);
     void changeControlMode(ControlMode mode);
+    void resize(size_t size);
     void draw();
 
 private:
@@ -83,6 +85,7 @@ private:
 class VisionRenderer {
 public:
     VisionRenderer(size_t size, int width, int height, lwvl::ArrayBuffer& offsetBuffer);
+    void resize(size_t size);
     void draw();
 
 private:

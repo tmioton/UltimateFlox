@@ -15,6 +15,12 @@ void DataBufferUpdater::update(const BoidArray &array) {
     dataBuffer.update(array.get(), flockSize);
 }
 
+void DataBufferUpdater::resize(size_t size) {
+    dataBuffer.bind();
+    dataBuffer.construct<float>(nullptr, size * 6);
+    flockSize = size;
+}
+
 BoidRenderer::BoidRenderer(size_t size, int width, int height, lwvl::ArrayBuffer& offsetBuffer) {
     const glm::vec2 bounds{calculateBounds(static_cast<float>(width) / static_cast<float>(height))};
 
@@ -126,6 +132,11 @@ void BoidRenderer::draw() {
     );
 }
 
+void BoidRenderer::resize(size_t size) {
+    layout.bind();
+    layout.instances(size);
+}
+
 VisionRenderer::VisionRenderer(size_t size, int width, int height, lwvl::ArrayBuffer &offsetBuffer) {
     const glm::vec2 bounds{calculateBounds(static_cast<float>(width) / static_cast<float>(height))};
 
@@ -156,4 +167,9 @@ void VisionRenderer::draw() {
 
     control.uniform("scale").set1f(Boid::disruptiveRadius);
     layout.drawArrays(lwvl::PrimitiveMode::LineStrip, 17);
+}
+
+void VisionRenderer::resize(size_t size) {
+    layout.bind();
+    layout.instances(size);
 }

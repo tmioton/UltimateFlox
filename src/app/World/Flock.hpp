@@ -24,4 +24,5 @@ public:
     void update(float dt);
 
     BoidArray& boids();
+    void resize(size_t size);
 };

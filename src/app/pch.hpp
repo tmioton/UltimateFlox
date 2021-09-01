@@ -6,12 +6,11 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/fast_square_root.hpp>
 #include <glm/gtx/norm.hpp>
-#include <cmath>
-#include <array>
 #include <iostream>
 #include <optional>
 #include <functional>
 #include <variant>
 #include <vector>
+#include <array>
 #include <unordered_map>
 #include <utility>

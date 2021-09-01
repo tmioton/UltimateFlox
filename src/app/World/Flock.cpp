@@ -107,3 +107,22 @@ void Flock::update(float dt) {
 BoidArray &Flock::boids() {
     return m_primaryFlock;
 }
+
+void Flock::resize(size_t size) {
+    if (size > flockSize) {
+        BoidArray old = std::move(m_primaryFlock);
+        m_primaryFlock = std::make_unique<Boid[]>(size);
+        m_secondaryFlock = std::make_unique<Boid[]>(size);
+
+        const float tauOverSize = glm::two_pi<float>() / static_cast<float>(flockSize);
+        for (size_t i = flockSize; i < size; i++) {
+            Boid &boid = m_primaryFlock[i];
+            auto angle = static_cast<float>(i) * tauOverSize;
+            Vector offsets {cosf(angle), sinf(angle)};
+            boid.position = 50.0f * offsets;
+            boid.velocity = magnitude(10.0f * offsets + angle, Boid::maxSpeed);
+        }
+    }
+
+    flockSize = size;
+}
