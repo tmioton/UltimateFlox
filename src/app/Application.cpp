@@ -40,23 +40,21 @@ public:
         flockSize(size), p_flock(size, width, height), p_dataBuffer(size),
         p_boidRenderer(size, width, height, p_dataBuffer.buffer()),
         p_visionRenderer(size, width, height, p_dataBuffer.buffer()),
-        width(width), height(height) {
+        width(width), height(height) {}
 
-    }
-
-    Flock& flock() {
+    Flock &flock() {
         return p_flock;
     }
 
-    DataBufferUpdater& dataBuffer() {
+    DataBufferUpdater &dataBuffer() {
         return p_dataBuffer;
     }
 
-    BoidRenderer& boidRenderer() {
+    BoidRenderer &boidRenderer() {
         return p_boidRenderer;
     }
 
-    VisionRenderer& visionRenderer() {
+    VisionRenderer &visionRenderer() {
         return p_visionRenderer;
     }
 };
@@ -107,10 +105,10 @@ public:
                 flockSize = std::stoull(line);
                 break;
             }
-        } catch(std::ios_base::failure &fb) {
+        } catch (std::ios_base::failure &fb) {
             //std::cout << fb.what() << ". Defaulting to 8 boids." << std::endl;
             std::cout << "flox.txt not found. Defaulting to " << flockSize << " boids." << std::endl;
-        } catch(std::invalid_argument &ia) {
+        } catch (std::invalid_argument &ia) {
             std::cout << "Could not convert contents of flock.txt. Defaulting to 8 boids." << std::endl;
         }
 
@@ -133,10 +131,10 @@ public:
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         for (int frameCount = 0; !m_window.shouldClose(); frameCount++) {
-            Flock& flock = state.flock();
-            DataBufferUpdater& dataBuffer = state.dataBuffer();
-            BoidRenderer& bRender = state.boidRenderer();
-            VisionRenderer& vRender = state.visionRenderer();
+            Flock &flock = state.flock();
+            DataBufferUpdater &dataBuffer = state.dataBuffer();
+            BoidRenderer &bRender = state.boidRenderer();
+            VisionRenderer &vRender = state.visionRenderer();
 
             // Calculate the time since last frame
             const auto dt = static_cast<float>(delta(frameStart));
@@ -160,7 +158,7 @@ public:
                 // Handle window close.
                 if (concrete.type == Event::Type::KeyRelease
                     && std::get<KeyboardEvent>(concrete.event).key == GLFW_KEY_ESCAPE
-                ) {
+                    ) {
                     m_window.shouldClose(true);
                 }
 
@@ -184,8 +182,7 @@ public:
 
                         std::cout << key_name;
                     }
-                }
-                else {
+                } else {
                     if (concrete.type == Event::Type::KeyRelease) {
                         KeyboardEvent &key_event = std::get<KeyboardEvent>(concrete.event);
 
@@ -194,7 +191,7 @@ public:
                             state.consoleOpen = true;
                         } else
 
-                        // Boid keybinds.
+                            // Boid keybinds.
                         if (key_event.key == GLFW_KEY_SPACE) {
                             state.paused ^= true;
                         } else if (key_event.key == GLFW_KEY_1) {
