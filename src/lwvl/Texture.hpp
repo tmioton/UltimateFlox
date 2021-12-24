@@ -89,98 +89,74 @@ namespace lwvl {
     };
 
     namespace detail {
-        class TextureID {
+        class TextureInfo {
         protected:
             static unsigned int reserve() {
                 unsigned int tempID;
                 glGenTextures(1, &tempID);
                 return tempID;
             }
-
         public:
-            ~TextureID() {
-                glDeleteTextures(1, &textureID);
+            ~TextureInfo() {
+                glDeleteTextures(1, &id);
             }
 
-            explicit operator uint32_t() const {
-                return textureID;
+            explicit operator GLuint() const {
+                return id;
             }
 
-            const uint32_t textureID = reserve();
+            const GLuint id = reserve();
         };
+    }
 
-        enum class TextureTarget {
+    class Texture {
+        friend Framebuffer;
+    public:
+        enum class Target {
+            Texture1D = GL_TEXTURE_1D,
+            Texture1DArray = GL_TEXTURE_1D_ARRAY,
             Texture2D = GL_TEXTURE_2D,
+            Texture2DMultisample = GL_TEXTURE_2D_MULTISAMPLE,
+            Texture2DArray = GL_TEXTURE_2D_ARRAY,
+            Texture2DArrayMultisample = GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
+            TextureRectangle = GL_TEXTURE_RECTANGLE,
+            TextureCubeMap = GL_TEXTURE_CUBE_MAP,
+            TextureCubeMapArray = GL_TEXTURE_CUBE_MAP_ARRAY,
             Texture3D = GL_TEXTURE_3D,
             TextureBuffer = GL_TEXTURE_BUFFER
         };
 
-        template<TextureTarget target>
-        class TextureBase {
-        protected:
-            // Offsite Data - to avoid copying buffers on the GPU for shallow copies of this class.
-            std::shared_ptr<TextureID> m_offsite_id = std::make_shared<TextureID>();
+        Texture();
+        explicit Texture(Target t);
 
-            // Local Data
-            uint32_t m_id = static_cast<uint32_t>(*m_offsite_id);
-            uint32_t m_slot = 0;
+        [[nodiscard]] GLuint slot() const;
+        void slot(GLuint value);
+        void filter(Filter value);
+        void bind();
 
-            friend Framebuffer;
-        public:
-            [[nodiscard]] uint32_t slot() const {
-                return m_slot;
-            }
-
-            void slot(uint32_t value) {
-                m_slot = value;
-                //int32_t maxTextureUnits;
-                //glGetIntegerv(GL_MAX_TEXTURE_UNITS, &maxTextureUnits);
-                //
-                //if (static_cast<uint32_t>(maxTextureUnits) < value) {
-                //    m_slot = value;
-                //} else {
-                //    throw std::exception("Max Texture Units Exceeded.");
-                //}
-            }
-
-            void filter(Filter value) {
-                const auto GLTarget = static_cast<GLenum>(target);
-                const auto GLFilter = static_cast<GLenum>(value);
-                glTexParameteri(GLTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GLTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GLTarget, GL_TEXTURE_MIN_FILTER, GLFilter);
-                glTexParameteri(GLTarget, GL_TEXTURE_MAG_FILTER, GLFilter);
-            }
-
-            void bind() {
-                if (m_id != 0) {
-                    glActiveTexture(GL_TEXTURE0 + m_slot);
-                    glBindTexture(static_cast<GLenum>(target), m_id);
-                }
-            }
-        };
-    }
-
-    class Texture2D : public detail::TextureBase<detail::TextureTarget::Texture2D> {
-    public:
         void construct(
-            uint32_t width, uint32_t height, const void *pixels,
-            ChannelLayout internalFormat = ChannelLayout::R8UI, ChannelOrder format = ChannelOrder::Red,
-            ByteFormat type = ByteFormat::Byte
+            int width, int height,
+            ChannelLayout layout, ChannelOrder order, ByteFormat type,
+            const void *pixels
         );
-    };
 
-    class Texture3D : public detail::TextureBase<detail::TextureTarget::Texture3D> {
-    public:
         void construct(
-            uint32_t width, uint32_t height, uint32_t depth, const void *pixels,
-            ChannelLayout internalFormat = ChannelLayout::R8UI, ChannelOrder format = ChannelOrder::Red,
-            ByteFormat type = ByteFormat::Byte
+            int width, int height, int depth,
+            ChannelLayout layout, ChannelOrder order, ByteFormat type,
+            const void *pixels
         );
-    };
 
-    class BufferTexture : public detail::TextureBase<detail::TextureTarget::TextureBuffer> {
-    public:
-        void construct(TextureBuffer &buffer, ChannelLayout internalFormat = ChannelLayout::R8UI);
+        void construct(TextureBuffer &buffer, ChannelLayout layout);
+
+    private:
+        [[nodiscard]] inline GLenum target() const;
+
+        // Offsite data for easy copies.
+        std::shared_ptr<detail::TextureInfo> m_info;
+
+        // Local data to avoid lookups.
+        GLuint m_id = static_cast<GLuint>(*m_info);
+        Target m_target;
+        GLuint m_slot = 0;
     };
 }

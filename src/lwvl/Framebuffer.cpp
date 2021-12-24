@@ -15,11 +15,23 @@ void lwvl::Framebuffer::bind() {
     glBindFramebuffer(GL_FRAMEBUFFER, m_id);
 }
 
-void lwvl::Framebuffer::attach(lwvl::Attachment point, lwvl::Texture2D &texture) {
+void lwvl::Framebuffer::attach(lwvl::Attachment point, lwvl::Texture &texture, int level) {
+    glFramebufferTexture(GL_FRAMEBUFFER, static_cast<GLenum>(point), texture.m_id, level);
+}
+
+void lwvl::Framebuffer::attach1D(lwvl::Attachment point, lwvl::Texture &texture, int level) {
+    glFramebufferTexture1D(GL_FRAMEBUFFER, static_cast<GLenum>(point), texture.target(), texture.m_id, level);
+}
+
+void lwvl::Framebuffer::attach2D(lwvl::Attachment point, lwvl::Texture &texture, int level) {
     glFramebufferTexture2D(
         GL_FRAMEBUFFER, static_cast<GLenum>(point),
-        GL_TEXTURE_2D, texture.m_id, 0
+        texture.target(), texture.m_id, level
     );
+}
+
+void lwvl::Framebuffer::attach3D(lwvl::Attachment point, lwvl::Texture &texture, int layer, int level) {
+    glFramebufferTexture3D(GL_FRAMEBUFFER, static_cast<GLenum>(point), texture.target(), texture.m_id, level, layer);
 }
 
 void lwvl::Framebuffer::clear() {

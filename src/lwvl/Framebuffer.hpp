@@ -3,6 +3,8 @@
 #include "pch.hpp"
 #include "Texture.hpp"
 
+// Look into adding exceptions based on https://docs.gl/gl4/glFramebufferTexture
+
 namespace lwvl {
     enum class Attachment {
         Color = GL_COLOR_ATTACHMENT0,
@@ -10,7 +12,7 @@ namespace lwvl {
         Stencil = GL_STENCIL_ATTACHMENT
     };
 
-    class Texture2D;
+    class Texture;
 
     class Framebuffer {
         uint32_t m_id = 0;
@@ -20,7 +22,10 @@ namespace lwvl {
 
         ~Framebuffer();
 
-        void attach(Attachment attachment, Texture2D &texture);
+        void attach(Attachment, Texture &, int level = 0);
+        void attach1D(Attachment, Texture &, int level = 0);
+        void attach2D(Attachment, Texture &, int level = 0);
+        void attach3D(Attachment, Texture &, int layer, int level = 0);
 
         void bind();
 
