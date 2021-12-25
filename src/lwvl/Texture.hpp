@@ -88,30 +88,18 @@ namespace lwvl {
         DepthStencil = GL_DEPTH_STENCIL
     };
 
-    namespace detail {
-        class TextureInfo {
-        protected:
-            static unsigned int reserve() {
-                unsigned int tempID;
-                glGenTextures(1, &tempID);
-                return tempID;
-            }
-        public:
-            ~TextureInfo() {
-                glDeleteTextures(1, &id);
-            }
-
-            explicit operator GLuint() const {
-                return id;
-            }
-
-            const GLuint id = reserve();
-        };
-    }
-
     class Texture {
         friend Framebuffer;
     public:
+        class Info {
+        protected:
+            static unsigned int reserve();
+        public:
+            ~Info();
+            explicit operator GLuint() const;
+            const GLuint id = reserve();
+        };
+
         enum class Target {
             Texture1D = GL_TEXTURE_1D,
             Texture1DArray = GL_TEXTURE_1D_ARRAY,
@@ -135,15 +123,24 @@ namespace lwvl {
         void bind();
 
         void construct(
+            int width,
+            ChannelLayout layout, ChannelOrder order, ByteFormat type,
+            const void *pixels, int level = 0
+        );
+
+        void construct(
             int width, int height,
             ChannelLayout layout, ChannelOrder order, ByteFormat type,
-            const void *pixels
+            const void *pixels, int level = 0
         );
+
+        void construct(int width, int height, int samples, ChannelLayout layout, bool fixedSampleLocations = false);
+        void construct(int width, int height, int depth, int samples, ChannelLayout layout, bool fixedSampleLocations = false);
 
         void construct(
             int width, int height, int depth,
             ChannelLayout layout, ChannelOrder order, ByteFormat type,
-            const void *pixels
+            const void *pixels, int level = 0
         );
 
         void construct(TextureBuffer &buffer, ChannelLayout layout);
@@ -152,7 +149,7 @@ namespace lwvl {
         [[nodiscard]] inline GLenum target() const;
 
         // Offsite data for easy copies.
-        std::shared_ptr<detail::TextureInfo> m_info;
+        std::shared_ptr<Info> m_info;
 
         // Local data to avoid lookups.
         GLuint m_id = static_cast<GLuint>(*m_info);
