@@ -1,6 +1,4 @@
 #include "pch.hpp"
-#include "GLDebug.hpp"
-#include "Common.hpp"
 #include "Core/Window.hpp"
 #include "World/Flock.hpp"
 

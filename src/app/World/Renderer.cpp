@@ -37,18 +37,18 @@ BoidRenderer::BoidRenderer(size_t size, int width, int height, lwvl::ArrayBuffer
         lwvl::FragmentShader::readFile("Data/Shaders/speeddebug.frag")
     );
     boidSpeedDebugControl.bind();
-    boidSpeedDebugControl.uniform("maxSpeed").set1f(Boid::maxSpeed);
+    boidSpeedDebugControl.uniform("maxSpeed").set(Boid::maxSpeed);
 
     for (auto &control : controls) {
         control.bind();
-        control.uniform("scale").set1f(Boid::scale);
-        control.uniform("projection").set2DOrthographic(bounds.y, -bounds.y, bounds.x, -bounds.x);
+        control.uniform("scale").set(Boid::scale);
+        control.uniform("projection").ortho2D(bounds.y, -bounds.y, bounds.x, -bounds.x);
 
         //control.uniform("color").set3f(1.00000f, 0.00000f, 0.00000f);  // Red
         //control.uniform("color").set3f(1.00000f, 1.00000f, 1.00000f);  // White
         //control.uniform("color").set3f(0.05098f, 0.19608f, 0.30196f);  // Prussian Blue
         //control.uniform("color").set3f(0.30980f, 0.00392f, 0.27843f);  // Tyrian Purple
-        control.uniform("color").set3f(0.71373f, 0.09020f, 0.29412f);  // Pictoral Carmine
+        control.uniform("color").set(0.71373f, 0.09020f, 0.29412f);  // Pictoral Carmine
         //control.uniform("color").set3f(0.17647f, 0.18824f, 0.27843f);  // Space Cadet
         //control.uniform("color").set3f(0.76471f, 0.92157f, 0.47059f);  // Yellow Green Crayon
         //control.uniform("color").set3f(0.91765f, 0.88235f, 0.31765f);  // Hard Yellow
@@ -145,7 +145,7 @@ VisionRenderer::VisionRenderer(size_t size, int width, int height, lwvl::ArrayBu
     lwvl::FragmentShader visionFragmentModifier{lwvl::FragmentShader::readFile("Data/Shaders/default.frag")};
     control.link(visionVertexModifier, visionFragmentModifier);
     control.bind();
-    control.uniform("projection").set2DOrthographic(bounds.y, -bounds.y, bounds.x, -bounds.x);
+    control.uniform("projection").ortho2D(bounds.y, -bounds.y, bounds.x, -bounds.x);
 
     layout.bind();
     layout.instances(size);
@@ -162,10 +162,10 @@ void VisionRenderer::draw() {
     control.bind();
     layout.bind();
 
-    control.uniform("scale").set1f(Boid::cohesiveRadius);
+    control.uniform("scale").set(Boid::cohesiveRadius);
     layout.drawArrays(lwvl::PrimitiveMode::LineStrip, 17);
 
-    control.uniform("scale").set1f(Boid::disruptiveRadius);
+    control.uniform("scale").set(Boid::disruptiveRadius);
     layout.drawArrays(lwvl::PrimitiveMode::LineStrip, 17);
 }
 

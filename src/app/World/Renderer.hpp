@@ -1,11 +1,6 @@
 #pragma once
 
 #include "pch.hpp"
-#include "Shader.hpp"
-#include "VertexArray.hpp"
-#include "Buffer.hpp"
-#include "Texture.hpp"
-#include "Framebuffer.hpp"
 
 #include "Boid.hpp"
 #include "World.hpp"
@@ -73,10 +68,11 @@ private:
 
     lwvl::ShaderProgram activeControl;
     lwvl::VertexArray layout;
-    lwvl::ArrayBuffer vertices{lwvl::Usage::Static};
-    lwvl::ElementBuffer indices{lwvl::Usage::Static};
+    lwvl::ArrayBuffer vertices{lwvl::ArrayBuffer::Usage::Static};
+    lwvl::ElementBuffer indices{lwvl::ElementBuffer::Usage::Static};
 
     lwvl::ShaderProgram controls[2];
+    lwvl::WorldBlock worldBlock;
 
     lwvl::PrimitiveMode renderMode = lwvl::PrimitiveMode::TriangleFan;
     int32_t indexCount = 10;
@@ -91,5 +87,5 @@ public:
 private:
     lwvl::ShaderProgram control;
     lwvl::VertexArray layout;
-    lwvl::ArrayBuffer vertices{lwvl::Usage::Static};
+    lwvl::ArrayBuffer vertices{lwvl::ArrayBuffer::Usage::Static};
 };

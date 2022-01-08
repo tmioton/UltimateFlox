@@ -1,10 +1,5 @@
 #pragma once
 
-#include "Shader.hpp"
-#include "Buffer.hpp"
-#include "VertexArray.hpp"
-#include "Common.hpp"
-
 #include "World.hpp"
 #include "Boid.hpp"
 #include "Renderer.hpp"
