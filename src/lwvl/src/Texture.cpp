@@ -1,117 +1,153 @@
 #include "lwvl/lwvl.hpp"
+#include <iostream>
 
 
-unsigned int lwvl::Texture::Info::reserve() {
-    unsigned int tempID;
-    glGenTextures(1, &tempID);
+GLuint lwvl::Texture::ID::reserve(GLenum target) {
+    GLuint tempID;
+    glCreateTextures(target, 1, &tempID);
     return tempID;
 }
 
-lwvl::Texture::Info::~Info() {
+lwvl::Texture::ID::ID(Target target) : id(reserve(static_cast<GLenum>(target))) {}
+
+lwvl::Texture::ID::~ID() {
     glDeleteTextures(1, &id);
 }
 
-lwvl::Texture::Info::operator GLuint() const {
-    return id;
+lwvl::Region::Region(GLsizei l, GLint o) : length(l), offset(o) {}
+
+GLuint lwvl::Texture::id() const {
+    return m_offsite_id->id;
+}
+
+lwvl::Texture::Target lwvl::Texture::target() const {
+    return m_target;
 }
 
 
-lwvl::Texture::Texture() : m_target(lwvl::Texture::Target::Texture2D) {}
+lwvl::Texture::Texture() :
+    m_offsite_id(std::make_shared<const lwvl::Texture::ID>(lwvl::Texture::Target::Texture2D)),
+    m_target(lwvl::Texture::Target::Texture2D) {}
 
-lwvl::Texture::Texture(lwvl::Texture::Target t) : m_target(t) {}
+lwvl::Texture::Texture(lwvl::Texture::Target t) :
+    m_offsite_id(std::make_shared<const lwvl::Texture::ID>(t)),
+    m_target(t) {}
 
-GLuint lwvl::Texture::slot() const {
-    return m_slot;
+void lwvl::Texture::format(GLsizei width, lwvl::ChannelLayout layout, GLsizei levels) {
+    glTextureStorage1D(id(), levels, static_cast<GLenum>(layout), width);
 }
 
-void lwvl::Texture::slot(GLuint value) {
-    m_slot = value;
-    //int32_t maxTextureUnits;
-    //glGetIntegerv(GL_MAX_TEXTURE_UNITS, &maxTextureUnits);
-    //
-    //if (static_cast<uint32_t>(maxTextureUnits) < value) {
-    //    m_slot = value;
-    //} else {
-    //    throw std::exception("Max Texture Units Exceeded.");
-    //}
+void lwvl::Texture::format(GLsizei width, GLsizei height, lwvl::ChannelLayout layout, GLsizei levels) {
+    glTextureStorage2D(id(), levels, static_cast<GLenum>(layout), width, height);
+}
+
+void lwvl::Texture::format(GLsizei width, GLsizei height, GLsizei depth, lwvl::ChannelLayout layout, GLsizei levels) {
+    glTextureStorage3D(id(), levels, static_cast<GLenum>(layout), width, height, depth);
+}
+
+void lwvl::Texture::format(lwvl::Buffer const &buffer, lwvl::ChannelLayout layout) {
+    glTextureBuffer(id(), static_cast<GLenum>(layout), buffer.id());
+}
+
+void lwvl::Texture::format(lwvl::Buffer const &buffer, lwvl::ChannelLayout layout, GLsizeiptr size, GLintptr offset) {
+    glTextureBufferRange(id(), static_cast<GLenum>(layout), buffer.id(), offset, size);
 }
 
 void lwvl::Texture::filter(lwvl::Filter value) {
-    const auto GLTarget = target();
     const auto GLFilter = static_cast<GLint>(value);
-    glTexParameteri(GLTarget, GL_TEXTURE_MIN_FILTER, GLFilter);
-    glTexParameteri(GLTarget, GL_TEXTURE_MAG_FILTER, GLFilter);
+    glTextureParameteri(id(), GL_TEXTURE_MIN_FILTER, GLFilter);
+    glTextureParameteri(id(), GL_TEXTURE_MAG_FILTER, GLFilter);
 }
 
-void lwvl::Texture::bind() {
-    if (m_id != 0) {
-        glActiveTexture(GL_TEXTURE0 + m_slot);
-        glBindTexture(target(), m_id);
-    }
+void lwvl::Texture::bind(GLuint slot) {
+    glBindTextureUnit(slot, id());
+}
+
+void lwvl::Texture::clear(GLuint slot) {
+    glBindTextureUnit(slot, 0);
 }
 
 void lwvl::Texture::construct(
-    int width, lwvl::ChannelLayout layout, lwvl::ChannelOrder order, lwvl::ByteFormat type,
-    const void *pixels, int level
+    lwvl::Region x, GLsizei level,
+    lwvl::ChannelOrder order, lwvl::ByteFormat type,
+    const void *pixels
 ) {
-    glTexImage1D(
-        target(), level, static_cast<GLint>(layout), width, 0,
-        static_cast<GLenum>(order), static_cast<GLenum>(type),
+    glTextureSubImage1D(
+        id(), level,
+        x.offset,
+        x.length,
+        static_cast<GLenum>(order),
+        static_cast<GLenum>(type),
         pixels
     );
 }
 
 void lwvl::Texture::construct(
-    int width, int height, lwvl::ChannelLayout layout, lwvl::ChannelOrder order,
-    lwvl::ByteFormat type, const void *pixels, int level
+    lwvl::Region x, lwvl::Region y, GLsizei level,
+    lwvl::ChannelOrder order, lwvl::ByteFormat type,
+    void const *pixels
 ) {
-    glTexImage2D(
-        target(), level, static_cast<GLint>(layout), width, height, 0,
-        static_cast<GLenum>(order), static_cast<GLenum>(type), pixels
+    glTextureSubImage2D(
+        id(), level,
+        x.offset, y.offset,
+        x.length, y.length,
+        static_cast<GLenum>(order),
+        static_cast<GLenum>(type),
+        pixels
     );
 }
 
 void lwvl::Texture::construct(
-    int width, int height, int samples,
-    lwvl::ChannelLayout layout, bool fixedSampleLocations
+    lwvl::Region x, lwvl::Region y, lwvl::Region z,
+    GLsizei level, lwvl::ChannelOrder order, lwvl::ByteFormat type,
+    const void *pixels
 ) {
-    glTexImage2DMultisample(
-        target(), samples, static_cast<GLenum>(layout),
-        width, height, fixedSampleLocations
+    glTextureSubImage3D(
+        id(), level,
+        x.offset, y.offset, z.offset,
+        x.length, y.length, z.length,
+        static_cast<GLenum>(order),
+        static_cast<GLenum>(type),
+        pixels
     );
 }
 
 void lwvl::Texture::construct(
-    int width, int height, int depth,
-    lwvl::ChannelLayout layout,
-    lwvl::ChannelOrder order,
-    lwvl::ByteFormat type,
-    const void *pixels, int level
+    GLsizei width, GLsizei level,
+    lwvl::ChannelOrder order, lwvl::ByteFormat type,
+    void const *pixels
 ) {
-    glTexImage3D(
-        target(), level, static_cast<GLint>(layout),
-        width, height, depth, 0, static_cast<GLenum>(order),
-        static_cast<GLenum>(type), pixels
+    glTextureSubImage1D(
+        id(), level, 0, width,
+        static_cast<GLenum>(order),
+        static_cast<GLenum>(type),
+        pixels
     );
 }
 
 void lwvl::Texture::construct(
-    int width, int height, int depth, int samples, lwvl::ChannelLayout layout, bool fixedSampleLocations
+    GLsizei width, GLsizei height, GLsizei level,
+    lwvl::ChannelOrder order, lwvl::ByteFormat type,
+    const void *pixels
 ) {
-    glTexImage3DMultisample(
-        target(), samples, static_cast<GLenum>(layout),
-        width, height, depth, fixedSampleLocations
+    glTextureSubImage2D(
+        id(), level, 0, 0, width, height,
+        static_cast<GLenum>(order),
+        static_cast<GLenum>(type),
+        pixels
     );
 }
 
-void lwvl::Texture::construct(lwvl::TextureBuffer &buffer, lwvl::ChannelLayout layout) {
-    glTexBuffer(GL_TEXTURE_BUFFER, static_cast<GLenum>(layout), buffer.id());
-}
-
-GLenum lwvl::Texture::target() const {
-    return static_cast<GLenum>(m_target);
-}
-
-GLuint lwvl::Texture::id() const {
-    return m_id;
+void lwvl::Texture::construct(
+    GLsizei width, GLsizei height, GLsizei depth, GLsizei level,
+    lwvl::ChannelOrder order, lwvl::ByteFormat type,
+    const void *pixels
+) {
+    glTextureSubImage3D(
+        id(), level, 0, 0, 0,
+        width, height, depth,
+        static_cast<GLenum>(order),
+        static_cast<GLenum>(type),
+        pixels
+    );
 }

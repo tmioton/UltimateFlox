@@ -1,6 +1,7 @@
 #include "pch.hpp"
 #include "Core/Window.hpp"
 #include "World/Flock.hpp"
+#include "Render/FlockRenderer.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -14,48 +15,6 @@ using namespace std::chrono;
 //   . Compute shaders
 //   . Spatial partitioning
 //   . Dev Console
-
-
-// Commands stored as function pointers in a map
-// We pass this worldState to all commands
-class WorldState {
-    size_t flockSize;
-
-    Flock p_flock;
-    DataBufferUpdater p_dataBuffer;
-    BoidRenderer p_boidRenderer;
-    VisionRenderer p_visionRenderer;
-
-public:
-    const int width, height;
-    bool consoleOpen = false;
-    bool paused = false;
-    bool debugVisual = false;
-    bool renderBoids = true;
-    bool renderVision = false;
-
-    WorldState(size_t size, int width, int height) :
-        flockSize(size), p_flock(size, width, height), p_dataBuffer(size),
-        p_boidRenderer(size, width, height, p_dataBuffer.buffer()),
-        p_visionRenderer(size, width, height, p_dataBuffer.buffer()),
-        width(width), height(height) {}
-
-    Flock &flock() {
-        return p_flock;
-    }
-
-    DataBufferUpdater &dataBuffer() {
-        return p_dataBuffer;
-    }
-
-    BoidRenderer &boidRenderer() {
-        return p_boidRenderer;
-    }
-
-    VisionRenderer &visionRenderer() {
-        return p_visionRenderer;
-    }
-};
 
 
 static inline double delta(time_point<steady_clock> start) {
@@ -107,7 +66,35 @@ int run(int width, int height) {
         std::cout << "Could not convert contents of flock.txt. Defaulting to 8 boids." << std::endl;
     }
 
-    WorldState state(flockSize, width, height);
+    // Move all of this to Register type variables
+    bool consoleOpen = false;
+    bool paused = false;
+    bool debugVisual = false;
+    bool renderBoids = true;
+    bool renderVision = false;
+
+    Flock flock{flockSize, width, height};
+    FlockRenderer renderer{flockSize};
+
+    ClassicModel classicModel{renderer.model<ClassicModel>()};
+    FilledModel filledModel{renderer.model<FilledModel>()};
+    VisionModel visionModel{renderer.model<VisionModel>()};
+    BoidModel* activeModel = &filledModel;
+
+    const float aspect = static_cast<float>(width) / static_cast<float>(height);
+    const Vector bounds{calculateBounds(aspect)};
+    //Projection projection{glm::perspective(90.0f, aspect, 1.0f, 10.0f)};
+    Projection projection{
+        1.0f / bounds.x, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f / bounds.y, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+
+    DefaultBoidShader defaultBoidShader{renderer.control<DefaultBoidShader>(projection)};
+    SpeedDebugShader speedDebugShader{renderer.control<SpeedDebugShader>(projection)};
+    VisionShader visionShader{renderer.control<VisionShader>(projection)};
+    BoidShader* activeShader = &defaultBoidShader;
 
 #ifndef NDEBUG
     std::cout << "Setup took " << delta(setupStart) << " seconds." << std::endl;
@@ -116,19 +103,14 @@ int run(int width, int height) {
     auto frameStart = high_resolution_clock::now();
 
 #ifndef NDEBUG
-    double eventDurationAverage = 0.0;
+        double eventDurationAverage = 0.0;
         double updateDurationAverage = 0.0;
         double renderDurationAverage = 0.0;
 #endif
 
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     for (int frameCount = 0; !window.shouldClose(); frameCount++) {
-        Flock &flock = state.flock();
-        DataBufferUpdater &dataBuffer = state.dataBuffer();
-        BoidRenderer &bRender = state.boidRenderer();
-        VisionRenderer &vRender = state.visionRenderer();
-
         // Calculate the time since last frame
         const auto dt = static_cast<float>(delta(frameStart));
         frameStart = high_resolution_clock::now();
@@ -156,7 +138,7 @@ int run(int width, int height) {
             }
 
             // Handle events differently if the console's open.
-            if (state.consoleOpen) {
+            if (consoleOpen) {
                 if (concrete.type == Event::Type::KeyRelease) {
                     KeyboardEvent &key_event = std::get<KeyboardEvent>(concrete.event);
 
@@ -164,7 +146,7 @@ int run(int width, int height) {
                         // End the line, interpret input, start new input stream
                         std::cout << std::endl;
                     } else if (key_event.key == GLFW_KEY_GRAVE_ACCENT) {
-                        state.consoleOpen = false;
+                        consoleOpen = false;
                     }
                 } else if (concrete.type == Event::Type::TextInput) {
                     TextEvent &text_event = std::get<TextEvent>(concrete.event);
@@ -181,26 +163,26 @@ int run(int width, int height) {
 
                     // Open console.
                     if (key_event.key == GLFW_KEY_GRAVE_ACCENT) {
-                        state.consoleOpen = true;
+                        consoleOpen = true;
                     } else
 
-                        // Boid keybinds.
+                    // Boid keybinds.
                     if (key_event.key == GLFW_KEY_SPACE) {
-                        state.paused ^= true;
+                        paused ^= true;
                     } else if (key_event.key == GLFW_KEY_1) {
-                        bRender.changeRenderMode(BoidRenderer::RenderMode::Filled);
+                        activeModel = &filledModel;
                     } else if (key_event.key == GLFW_KEY_2) {
-                        bRender.changeRenderMode(BoidRenderer::RenderMode::Classic);
+                        activeModel = &classicModel;
                     } else if (key_event.key == GLFW_KEY_B) {
-                        state.renderBoids ^= true;
+                        renderBoids ^= true;
                     } else if (key_event.key == GLFW_KEY_V) {
-                        state.renderVision ^= true;
+                        renderVision ^= true;
                     } else if (key_event.key == GLFW_KEY_S) {
-                        state.debugVisual ^= true;
-                        if (state.debugVisual) {
-                            bRender.changeControlMode(BoidRenderer::ControlMode::SpeedDebug);
+                        debugVisual ^= true;
+                        if (debugVisual) {
+                            activeShader = &speedDebugShader;
                         } else {
-                            bRender.changeControlMode(BoidRenderer::ControlMode::Default);
+                            activeShader = &defaultBoidShader;
                         }
                     }
                 }
@@ -213,7 +195,7 @@ int run(int width, int height) {
 #endif
 
         // Update engine
-        bool doUpdates = !state.paused && !state.consoleOpen;
+        bool doUpdates = !paused && !consoleOpen;
         if (doUpdates) {
             flock.update(dt);
         }
@@ -225,17 +207,20 @@ int run(int width, int height) {
 
         // Rendering
         if (doUpdates) {
-            dataBuffer.update(flock.boids());
+            renderer.update(flock.boids());
         }
 
         lwvl::clear();
 
-        if (state.renderVision) {
-            vRender.draw();
+        if (renderVision) {
+            visionShader.radius(Boid::cohesiveRadius);
+            FlockRenderer::draw(&visionModel, &visionShader);
+            visionShader.radius(Boid::disruptiveRadius);
+            FlockRenderer::draw(&visionModel, &visionShader);
         }
 
-        if (state.renderBoids) {
-            bRender.draw();
+        if (renderBoids) {
+            FlockRenderer::draw(activeModel, activeShader);
         }
 
         window.swapBuffers();

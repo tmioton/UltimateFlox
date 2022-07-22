@@ -7,10 +7,16 @@ target_sources(
         World/World.hpp
         World/Boid.hpp
         World/Boid.cpp
-        World/Renderer.hpp
-        World/Renderer.cpp
         World/Flock.hpp
         World/Flock.cpp
+
+        # RENDER
+        Render/Controls.hpp
+        Render/Controls.cpp
+        Render/Models.hpp
+        Render/Models.cpp
+        Render/FlockRenderer.hpp
+        Render/FlockRenderer.cpp
 
         # CORE
         Core/Window.hpp

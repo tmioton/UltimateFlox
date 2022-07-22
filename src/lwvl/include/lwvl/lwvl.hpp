@@ -2,20 +2,25 @@
 
 // Figure out how to make this library independent.
 #include <glad/glad.h>
+
 #include <memory>
 #include <string>
 #include <sstream>
 #include <fstream>
 #include <variant>
 
-
 namespace lwvl {
+    class Buffer;
+
     class Framebuffer;
-    class ShaderProgram;
+
     class Texture;
+
+    class Program;
+
     class Uniform;
+
     class VertexArray;
-    class WorldBlock;
 
     enum class Attachment {
         Color = GL_COLOR_ATTACHMENT0,
@@ -32,6 +37,11 @@ namespace lwvl {
         Int = GL_INT,
         HalfFloat = GL_HALF_FLOAT,
         Float = GL_FLOAT,
+        Fixed = GL_FIXED,
+        Double = GL_DOUBLE,
+        Int_2_10_10_10 = GL_INT_2_10_10_10_REV,
+        UnsignedInt_2_10_10_10 = GL_UNSIGNED_INT_2_10_10_10_REV,
+        UnsignedInt_10F_11F_11F = GL_UNSIGNED_INT_10F_11F_11F_REV
     };
 
     enum class ChannelLayout {
@@ -42,15 +52,15 @@ namespace lwvl {
         RGBA = GL_RGBA,
         BGRA = GL_BGRA,
 
-        //R8 = GL_R8,
-        //R16 = GL_R16,
-        //RG8 = GL_RG8,
-        //RG16 = GL_RG16,
-        //RGB8 = GL_RGB8,
-        //RGBA2 = GL_RGBA2,
-        //RGBA4 = GL_RGBA4,
-        //RGBA8 = GL_RGBA8,
-        //RGBA16 = GL_RGBA16,
+        R8 = GL_R8,
+        R16 = GL_R16,
+        RG8 = GL_RG8,
+        RG16 = GL_RG16,
+        RGB8 = GL_RGB8,
+        RGBA2 = GL_RGBA2,
+        RGBA4 = GL_RGBA4,
+        RGBA8 = GL_RGBA8,
+        RGBA16 = GL_RGBA16,
 
         // Half Float Formats
         R16F = GL_R16F,
@@ -127,231 +137,102 @@ namespace lwvl {
         TrianglesAdjacency = GL_TRIANGLES_ADJACENCY,
     };
 
-    namespace details {
-        enum class BufferTarget {
+    namespace bits {
+        constexpr GLbitfield None = 0;
+        typedef enum GLbitfield {
+            Dynamic = GL_DYNAMIC_STORAGE_BIT,
+            MapRead = GL_MAP_READ_BIT,
+            MapWrite = GL_MAP_WRITE_BIT,
+            MapPersistent = GL_MAP_PERSISTENT_BIT,
+            MapCoherent = GL_MAP_COHERENT_BIT,
+            Client = GL_MAP_COHERENT_BIT
+        } UsageBits;
+    }
+
+    class Buffer {
+    public:
+        enum class Target {
             Array = GL_ARRAY_BUFFER,
             Element = GL_ELEMENT_ARRAY_BUFFER,
             Texture = GL_TEXTURE_BUFFER,
+            //Uniform = GL_UNIFORM_BUFFER,
+            Shader = GL_SHADER_STORAGE_BUFFER,
+        };
+
+        enum class IndexedTarget {
+            AtomicCounter = GL_ATOMIC_COUNTER_BUFFER,
+            ShaderStorage = GL_SHADER_STORAGE_BUFFER,
+            TransformFeedback = GL_TRANSFORM_FEEDBACK_BUFFER,
             Uniform = GL_UNIFORM_BUFFER,
-            ShaderStorage = GL_SHADER_STORAGE_BUFFER
         };
 
-        enum class ShaderTarget {
-            Vertex = GL_VERTEX_SHADER,
-            TessCtrl = GL_TESS_CONTROL_SHADER,
-            TessEval = GL_TESS_EVALUATION_SHADER,
-            Geometry = GL_GEOMETRY_SHADER,
-            Fragment = GL_FRAGMENT_SHADER,
-            Compute = GL_COMPUTE_SHADER
+        enum class Usage {
+            Static = GL_STATIC_DRAW,
+            Dynamic = GL_DYNAMIC_DRAW,
+            Stream = GL_STREAM_DRAW
         };
-
-        template<BufferTarget target>
-        class Buffer {
-        public:
-            enum class Usage {
-                Static = GL_STATIC_DRAW,
-                Dynamic = GL_DYNAMIC_DRAW,
-                Stream = GL_STREAM_DRAW
-            };
-        private:
-            class ID {
-                static unsigned int reserve() {
-                    unsigned int tempID;
-                    glGenBuffers(1, &tempID);
-                    return tempID;
-                }
-
-            public:
-                ~ID() {
-                    glDeleteBuffers(1, &bufferID);
-                }
-
-                explicit operator unsigned int() const {
-                    return bufferID;
-                }
-
-                const unsigned int bufferID = reserve();
-            };
-
-            // Offsite Data - to avoid copying buffers on the GPU for simple copies of this class.
-            std::shared_ptr<Buffer::ID> m_offsite_id = std::make_shared<Buffer::ID>();
-
-            // Local Data
-            uint32_t m_id = static_cast<uint32_t>(*m_offsite_id);
-            Usage m_usage = Usage::Dynamic;
+    private:
+        class ID {
+            static GLuint reserve();
 
         public:
-            unsigned int id() {
-                return m_id;
-            }
+            ~ID();
 
-            Buffer() = default;
-
-            explicit Buffer(Usage usage) : m_usage(usage) {}
-
-            Buffer(const Buffer &other) = default;
-
-            Buffer &operator=(const Buffer &other) = default;
-
-            Buffer(Buffer &&other) noexcept = default;
-
-            Buffer &operator=(Buffer &&other) noexcept = default;
-
-            template<typename T>
-            void construct(const T *data, GLsizei count) {
-                glBufferData(
-                    static_cast<GLenum>(target), sizeof(T) * count,
-                    data, static_cast<GLenum>(m_usage)
-                );
-            }
-
-            template<class Iterator>
-            void construct(Iterator first, Iterator last) {
-                glBufferData(
-                    static_cast<GLenum>(target), sizeof(*first) * (last - first),
-                    &(*first), static_cast<GLenum>(m_usage)
-                );
-            }
-
-            template<typename T>
-            void update(const T *data, GLsizei count, GLsizei offsetCount = 0) {
-                glBufferSubData(static_cast<GLenum>(target), offsetCount * sizeof(T), count * sizeof(T), data);
-            }
-
-            template<class Iterator>
-            void update(Iterator first, Iterator last, GLsizei offsetCount = 0) {
-                glBufferSubData(
-                    static_cast<GLenum>(target), offsetCount * sizeof(*first), sizeof(*first) * (last - first), &(*first));
-            }
-
-            void usage(Usage usage) { m_usage = usage; }
-            Usage usage() { return m_usage; }
-
-            [[nodiscard]] GLuint id() const {
-                return m_id;
-            }
-
-            // These operations should not be const because they modify GL state.
-            void bind() {
-                glBindBuffer(
-                    static_cast<GLenum>(target),
-                    m_id
-                );
-            }
-
-            static void clear() {
-                glBindBuffer(static_cast<GLenum>(target), 0);
-            }
+            const GLuint id = reserve();
         };
 
-        template<ShaderTarget target>
-        class Shader {
-            unsigned int m_id{reserve()};
+        // Offsite Data - Maintain lifetime of the buffer over copies.
+        std::shared_ptr<const ID> m_offsite_id = std::make_shared<const ID>();
 
-            friend class lwvl::ShaderProgram;
+    public:
+        [[nodiscard]] GLuint id() const;
 
-            static unsigned int reserve() {
-                unsigned int id = glCreateShader(static_cast<GLenum>(target));
-                return id;
-            }
+        void bind(Target);
 
-        public:
-            explicit Shader(const std::string &source) {
-                const char *src = source.c_str();
-                glShaderSource(m_id, 1, &src, nullptr);
-                glCompileShader(m_id);
+        void bind(IndexedTarget, GLuint);
 
-                int result;
-                glGetShaderiv(m_id, GL_COMPILE_STATUS, &result);
-                if (result == GL_FALSE) {
-                    int length;
-                    glGetShaderiv(m_id, GL_INFO_LOG_LENGTH, &length);
-                    char *message = static_cast<char *>(_malloca(length * sizeof(char)));
-                    glGetShaderInfoLog(m_id, length, &length, message);
-                    std::stringstream error;
-                    error << "Failed to compile ";
+        static void clear(Target);
 
-                    switch (target) {
-                        case ShaderTarget::Vertex: error << "vertex"; break;
-                        case ShaderTarget::Fragment: error << "fragment"; break;
-                        case ShaderTarget::Geometry: error << "geometry"; break;
-                        case ShaderTarget::TessCtrl: error << "tesselation control"; break;
-                        case ShaderTarget::TessEval: error << "tesselation evaluation"; break;
-                        case ShaderTarget::Compute: error << "compute"; break;
-                        default: error << "unknown type of ";
-                            break;
-                    }
+        Buffer() = default;
 
-                    error << " shader" << std::endl << message << std::endl;
-                    throw std::invalid_argument(error.str().c_str());
-                }
-            }
+        Buffer(Buffer const &) = default;
 
-            Shader(const Shader &other) = delete;
+        Buffer(Buffer &&) noexcept = default;
 
-            Shader(Shader &&other) noexcept: m_id(other.m_id) {
-                other.m_id = 0;
-            }
+        Buffer &operator=(Buffer const &) = default;
 
-            Shader &operator=(const Shader &other) = delete;
+        Buffer &operator=(Buffer &&) noexcept = default;
 
-            Shader &operator=(Shader &&other) noexcept {
-                m_id = other.m_id;
-                other.m_id = 0;
-                return *this;
-            }
+        template<typename T>
+        void construct(T const *data, GLsizeiptr size, Usage usage = Usage::Dynamic) {
+            glNamedBufferData(id(), size, data, static_cast<GLenum>(usage));
+        }
 
-            static std::string readFile(const std::string &filepath) {
-                // need to figure out how to handle errors on this.
-                std::ifstream file(filepath);
-                std::stringstream output_stream;
+        template<class Iterator>
+        void construct(Iterator first, Iterator last, Usage usage = Usage::Dynamic) {
+            glNamedBufferData(id(), sizeof(*first) * (last - first), &(*first), static_cast<GLenum>(usage));
+        }
 
-                std::string line;
-                while (getline(file, line)) {
-                    output_stream << line << '\n';
-                }
+        template<typename T>
+        void store(T const *data, GLsizeiptr size, GLbitfield usage = bits::None) {
+            glNamedBufferStorage(id(), size, data, usage);
+        }
 
-                return output_stream.str();
-            }
+        template<class Iterator>
+        void store(Iterator first, Iterator last, GLbitfield usage = bits::None) {
+            glNamedBufferStorage(id(), sizeof(*first) * (last - first), &(*first), usage);
+        }
 
-            ~Shader() {
-                // An id of 0 will be silently ignored.
-                glDeleteShader(m_id);
-            }
+        template<typename T>
+        void update(T const *data, GLsizeiptr size, GLsizei offset = 0) {
+            glNamedBufferSubData(id(), offset, size, data);
+        }
 
-            [[nodiscard]] GLuint id() const {
-                return m_id;
-            }
-        };
-    }
-
-    typedef details::Buffer<details::BufferTarget::Array> ArrayBuffer;
-    typedef details::Buffer<details::BufferTarget::Element> ElementBuffer;
-    typedef details::Buffer<details::BufferTarget::Texture> TextureBuffer;
-    typedef details::Buffer<details::BufferTarget::Uniform> UniformBuffer;
-    typedef details::Buffer<details::BufferTarget::ShaderStorage> ShaderStorageBuffer;
-    typedef std::variant<
-        ArrayBuffer,
-        ElementBuffer,
-        TextureBuffer,
-        UniformBuffer,
-        ShaderStorageBuffer
-    > Buffer;
-
-    typedef details::Shader<details::ShaderTarget::Vertex> VertexShader;
-    typedef details::Shader<details::ShaderTarget::TessCtrl> TesselationControlShader;
-    typedef details::Shader<details::ShaderTarget::TessEval> TesselationEvaluationShader;
-    typedef details::Shader<details::ShaderTarget::Geometry> GeometryShader;
-    typedef details::Shader<details::ShaderTarget::Fragment> FragmentShader;
-    typedef details::Shader<details::ShaderTarget::Compute> ComputeShader;
-    typedef std::variant<
-        VertexShader,
-        TesselationControlShader,
-        TesselationEvaluationShader,
-        GeometryShader,
-        FragmentShader,
-        ComputeShader
-    > Shader;
+        template<class Iterator>
+        void update(Iterator first, Iterator last, GLsizei offset = 0) {
+            glNamedBufferSubData(id(), offset, sizeof(*first) * (last - first), &(*first));
+        }
+    };
 
     namespace debug {
         enum class Source {
@@ -417,7 +298,8 @@ namespace lwvl {
         };
 
         static void __stdcall glDebugCallback(
-            GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *state
+            GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message,
+            const void *state
         );
 
         void simpleDebugCallback(GLDEBUGPROC callback, void *userPtr);
@@ -427,118 +309,49 @@ namespace lwvl {
 
     void clear();
 
-    struct Viewport {
-        int x, y, width, height;
-    };
-
-    void viewport(Viewport);
-    Viewport viewport();
-
     class Framebuffer {
-        uint32_t m_id = 0;
+        class ID {
+            GLuint reserve();
 
+        public:
+            ID() = default;
+            ID(int);
+            ~ID();
+
+            GLuint id = reserve();
+            bool safe = true;
+        };
+
+        std::shared_ptr<const ID> m_offsite_id = std::make_shared<const ID>();
+
+        explicit Framebuffer(int);
     public:
-        Framebuffer();
-
-        ~Framebuffer();
-
-        void attach(Attachment, Texture &, int level = 0);
-        void attach1D(Attachment, Texture &, int level = 0);
-        void attach2D(Attachment, Texture &, int level = 0);
-        void attach3D(Attachment, Texture &, int layer, int level = 0);
+        [[nodiscard]] GLuint id() const;
 
         void bind();
 
         static void clear();
 
-        [[nodiscard]] GLuint id() const;
+        // DSA textures know what type they are, so we don't need attach1D, attach2D, etc.
+        void attach(Attachment point, Texture const &texture, GLint level);
+
+        void attachLayer(Attachment point, Texture const &texture, GLint level, GLint layer);
+
+        static Framebuffer activeDrawFramebuffer();
+        static Framebuffer activeReadFramebuffer();
+        bool safe();
     };
 
-    /* ****** Shader Program ******
-    * A simple abstraction over the code required to create a shader in OpenGL.
-    * Not feature complete.
-    *
-    * Usage:
-    *   ShaderProgram myShader;
-    *   myShader.attach(VertexShader);
-    *   myShader.attach(GeometryShader);
-    *   myShader.attach(FragmentShader);
-    *   myShader.link();
-    *
-    * Quick Linking (Vertex and Fragment Shaders only):
-    *   ShaderProgram myShader;
-    *   myShader.link(VertexShader, FragmentShader);
-    */
-    class ShaderProgram {
-        class ID {
-            static unsigned int reserve() {
-                return glCreateProgram();
-            }
+    struct Region {
+        GLsizei length;
+        GLint offset;
 
-        public:
-            ~ID() {
-                glDeleteProgram(programID);
-            }
-
-            constexpr explicit operator uint32_t() const {
-                return programID;
-            }
-
-            const uint32_t programID = reserve();
-        };
-
-        // Offsite Data -
-        std::shared_ptr<ShaderProgram::ID> m_offsite_id = std::make_shared<ShaderProgram::ID>();
-
-        // Local Data
-        uint32_t m_id = static_cast<uint32_t>(*m_offsite_id);
-
-        [[nodiscard]] int uniformLocation(const std::string &name) const;
-
-    public:
-        ShaderProgram() = default;
-
-        ShaderProgram(const ShaderProgram &other) = default;
-
-        ShaderProgram &operator=(const ShaderProgram &other) = default;
-
-        ShaderProgram(ShaderProgram &&other) noexcept = default;
-
-        ShaderProgram &operator=(ShaderProgram &&other) noexcept = default;
-
-        [[nodiscard]] unsigned int id() const;
-
-        Uniform uniform(const std::string &name);
-
-        template<details::ShaderTarget target>
-        void attach(const details::Shader<target> &shader) { glAttachShader(m_id, shader.m_id); }
-
-        template<details::ShaderTarget target>
-        void detach(const details::Shader<target> &shader) { glDetachShader(m_id, shader.m_id); }
-
-        void link();
-
-        void link(const VertexShader &vs, const FragmentShader &fs);
-
-        void link(const std::string &vertexSource, const std::string &fragmentSource);
-
-        void bind() const;
-
-        static void clear();
+        explicit Region(GLsizei l, GLint o = 0);
     };
 
     class Texture {
         friend Framebuffer;
     public:
-        class Info {
-        protected:
-            static unsigned int reserve();
-        public:
-            ~Info();
-            explicit operator GLuint() const;
-            const GLuint id = reserve();
-        };
-
         enum class Target {
             Texture1D = GL_TEXTURE_1D,
             Texture1DArray = GL_TEXTURE_1D_ARRAY,
@@ -553,119 +366,363 @@ namespace lwvl {
             TextureBuffer = GL_TEXTURE_BUFFER
         };
 
-        Texture();
-        explicit Texture(Target t);
+        class ID {
+        protected:
+            static GLuint reserve(GLenum target);
 
-        [[nodiscard]] GLuint slot() const;
-        void slot(GLuint value);
-        void filter(Filter value);
-        void bind();
+        public:
+            explicit ID(Target);
 
-        void construct(
-            int width,
-            ChannelLayout layout, ChannelOrder order, ByteFormat type,
-            const void *pixels, int level = 0
-        );
+            ~ID();
 
-        void construct(
-            int width, int height,
-            ChannelLayout layout, ChannelOrder order, ByteFormat type,
-            const void *pixels, int level = 0
-        );
-
-        void construct(int width, int height, int samples, ChannelLayout layout, bool fixedSampleLocations = false);
-        void construct(int width, int height, int depth, int samples, ChannelLayout layout, bool fixedSampleLocations = false);
-
-        void construct(
-            int width, int height, int depth,
-            ChannelLayout layout, ChannelOrder order, ByteFormat type,
-            const void *pixels, int level = 0
-        );
-
-        void construct(TextureBuffer &buffer, ChannelLayout layout);
-
-        [[nodiscard]] GLuint id() const;
+            const GLuint id;
+        };
 
     private:
-        [[nodiscard]] inline GLenum target() const;
-
-        // Offsite data for easy copies.
-        std::shared_ptr<Info> m_info;
-
-        // Local data to avoid lookups.
-        GLuint m_id = static_cast<GLuint>(*m_info);
+        std::shared_ptr<const ID> m_offsite_id;
         Target m_target;
-        GLuint m_slot = 0;
+
+    public:
+        [[nodiscard]] GLuint id() const;
+
+        [[nodiscard]] Target target() const;
+
+        Texture();  // Default to 2D texture
+        explicit Texture(Target t);
+
+        // Add view thingy
+
+        void bind(GLuint slot);
+
+        static void clear(GLuint slot);
+
+        void filter(Filter value);
+
+        // Set the format of the texture.
+        void format(GLsizei width, lwvl::ChannelLayout layout, GLsizei levels = 1);
+
+        void format(GLsizei width, GLsizei height, lwvl::ChannelLayout layout, GLsizei levels = 1);
+
+        void format(GLsizei width, GLsizei height, GLsizei depth, lwvl::ChannelLayout layout, GLsizei levels = 1);
+
+        void format(Buffer const &, ChannelLayout);
+
+        void format(Buffer const &, ChannelLayout, GLsizeiptr, GLintptr = 0);
+
+        void construct(
+            Region x, GLsizei level,
+            lwvl::ChannelOrder order, lwvl::ByteFormat type,
+            void const *pixels
+        );
+
+        void construct(
+            Region x, Region y, GLsizei level,
+            lwvl::ChannelOrder order, lwvl::ByteFormat type,
+            void const *pixels
+        );
+
+        void construct(
+            Region x, Region y, Region z, GLsizei level,
+            lwvl::ChannelOrder order, lwvl::ByteFormat type,
+            void const *pixels
+        );
+
+        void construct(
+            GLsizei width, GLsizei level,
+            lwvl::ChannelOrder order, lwvl::ByteFormat type,
+            void const *pixels
+        );
+
+        void construct(
+            GLsizei width, GLsizei height, GLsizei level,
+            lwvl::ChannelOrder order, lwvl::ByteFormat type,
+            void const *pixels
+        );
+
+        void construct(
+            GLsizei width, GLsizei height, GLsizei depth, GLsizei level,
+            lwvl::ChannelOrder order, lwvl::ByteFormat type,
+            void const *pixels
+        );
+    };
+
+    namespace details {
+        enum class ShaderType {
+            Vertex = GL_VERTEX_SHADER,
+            Fragment = GL_FRAGMENT_SHADER,
+            Geometry = GL_GEOMETRY_SHADER,
+            TessellationControl = GL_TESS_CONTROL_SHADER,
+            TessellationEvaluation = GL_TESS_EVALUATION_SHADER,
+            Compute = GL_COMPUTE_SHADER
+        };
+
+        static std::ostream &operator<<(std::ostream &os, ShaderType target) {
+            switch (target) {
+                case details::ShaderType::Vertex: os << "vertex";
+                    break;
+                case details::ShaderType::Fragment: os << "fragment";
+                    break;
+                case details::ShaderType::Geometry: os << "geometry";
+                    break;
+                case details::ShaderType::TessellationControl: os << "tessellation control";
+                    break;
+                case details::ShaderType::TessellationEvaluation: os << "tessellation evaluation";
+                    break;
+                case details::ShaderType::Compute:
+                default: os << "compute";
+                    break;
+            }
+            return os;
+        }
+
+        template<ShaderType target>
+        class Shader {
+            // Offsite is a little overkill here
+            class ID {
+                static GLuint reserve() {
+                    return glCreateShader(static_cast<GLenum>(target));
+                }
+
+            public:
+                ~ID() { glDeleteShader(id); }
+
+                const GLuint id = reserve();
+            };
+
+            std::shared_ptr<const ID> m_offsite_id = std::make_shared<const ID>();
+        public:
+            [[nodiscard]] GLuint id() const {
+                return m_offsite_id->id;
+            }
+
+            explicit Shader(std::string const &source) {
+                const char *src = source.c_str();
+                const GLuint so = id();
+                int result;
+                glShaderSource(so, 1, &src, nullptr);
+                glCompileShader(so);
+
+                glGetShaderiv(so, GL_COMPILE_STATUS, &result);
+                if (result == GL_FALSE) {
+                    int length;
+                    glGetShaderiv(so, GL_INFO_LOG_LENGTH, &length);
+                    char *infoLog = new char[length];
+                    glGetShaderInfoLog(so, length, &length, infoLog);
+                    std::stringstream error;
+                    error << "Failed to compile " << target << " shader:" << std::endl << infoLog << std::endl;
+                    throw std::invalid_argument(error.str().c_str());
+                }
+            }
+
+            Shader(Shader const &) = default;
+
+            Shader(Shader &&) noexcept = default;
+
+            Shader &operator=(Shader const &) = default;
+
+            Shader &operator=(Shader &&) noexcept = default;
+
+            ~Shader() = default;
+
+            static std::string readFile(const std::string &path) {
+                // Need to figure out how to handle errors on this.
+                // Compilation acts as a sort of error handling.
+                std::ifstream file(path);
+                std::stringstream output_stream;
+
+                std::string line;
+                while (getline(file, line)) {
+                    output_stream << line << '\n';
+                }
+
+                // No need to return std::string&& since we need to copy
+                // from output_stream anyway.
+                return output_stream.str();
+            }
+
+            static Shader<target> fromFile(const std::string &path) {
+                return Shader<target>(readFile(path));
+            }
+        };
+    }
+
+    using VertexShader = details::Shader<details::ShaderType::Vertex>;
+    using FragmentShader = details::Shader<details::ShaderType::Fragment>;
+    using GeometryShader = details::Shader<details::ShaderType::Geometry>;
+    using TessControlShader = details::Shader<details::ShaderType::TessellationControl>;
+    using TessEvaluationShader = details::Shader<details::ShaderType::TessellationEvaluation>;
+    using ComputeShader = details::Shader<details::ShaderType::Compute>;
+
+    class Program {
+        class ID {
+            static GLuint reserve();
+
+        public:
+            ~ID();
+
+            const GLuint id = reserve();
+        };
+
+        [[nodiscard]] int uniformLocation(const char *name) const;
+
+        std::shared_ptr<const ID> m_offsite_id = std::make_shared<const ID>();
+    public:
+        [[nodiscard]] GLuint id() const;
+
+        Program() = default;
+
+        Program(Program const &) = default;
+
+        Program(Program &&) noexcept = default;
+
+        Program &operator=(Program const &) = default;
+
+        Program &operator=(Program &&) = default;
+
+        Uniform uniform(const char *name);
+
+        template<details::ShaderType target>
+        void attach(details::Shader<target> const &shader) {
+            glAttachShader(id(), shader.id());
+        }
+
+        template<details::ShaderType target>
+        void detach(details::Shader<target> const &shader) {
+            glAttachShader(id(), shader.id());
+        }
+
+        void link();
+
+        void link(VertexShader const &vs, FragmentShader const &fs);
+
+        void link(std::string const &vertexSource, std::string const &fragmentSource);
+
+        void bind() const;
+
+        static void clear();
+        static int active();
     };
 
     class Uniform {
-        int m_location = -1;
+        GLint m_location = -1;
     public:
         Uniform() = default;
-        explicit Uniform(int location);
-        Uniform(const Uniform&) = default;
-        Uniform(Uniform&&) = default;
-        ~Uniform() = default;
-        Uniform &operator=(const Uniform&) = default;
-        Uniform &operator=(Uniform&&) = default;
 
-        void set(int);
-        void set(float);
-        void set(unsigned int);
-        void set(int, int);
-        void set(float, float);
-        void set(unsigned int, unsigned int);
-        void set(int, int, int);
-        void set(float, float, float);
-        void set(unsigned int, unsigned int, unsigned int);
-        void set(int, int, int, int);
-        void set(float, float, float, float);
-        void set(unsigned int, unsigned int, unsigned int, unsigned int);
-        void matrix4(const float *data);
+        explicit Uniform(GLint location);
+
+        Uniform(Uniform const &) = default;
+
+        Uniform(Uniform &&) = default;
+
+        Uniform &operator=(Uniform const &) = default;
+
+        Uniform &operator=(Uniform &&) = default;
+
+        // Separate setters since set(1) is ambiguous.
+        void setI(GLint);
+
+        void setI(GLint, GLint);
+
+        void setI(GLint, GLint, GLint);
+
+        void setI(GLint, GLint, GLint, GLint);
+
+        void setU(GLuint);
+
+        void setU(GLuint, GLuint);
+
+        void setU(GLuint, GLuint, GLuint);
+
+        void setU(GLuint, GLuint, GLuint, GLuint);
+
+        void setF(float);
+
+        void setF(float, float);
+
+        void setF(float, float, float);
+
+        void setF(float, float, float, float);
+
+        void matrix4F(const float *data);
+
         void ortho(float top, float bottom, float right, float left, float far, float near);
+
         void ortho2D(float top, float bottom, float right, float left);
 
-        [[nodiscard]] int location() const;
+        void ortho2D(float aspect);
+
+        [[nodiscard]] GLint location() const;
     };
 
+    /*
+     *
+     * Combined index/vertex buffer:
+     * https://github.com/fendevel/Guide-to-Modern-OpenGL-Functions#storing-index-and-vertex-data-under-single-buffer
+     */
     class VertexArray {
-        // There are only < 256 attribute bind sites, so this could be a uint16_t
-        //   if another 16 or 2x8 bytes can be used for something else.
-        unsigned int m_attributes = 0;
-        unsigned int m_instances = 1;
-        unsigned int m_id = 0;
-    public:
-        VertexArray();
+        class ID {
+            static GLuint reserve();
 
-        ~VertexArray();
+        public:
+            ~ID();
+
+            const GLuint id = reserve();
+        };
+
+        void _format(GLuint vao, GLuint index, uint8_t dimensions, ByteFormat type, GLuint offset);
+
+        std::shared_ptr<const ID> m_offsite_id = std::make_shared<const ID>();
+    public:
+        unsigned int instances = 1;
+
+        [[nodiscard]] GLuint id() const;
 
         void bind();
 
         static void clear();
 
-        [[nodiscard]] GLuint id() const;
+        VertexArray() = default;
 
-        [[nodiscard]] uint32_t instances() const;
-        void instances(uint32_t count);
+        VertexArray(VertexArray const &) = default;
 
-        void attribute(uint8_t dimensions, GLenum type, int64_t stride, int64_t offset, uint32_t divisor = 0);
+        VertexArray(VertexArray &&) noexcept = default;
+
+        VertexArray &operator=(VertexArray const &) = default;
+
+        VertexArray &operator=(VertexArray &&) noexcept = default;
+
+        ~VertexArray() = default;
+
+        // Set the element buffer for the vertex array.
+        void element(lwvl::Buffer const &);
+
+        // Attach an array buffer to a bind point.
+        void array(lwvl::Buffer const &, GLuint binding, GLintptr offset, GLsizei stride);
+
+        // Set the format for a section of a buffer.
+        void attribute(GLuint index, uint8_t dimensions, ByteFormat type, GLuint offset);
+
+        void attribute(GLuint binding, GLuint attribute, uint8_t dimensions, ByteFormat type, GLuint offset);
+
+        // Mark that the specified format applies to the buffer bound to the specified bind point.
+        void attach(GLuint binding, GLuint attribute);
+
+        void divisor(GLuint binding, GLuint divisor);
+
+        void enable(GLuint attribute);
+
+        void disable(GLuint attribute);
 
         void drawArrays(PrimitiveMode mode, int count) const;
 
         void drawElements(PrimitiveMode mode, int count, ByteFormat type) const;
-
-        void multiDrawArrays(PrimitiveMode mode, const GLint *firsts, const GLsizei *counts, GLsizei drawCount);
-
-        void multiDrawElements(
-            PrimitiveMode mode, const GLsizei *counts, ByteFormat type, const void *const *indices, GLsizei drawCount
-        );
     };
 
-    class WorldBlock {
-    public:
-        WorldBlock() = default;
-        void attach(const ShaderProgram& program);
-    private:
-        lwvl::UniformBuffer blockBuffer;
+    struct Viewport {
+        int x, y, width, height;
     };
+
+    void viewport(Viewport);
+
+    Viewport viewport();
 }

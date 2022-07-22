@@ -7,6 +7,7 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/fast_square_root.hpp>
 #include <glm/gtx/norm.hpp>
+
 #include <iostream>
 #include <optional>
 #include <functional>
@@ -15,3 +16,5 @@
 #include <array>
 #include <unordered_map>
 #include <utility>
+
+#include "Common.hpp"
