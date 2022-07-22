@@ -2,7 +2,6 @@
 
 #include "World.hpp"
 #include "Boid.hpp"
-#include "Renderer.hpp"
 
 
 class Flock {
