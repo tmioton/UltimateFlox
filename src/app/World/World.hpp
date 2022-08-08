@@ -1,7 +1,8 @@
 #pragma once
+
 #include "pch.hpp"
 
-static constexpr float worldBound = 200.0f;
+static constexpr float worldBound = 300.0f;
 
 inline Vector calculateBounds(float aspect) {
     return {
