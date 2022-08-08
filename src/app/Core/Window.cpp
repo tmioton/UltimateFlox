@@ -55,6 +55,10 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor) :
         throw std::exception("Failed to initialize Glad.");
     }
 
+    if (config.samples > 1) {
+        glEnable(GL_MULTISAMPLE);
+    }
+
     glfwSetWindowUserPointer(m_window, this);
     glfwSwapInterval(1);
 
