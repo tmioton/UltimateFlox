@@ -1,4 +1,5 @@
 #pragma once
+
 #include "pch.hpp"
 #include "World/Boid.hpp"
 #include "Models.hpp"
@@ -12,9 +13,12 @@
 class FlockRenderer {
 public:
     explicit FlockRenderer(size_t);
-    void update(BoidArray const &array);
-    void resize(size_t size);
-    static void draw(BoidModel*, BoidShader*);
+
+    void update(Boid const array[]);
+
+    void resize(size_t);
+
+    static void draw(BoidModel *, BoidShader *);
 
     // Convert to concepts & requirements
     template<class T, std::enable_if_t<std::is_base_of<BoidModel, T>::value, bool> = true>
@@ -23,9 +27,10 @@ public:
     }
 
     template<class T, std::enable_if_t<std::is_base_of<BoidShader, T>::value, bool> = true>
-    T control(Projection& projection) {
+    T control(Projection &projection) {
         return std::move(T{projection});
     }
+
 private:
     lwvl::Buffer data;
     size_t flockSize;

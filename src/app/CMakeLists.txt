@@ -3,6 +3,11 @@ target_sources(
     PRIVATE
         Application.cpp
 
+        # ALGORITHM
+        Algorithm/Algorithm.hpp
+        Algorithm/DirectLoopAlgorithm.hpp
+        Algorithm/DirectLoopAlgorithm.cpp
+
         # WORLD
         World/World.hpp
         World/Boid.hpp
@@ -17,6 +22,9 @@ target_sources(
         Render/Models.cpp
         Render/FlockRenderer.hpp
         Render/FlockRenderer.cpp
+
+        # STRUCTURES
+        Structures/DoubleBuffer.hpp
 
         # CORE
         Core/Window.hpp

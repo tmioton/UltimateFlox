@@ -1,6 +1,7 @@
 #include "pch.hpp"
 #include "Core/Window.hpp"
 #include "World/Flock.hpp"
+#include "Algorithm/DirectLoopAlgorithm.hpp"
 #include "Render/FlockRenderer.hpp"
 
 #include <chrono>
@@ -73,7 +74,12 @@ int run(int width, int height) {
     bool renderBoids = true;
     bool renderVision = false;
 
-    Flock flock{flockSize, width, height};
+    const float aspect = static_cast<float>(width) / static_cast<float>(height);
+    const Vector bounds{calculateBounds(aspect)};
+    Flock flock{flockSize};
+    DirectLoopAlgorithm directLoopAlgorithm{bounds};
+    Algorithm* algorithm = &directLoopAlgorithm;
+
     FlockRenderer renderer{flockSize};
 
     ClassicModel classicModel{renderer.model<ClassicModel>()};
@@ -81,8 +87,6 @@ int run(int width, int height) {
     VisionModel visionModel{renderer.model<VisionModel>()};
     BoidModel* activeModel = &filledModel;
 
-    const float aspect = static_cast<float>(width) / static_cast<float>(height);
-    const Vector bounds{calculateBounds(aspect)};
     //Projection projection{glm::perspective(90.0f, aspect, 1.0f, 10.0f)};
     Projection projection{
         1.0f / bounds.x, 0.0f, 0.0f, 0.0f,
@@ -197,7 +201,7 @@ int run(int width, int height) {
         // Update engine
         bool doUpdates = !paused && !consoleOpen;
         if (doUpdates) {
-            flock.update(dt);
+            flock.update(algorithm, dt);
         }
 
 #ifndef NDEBUG
