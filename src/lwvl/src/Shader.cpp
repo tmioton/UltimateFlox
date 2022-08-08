@@ -5,18 +5,27 @@
 lwvl::Uniform::Uniform(int location) : m_location(location) {}
 
 void lwvl::Uniform::setI(GLint v0) { glUniform1i(m_location, v0); }
+
 void lwvl::Uniform::setI(GLint v0, GLint v1) { glUniform2i(m_location, v0, v1); }
+
 void lwvl::Uniform::setI(GLint v0, GLint v1, GLint v2) { glUniform3i(m_location, v0, v1, v2); }
+
 void lwvl::Uniform::setI(GLint v0, GLint v1, GLint v2, GLint v3) { glUniform4i(m_location, v0, v1, v2, v3); }
 
 void lwvl::Uniform::setF(GLfloat v0) { glUniform1f(m_location, v0); }
+
 void lwvl::Uniform::setF(GLfloat v0, GLfloat v1) { glUniform2f(m_location, v0, v1); }
+
 void lwvl::Uniform::setF(GLfloat v0, GLfloat v1, GLfloat v2) { glUniform3f(m_location, v0, v1, v2); }
+
 void lwvl::Uniform::setF(GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) { glUniform4f(m_location, v0, v1, v2, v3); }
 
 void lwvl::Uniform::setU(GLuint v0) { glUniform1ui(m_location, v0); }
+
 void lwvl::Uniform::setU(GLuint v0, GLuint v1) { glUniform2ui(m_location, v0, v1); }
+
 void lwvl::Uniform::setU(GLuint v0, GLuint v1, GLuint v2) { glUniform3ui(m_location, v0, v1, v2); }
+
 void lwvl::Uniform::setU(GLuint v0, GLuint v1, GLuint v2, GLuint v3) { glUniform4ui(m_location, v0, v1, v2, v3); }
 
 void lwvl::Uniform::matrix4F(const float *data) {
@@ -70,11 +79,11 @@ void lwvl::Uniform::ortho2D(float aspect) {
         yOffset = -aspect;
     }
 
-    float ortho[16] {
-        2.0f / w, 0.0f,     0.0f, 0.0f,
-        0.0f,     2.0f / h, 0.0f, 0.0f,
-        0.0f,     0.0f,     1.0f, 0.0f,
-        xOffset,  yOffset,  0.0f, 1.0f
+    float ortho[16]{
+        2.0f / w, 0.0f, 0.0f, 0.0f,
+        0.0f, 2.0f / h, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        xOffset, yOffset, 0.0f, 1.0f
     };
 
     glUniformMatrix4fv(m_location, 1, GL_FALSE, ortho);
@@ -94,7 +103,7 @@ lwvl::Program::ID::~ID() {
     glDeleteProgram(id);
 }
 
-int lwvl::Program::uniformLocation(const char* name) const {
+int lwvl::Program::uniformLocation(const char *name) const {
     const int location = glGetUniformLocation(id(), name);
     if (location == -1) {
         std::stringstream msg;
@@ -109,7 +118,7 @@ GLuint lwvl::Program::id() const {
     return m_offsite_id->id;
 }
 
-lwvl::Uniform lwvl::Program::uniform(const char* name) {
+lwvl::Uniform lwvl::Program::uniform(const char *name) {
     int location = uniformLocation(name);
     return Uniform(location);
 }
@@ -140,7 +149,7 @@ void lwvl::Program::link() {
         glGetProgramiv(pid, GL_INFO_LOG_LENGTH, &maxLength);
 
         // The maxLength includes the NULL character
-        auto* infoLog = new GLchar[maxLength];
+        auto *infoLog = new GLchar[maxLength];
         glGetProgramInfoLog(pid, maxLength, &maxLength, &infoLog[0]);
 
         // The program is useless now. So delete it.
@@ -165,7 +174,7 @@ void lwvl::Program::link() {
         glGetProgramiv(pid, GL_INFO_LOG_LENGTH, &maxLength);
 
         // The maxLength includes the NULL character
-        auto* infoLog = new GLchar[maxLength];
+        auto *infoLog = new GLchar[maxLength];
         glGetProgramInfoLog(pid, maxLength, &maxLength, &infoLog[0]);
 
         // The program is useless now. So delete it.
@@ -205,7 +214,7 @@ void lwvl::Program::link(const VertexShader &vs, const FragmentShader &fs) {
     glDetachShader(pid, fso);
 }
 
-void lwvl::Program::link(std::string const& vertexSource, std::string const& fragmentSource) {
+void lwvl::Program::link(std::string const &vertexSource, std::string const &fragmentSource) {
     VertexShader vs(vertexSource);
     FragmentShader fs(fragmentSource);
     link(vs, fs);

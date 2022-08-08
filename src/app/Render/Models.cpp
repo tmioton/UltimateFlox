@@ -2,6 +2,7 @@
 #include "World/Boid.hpp"
 #include "Models.hpp"
 
+
 // ****** Classic Model ******
 ClassicModel::ClassicModel(size_t size, lwvl::Buffer &boidData) {
     layout.instances = size;
@@ -9,7 +10,7 @@ ClassicModel::ClassicModel(size_t size, lwvl::Buffer &boidData) {
     layout.array(vertices, 0, 0, 2 * sizeof(float));
     layout.attribute(0, 0, 2, lwvl::ByteFormat::Float, 0);
 
-    std::array<uint8_t, 10> indexData {
+    std::array<uint8_t, 10> indexData{
         0, 1, 1, 2, 2, 3, 2, 0, 3, 0
     };
 

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "pch.hpp"
 #include "Models.hpp"
 
@@ -7,7 +8,9 @@
 class BoidShader {
 public:
     virtual ~BoidShader() = default;
-    void draw(BoidModel*);
+
+    void draw(BoidModel *);
+
 protected:
     lwvl::Program control;
 };
@@ -16,6 +19,7 @@ protected:
 class DefaultBoidShader : public BoidShader {
 public:
     explicit DefaultBoidShader(Projection &proj);
+
     ~DefaultBoidShader() override = default;
 };
 
@@ -23,6 +27,7 @@ public:
 class SpeedDebugShader : public BoidShader {
 public:
     explicit SpeedDebugShader(Projection &proj);
+
     ~SpeedDebugShader() override = default;
 };
 
@@ -30,8 +35,11 @@ public:
 class VisionShader : public BoidShader {
 public:
     explicit VisionShader(Projection &proj);
+
     ~VisionShader() override = default;
+
     void radius(float);
+
 private:
     lwvl::Uniform u_radius;
 };

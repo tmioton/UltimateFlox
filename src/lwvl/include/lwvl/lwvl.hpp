@@ -315,7 +315,9 @@ namespace lwvl {
 
         public:
             ID() = default;
-            ID(int);
+
+            explicit ID(int);
+
             ~ID();
 
             GLuint id = reserve();
@@ -325,6 +327,7 @@ namespace lwvl {
         std::shared_ptr<const ID> m_offsite_id = std::make_shared<const ID>();
 
         explicit Framebuffer(int);
+
     public:
         [[nodiscard]] GLuint id() const;
 
@@ -338,7 +341,9 @@ namespace lwvl {
         void attachLayer(Attachment point, Texture const &texture, GLint level, GLint layer);
 
         static Framebuffer activeDrawFramebuffer();
+
         static Framebuffer activeReadFramebuffer();
+
         bool safe();
     };
 
@@ -600,6 +605,7 @@ namespace lwvl {
         void bind() const;
 
         static void clear();
+
         static int active();
     };
 

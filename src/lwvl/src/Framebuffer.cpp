@@ -13,7 +13,7 @@ lwvl::Framebuffer::ID::~ID() {
 }
 
 
-lwvl::Framebuffer::Framebuffer(int id): m_offsite_id(std::make_shared<const lwvl::Framebuffer::ID>(id)) {}
+lwvl::Framebuffer::Framebuffer(int id) : m_offsite_id(std::make_shared<const lwvl::Framebuffer::ID>(id)) {}
 
 
 void lwvl::Framebuffer::bind() {

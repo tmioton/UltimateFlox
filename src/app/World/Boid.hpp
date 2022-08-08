@@ -7,7 +7,7 @@ struct Boid;
 
 using BoidArray = std::unique_ptr<Boid[]>;
 
-Vector magnitude(Vector const& vec, float mag);
+Vector magnitude(Vector const &vec, float mag);
 
 struct Boid {
     static constexpr float scale = 5.0f;
@@ -30,7 +30,7 @@ struct Boid {
     //static constexpr glm::vec3 color {0.05098f, 0.19608f, 0.30196f};  // Prussian Blue
     //static constexpr glm::vec3 color {0.00000f, 0.29412f, 0.65882f};  // Cobalt Blue
     //static constexpr glm::vec3 color {0.24706f, 0.65490f, 0.83922f};  // Cerulean Crayola
-    static constexpr glm::vec3 color {0.76471f, 0.04314f, 0.30588f};  // Pictoral Carmine
+    static constexpr glm::vec3 color{0.76471f, 0.04314f, 0.30588f};  // Pictoral Carmine
     //static constexpr glm::vec3 color {0.17647f, 0.18824f, 0.27843f};  // Space Cadet
     //static constexpr glm::vec3 color {1.00000f, 0.87843f, 0.40000f};  // Naples Yellow
 
@@ -38,5 +38,5 @@ struct Boid {
     Vector position, velocity;
 
     // Methods
-    [[nodiscard]] Vector steer(Vector const& vec) const;
+    [[nodiscard]] Vector steer(Vector const &vec) const;
 };

@@ -12,7 +12,7 @@ lwvl::VertexArray::ID::~ID() {
 }
 
 void lwvl::VertexArray::_format(GLuint vao, GLuint index, uint8_t dimensions, lwvl::ByteFormat type, GLuint offset) {
-    switch(type) {
+    switch (type) {
         case ByteFormat::Int:
         case ByteFormat::Int_2_10_10_10:
         case ByteFormat::UnsignedInt:
@@ -42,11 +42,11 @@ void lwvl::VertexArray::clear() {
     glBindVertexArray(0);
 }
 
-void lwvl::VertexArray::array(lwvl::Buffer const& buffer, GLuint binding, GLintptr offset, GLsizei stride) {
+void lwvl::VertexArray::array(lwvl::Buffer const &buffer, GLuint binding, GLintptr offset, GLsizei stride) {
     glVertexArrayVertexBuffer(id(), binding, buffer.id(), offset, stride);
 }
 
-void lwvl::VertexArray::element(lwvl::Buffer const& buffer) {
+void lwvl::VertexArray::element(lwvl::Buffer const &buffer) {
     glVertexArrayElementBuffer(id(), buffer.id());
 }
 
@@ -56,7 +56,9 @@ void lwvl::VertexArray::attribute(GLuint index, uint8_t dimensions, lwvl::ByteFo
     _format(vao, index, dimensions, type, offset);
 }
 
-void lwvl::VertexArray::attribute(GLuint binding, GLuint attribute, uint8_t dimensions, lwvl::ByteFormat type, GLuint offset) {
+void lwvl::VertexArray::attribute(
+    GLuint binding, GLuint attribute, uint8_t dimensions, lwvl::ByteFormat type, GLuint offset
+) {
     const GLuint vao = id();
     glEnableVertexArrayAttrib(vao, attribute);
     _format(vao, attribute, dimensions, type, offset);
