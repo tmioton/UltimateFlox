@@ -5,8 +5,6 @@
 
 struct Boid;
 
-using BoidArray = std::unique_ptr<Boid[]>;
-
 Vector magnitude(Vector const &vec, float mag);
 
 struct Boid {
