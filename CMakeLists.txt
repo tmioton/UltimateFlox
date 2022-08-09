@@ -3,11 +3,11 @@ project(UltimateFlox VERSION 1.4.0)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(flox "")
+add_executable(${PROJECT_NAME} "")
 
 # Mark the project as C++ 17 and set the output directory.
 set_target_properties(
-    flox PROPERTIES
+    ${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO

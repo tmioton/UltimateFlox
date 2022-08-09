@@ -1,5 +1,5 @@
 target_sources(
-    flox
+    ${PROJECT_NAME}
     PRIVATE
         Application.cpp
 
@@ -16,6 +16,8 @@ target_sources(
         World/Flock.cpp
 
         # RENDER
+        Render/Object.hpp
+        Render/Object.cpp
         Render/Controls.hpp
         Render/Controls.cpp
         Render/Models.hpp
@@ -33,16 +35,16 @@ target_sources(
         Core/Event.cpp
 )
 
-target_include_directories(flox PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Use precompiled headers.
-target_precompile_headers(flox PRIVATE pch.hpp pch.cpp)
+target_precompile_headers(${PROJECT_NAME} PRIVATE pch.hpp pch.cpp)
 
 # Link in glad and glfw libraries
-target_link_libraries(flox PRIVATE OpenGL32)
-target_link_libraries(flox PRIVATE glad)
-target_link_libraries(flox PRIVATE glfw)
-target_link_libraries(flox PRIVATE glm)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL32)
+target_link_libraries(${PROJECT_NAME} PRIVATE glad)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+target_link_libraries(${PROJECT_NAME} PRIVATE glm)
 
 # Link in LWVL
-target_link_libraries(flox PRIVATE lwvl)
+target_link_libraries(${PROJECT_NAME} PRIVATE lwvl)

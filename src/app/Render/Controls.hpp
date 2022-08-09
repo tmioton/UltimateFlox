@@ -9,7 +9,7 @@ class BoidShader {
 public:
     virtual ~BoidShader() = default;
 
-    void draw(BoidModel *);
+    void draw(Model *);
 
 protected:
     lwvl::Program control;

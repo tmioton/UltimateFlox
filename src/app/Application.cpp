@@ -82,12 +82,15 @@ int run(int width, int height) {
 
     FlockRenderer renderer{flockSize};
 
-    ClassicModel classicModel{renderer.model<ClassicModel>()};
-    FilledModel filledModel{renderer.model<FilledModel>()};
-    VisionModel visionModel{renderer.model<VisionModel>()};
-    BoidModel* activeModel = &filledModel;
+    Model classicModel{loadObject(boidShape.data(), boidShape.size(), classicIndices.data(), classicIndices.size(), lwvl::PrimitiveMode::Lines), flockSize};
+    Model filledModel{loadObject(boidShape.data(), boidShape.size(), filledIndices.data(), filledIndices.size(), lwvl::PrimitiveMode::Triangles), flockSize};
+    Model visionModel{loadObject(visionShape.data(), visionShape.size(), visionIndices.data(), visionIndices.size(), lwvl::PrimitiveMode::Lines), flockSize};
+    Model* activeModel = &filledModel;
 
-    //Projection projection{glm::perspective(90.0f, aspect, 1.0f, 10.0f)};
+    renderer.attachData(&classicModel);
+    renderer.attachData(&filledModel);
+    renderer.attachData(&visionModel);
+
     Projection projection{
         1.0f / bounds.x, 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f / bounds.y, 0.0f, 0.0f,
@@ -95,9 +98,9 @@ int run(int width, int height) {
         0.0f, 0.0f, 0.0f, 1.0f
     };
 
-    DefaultBoidShader defaultBoidShader{renderer.control<DefaultBoidShader>(projection)};
-    SpeedDebugShader speedDebugShader{renderer.control<SpeedDebugShader>(projection)};
-    VisionShader visionShader{renderer.control<VisionShader>(projection)};
+    DefaultBoidShader defaultBoidShader{projection};
+    SpeedDebugShader speedDebugShader{projection};
+    VisionShader visionShader{projection};
     BoidShader* activeShader = &defaultBoidShader;
 
 #ifndef NDEBUG

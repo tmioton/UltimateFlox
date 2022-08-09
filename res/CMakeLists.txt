@@ -1,7 +1,7 @@
 # We define this target over the individual resource targets so they can all be built together,
 # rather than shaders then GLFW, then fonts, then Glad
 add_custom_target(resources)
-add_dependencies(flox resources)
+add_dependencies(${PROJECT_NAME} resources)
 
 # Maybe this should be a macro.
 function(export_resources)
@@ -41,6 +41,7 @@ export_resources(
         boid.frag
         speeddebug.vert
         speeddebug.frag
+        default.vert
         default.frag
         vision.vert
 )
