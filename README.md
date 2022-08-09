@@ -9,4 +9,4 @@ Use the ```s``` key to toggle speed debug vision mode.<br>
 Use the ```Space``` key to pause the simulation.<br>
 
 Create a ```flox.txt``` file in the executable's directory to control the flock size.
-A single unambiguous integer should be placed in the file. The simulation will default to 8 boids otherwise.
+A single unambiguous integer should be placed in the file. The simulation will default to 512 boids otherwise.
