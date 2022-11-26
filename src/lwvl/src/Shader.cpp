@@ -224,6 +224,13 @@ void lwvl::Program::bind() const {
     glUseProgram(id());
 }
 
+void lwvl::Program::draw(const void *user_ptr, LWVLProgramProc func) const {
+    int current = active();
+    bind();
+    func(user_ptr);
+    glUseProgram(current);
+}
+
 void lwvl::Program::clear() {
     glUseProgram(0);
 }

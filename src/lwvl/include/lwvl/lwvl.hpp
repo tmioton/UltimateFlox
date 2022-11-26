@@ -135,6 +135,8 @@ namespace lwvl {
         TriangleStrip = GL_TRIANGLE_STRIP,
         TriangleStripAdjacency = GL_TRIANGLE_STRIP_ADJACENCY,
         TrianglesAdjacency = GL_TRIANGLES_ADJACENCY,
+        Quads = GL_QUADS,
+        QuadStrip = GL_QUAD_STRIP
     };
 
     namespace bits {
@@ -232,6 +234,11 @@ namespace lwvl {
         void update(Iterator first, Iterator last, GLsizei offset = 0) {
             glNamedBufferSubData(id(), offset, sizeof(*first) * (last - first), &(*first));
         }
+
+        //template<typename T>
+        //T* map(GLsizeiptr size, GLbitfield bits, GLintptr offset = 0) {
+        //    glMapNamedBufferRange(id(), offset, size, bits);
+        //}
     };
 
     namespace debug {
@@ -558,6 +565,14 @@ namespace lwvl {
     using TessEvaluationShader = details::Shader<details::ShaderType::TessellationEvaluation>;
     using ComputeShader = details::Shader<details::ShaderType::Compute>;
 
+#ifdef _WIN32
+    using LWVLProgramProc = void (__stdcall *)(
+#else
+        using LWVLDebugProc = void(*)(
+#endif
+        const void *userState
+    );
+
     class Program {
         class ID {
             static GLuint reserve();
@@ -593,7 +608,7 @@ namespace lwvl {
 
         template<details::ShaderType target>
         void detach(details::Shader<target> const &shader) {
-            glAttachShader(id(), shader.id());
+            glDetachShader(id(), shader.id());
         }
 
         void link();
@@ -603,6 +618,7 @@ namespace lwvl {
         void link(std::string const &vertexSource, std::string const &fragmentSource);
 
         void bind() const;
+        void draw(const void* user_ptr, LWVLProgramProc) const;
 
         static void clear();
 
