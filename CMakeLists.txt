@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.17)
 project(UltimateFlox VERSION 1.4.1)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 add_executable(${PROJECT_NAME} "")
 
 # Mark the project as C++ 17 and set the output directory.
 set_target_properties(
     ${PROJECT_NAME} PROPERTIES
-    CXX_STANDARD 17
+    CXX_STANDARD 20
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 
