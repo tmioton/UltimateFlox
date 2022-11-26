@@ -5,7 +5,7 @@
 
 struct Boid;
 
-Vector magnitude(Vector const &vec, float mag);
+inline Vector magnitude(Vector vec, float mag);
 
 struct Boid {
     static constexpr float scale = 5.0f;
@@ -36,5 +36,5 @@ struct Boid {
     Vector position, velocity;
 
     // Methods
-    [[nodiscard]] Vector steer(Vector const &vec) const;
+    [[nodiscard]] Vector steer(Vector vec) const;
 };
