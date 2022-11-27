@@ -37,11 +37,13 @@ endfunction()
 export_resources(
     DIRECTORY Shaders
     DEPENDS
-        boid.vert
         boid.frag
-        speeddebug.vert
-        speeddebug.frag
-        default.vert
+        boid.vert
         default.frag
+        default.vert
+        quadtree.geom
+        quadtree.vert
+        speeddebug.frag
+        speeddebug.vert
         vision.vert
 )

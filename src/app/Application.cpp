@@ -1,8 +1,10 @@
 #include "pch.hpp"
 #include "Core/Window.hpp"
 #include "World/Flock.hpp"
-#include "Algorithm/DirectLoopAlgorithm.hpp"
+//#include "Algorithm/DirectLoopAlgorithm.hpp"
+#include "Algorithm/QuadtreeAlgorithm.hpp"
 #include "Render/FlockRenderer.hpp"
+#include "Render/QuadtreeRenderer.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -17,7 +19,6 @@ using namespace std::chrono;
 //   . Spatial partitioning
 //   . Dev Console
 
-
 static inline double delta(time_point<steady_clock> start) {
     return 0.000001 * static_cast<double>(duration_cast<microseconds>(
         high_resolution_clock::now() - start
@@ -28,6 +29,7 @@ static inline double delta(time_point<steady_clock> start) {
 int run(int width, int height) {
     Window window(width, height, "Ultimate Flox");
 
+    lwvl::Program::clear();
 #ifndef NDEBUG
     GLEventListener listener(
             [](
@@ -35,15 +37,16 @@ int run(int width, int height) {
                 Severity severity, unsigned int id, int length,
                 const char *message, const void *userState
             ) {
-                if (type != Type::OTHER) {
+                //if (type != Type::OTHER){
                     std::cout << "[OpenGL] " << message << std::endl;
-                }
+                //}
             }
         );
 
         const auto setupStart = high_resolution_clock::now();
 #endif
-    size_t flockSize = 512;
+
+    size_t flockSize = 1024;
     try {
         std::ifstream file("flox.txt");
         if (!file) {
@@ -73,14 +76,25 @@ int run(int width, int height) {
     bool debugVisual = false;
     bool renderBoids = true;
     bool renderVision = false;
+    bool renderQuadtree = false;
 
     const float aspect = static_cast<float>(width) / static_cast<float>(height);
     const Vector bounds{calculateBounds(aspect)};
     Flock flock{flockSize};
-    DirectLoopAlgorithm directLoopAlgorithm{bounds};
-    Algorithm* algorithm = &directLoopAlgorithm;
+    //DirectLoopAlgorithm directLoopAlgorithm{bounds};
+    QuadtreeAlgorithm quadtreeAlgorithm{bounds};
+    //Algorithm* algorithm = &directLoopAlgorithm;
+    Algorithm* algorithm = &quadtreeAlgorithm;
+
+    Projection projection{
+        1.0f / bounds.x, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f / bounds.y, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
 
     FlockRenderer renderer{flockSize};
+    QuadtreeRenderer qtRenderer{projection};
 
     Model classicModel{loadObject(boidShape.data(), boidShape.size(), classicIndices.data(), classicIndices.size(), lwvl::PrimitiveMode::Lines), flockSize};
     Model filledModel{loadObject(boidShape.data(), boidShape.size(), filledIndices.data(), filledIndices.size(), lwvl::PrimitiveMode::Triangles), flockSize};
@@ -90,13 +104,6 @@ int run(int width, int height) {
     renderer.attachData(&classicModel);
     renderer.attachData(&filledModel);
     renderer.attachData(&visionModel);
-
-    Projection projection{
-        1.0f / bounds.x, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f / bounds.y, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f
-    };
 
     DefaultBoidShader defaultBoidShader{projection};
     SpeedDebugShader speedDebugShader{projection};
@@ -184,6 +191,8 @@ int run(int width, int height) {
                         renderBoids ^= true;
                     } else if (key_event.key == GLFW_KEY_V) {
                         renderVision ^= true;
+                    } else if (key_event.key == GLFW_KEY_Q) {
+                        renderQuadtree ^= true;
                     } else if (key_event.key == GLFW_KEY_S) {
                         debugVisual ^= true;
                         if (debugVisual) {
@@ -214,7 +223,13 @@ int run(int width, int height) {
 
         // Rendering
         if (doUpdates) {
-            renderer.update(flock.boids());
+            if (renderBoids || renderVision) {
+                renderer.update(flock.boids());
+            }
+
+            if (renderQuadtree) {
+                qtRenderer.update(quadtreeAlgorithm.tree());
+            }
         }
 
         lwvl::clear();
@@ -228,6 +243,10 @@ int run(int width, int height) {
 
         if (renderBoids) {
             FlockRenderer::draw(activeModel, activeShader);
+        }
+
+        if (renderQuadtree) {
+            qtRenderer.draw();
         }
 
         window.swapBuffers();
@@ -263,7 +282,8 @@ int run(int width, int height) {
 
 int main() {
     try {
-        return run(800, 600);
+        return run(800, 450);
+        //return run(1920, 1080);
     } catch (const std::bad_alloc &e) {
         std::cout << "Unable to allocate memory for program. Exiting." << std::endl;
         return -1;

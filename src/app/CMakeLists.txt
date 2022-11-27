@@ -2,18 +2,18 @@ target_sources(
     ${PROJECT_NAME}
     PRIVATE
         Application.cpp
+        Common.hpp
 
         # ALGORITHM
         Algorithm/Algorithm.hpp
-        Algorithm/DirectLoopAlgorithm.hpp
-        Algorithm/DirectLoopAlgorithm.cpp
+#        Algorithm/DirectLoopAlgorithm.hpp
+#        Algorithm/DirectLoopAlgorithm.cpp
+        Algorithm/QuadtreeAlgorithm.hpp
+        Algorithm/QuadtreeAlgorithm.cpp
 
-        # WORLD
-        World/World.hpp
-        World/Boid.hpp
-        World/Boid.cpp
-        World/Flock.hpp
-        World/Flock.cpp
+         MATH
+        Math/Rectangle.hpp
+        Math/Rectangle.cpp
 
         # RENDER
         Render/Object.hpp
@@ -24,9 +24,19 @@ target_sources(
         Render/Models.cpp
         Render/FlockRenderer.hpp
         Render/FlockRenderer.cpp
+        Render/QuadtreeRenderer.hpp
+        Render/QuadtreeRenderer.cpp
 
         # STRUCTURES
         Structures/DoubleBuffer.hpp
+        Structures/Quadtree.hpp
+
+        # WORLD
+        World/Boid.hpp
+        World/Boid.cpp
+        World/Flock.hpp
+        World/Flock.cpp
+        World/World.hpp
 
         # CORE
         Core/Window.hpp
