@@ -246,6 +246,10 @@ int run(int width, int height) {
 
         lwvl::clear();
 
+        if (renderQuadtree) {
+            qtRenderer.draw();
+        }
+
         if (renderVision) {
             visionShader.radius(Boid::cohesiveRadius);
             FlockRenderer::draw(&visionModel, &visionShader);
@@ -255,10 +259,6 @@ int run(int width, int height) {
 
         if (renderBoids) {
             FlockRenderer::draw(activeModel, activeShader);
-        }
-
-        if (renderQuadtree) {
-            qtRenderer.draw();
         }
 
         window.swapBuffers();
