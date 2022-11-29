@@ -7,24 +7,24 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
     constexpr float cohesiveRadius = Boid::cohesiveRadius * Boid::cohesiveRadius;
 
     Boid *write = boids.write();
-    Boid const* read = boids.read();
-    const size_t count = boids.count();
+    Boid const *read = boids.read();
+    const int count = static_cast<int>(boids.count());
 
     m_failed.clear();
     m_tree.clear();
-    for(size_t i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
         if (!m_tree.insert(i, read[i].position)) {
             m_failed.push_back(i);
         }
     }
 
-    const int failedCount = m_failed.size();
+    const int failedCount = static_cast<int>(m_failed.size());
 
-    Rectangle centerBound {m_bounds * 0.75f};
-    Rectangle hardBound {m_bounds * 2.0f};
+    Rectangle centerBound{m_bounds * 0.75f};
+    Rectangle hardBound{m_bounds * 2.0f};
 
-    Rectangle boidBound {Vector{Boid::scale}};
-    Rectangle searchBound {Vector{Boid::cohesiveRadius}};
+    Rectangle boidBound{Vector{Boid::scale}};
+    Rectangle searchBound{Vector{Boid::cohesiveRadius}};
     for (int i = 0; i < count; ++i) {
         Boid &current = write[i];
 
@@ -32,7 +32,7 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
         searchBound.center = current.position;
         Vector centerSteer{0.0f, 0.0f};
 
-        bool inCenter = centerBound.intersects(boidBound);
+        const bool inCenter = centerBound.intersects(boidBound);
         float centerSteerWeight = Boid::primadonnaWeight;
         if (!inCenter) {
             if (!hardBound.intersects(boidBound)) {
@@ -53,8 +53,8 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
         size_t disruptiveTotal = 0;
 
         Boidtree::ResultVector result = m_tree.search(searchBound);
-        const int resultCount = result.size();
-        for(int j = 0; j < resultCount + failedCount; ++j) {
+        const int resultCount = static_cast<int>(result.size());
+        for (int j = 0; j < resultCount + failedCount; ++j) {
             if (inCenter && j >= resultCount) {
                 break;
             }

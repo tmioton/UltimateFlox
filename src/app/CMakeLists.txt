@@ -16,14 +16,14 @@ target_sources(
         Math/Rectangle.cpp
 
         # RENDER
-        Render/Object.hpp
-        Render/Object.cpp
-        Render/Controls.hpp
-        Render/Controls.cpp
-        Render/Models.hpp
-        Render/Models.cpp
-        Render/FlockRenderer.hpp
-        Render/FlockRenderer.cpp
+        Render/Boid/Object.hpp
+        Render/Boid/Object.cpp
+        Render/Boid/Controls.hpp
+        Render/Boid/Controls.cpp
+        Render/Boid/Models.hpp
+        Render/Boid/Models.cpp
+        Render/Boid/FlockRenderer.hpp
+        Render/Boid/FlockRenderer.cpp
         Render/QuadtreeRenderer.hpp
         Render/QuadtreeRenderer.cpp
 

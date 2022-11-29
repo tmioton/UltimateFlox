@@ -3,7 +3,7 @@
 #include "World/Flock.hpp"
 //#include "Algorithm/DirectLoopAlgorithm.hpp"
 #include "Algorithm/QuadtreeAlgorithm.hpp"
-#include "Render/FlockRenderer.hpp"
+#include "Render/Boid/FlockRenderer.hpp"
 #include "Render/QuadtreeRenderer.hpp"
 
 #include <chrono>
@@ -84,7 +84,7 @@ int run(int width, int height) {
     //DirectLoopAlgorithm directLoopAlgorithm{bounds};
     QuadtreeAlgorithm quadtreeAlgorithm{bounds};
     //Algorithm* algorithm = &directLoopAlgorithm;
-    Algorithm* algorithm = &quadtreeAlgorithm;
+    Algorithm *algorithm = &quadtreeAlgorithm;
 
     Projection projection{
         1.0f / bounds.x, 0.0f, 0.0f, 0.0f,
@@ -96,10 +96,22 @@ int run(int width, int height) {
     FlockRenderer renderer{flockSize};
     QuadtreeRenderer qtRenderer{projection};
 
-    Model classicModel{loadObject(boidShape.data(), boidShape.size(), classicIndices.data(), classicIndices.size(), lwvl::PrimitiveMode::Lines), flockSize};
-    Model filledModel{loadObject(boidShape.data(), boidShape.size(), filledIndices.data(), filledIndices.size(), lwvl::PrimitiveMode::Triangles), flockSize};
-    Model visionModel{loadObject(visionShape.data(), visionShape.size(), visionIndices.data(), visionIndices.size(), lwvl::PrimitiveMode::Lines), flockSize};
-    Model* activeModel = &filledModel;
+    Model classicModel{loadObject(
+        boidShape.data(), boidShape.size(),
+        classicIndices.data(), classicIndices.size(),
+        lwvl::PrimitiveMode::Lines
+    ), flockSize};
+    Model filledModel{loadObject(
+        boidShape.data(), boidShape.size(),
+        filledIndices.data(), filledIndices.size(),
+        lwvl::PrimitiveMode::Triangles
+    ), flockSize};
+    Model visionModel{loadObject(
+        visionShape.data(), visionShape.size(),
+        visionIndices.data(), visionIndices.size(),
+        lwvl::PrimitiveMode::Lines
+    ), flockSize};
+    Model *activeModel = &filledModel;
 
     renderer.attachData(&classicModel);
     renderer.attachData(&filledModel);
@@ -108,7 +120,7 @@ int run(int width, int height) {
     DefaultBoidShader defaultBoidShader{projection};
     SpeedDebugShader speedDebugShader{projection};
     VisionShader visionShader{projection};
-    BoidShader* activeShader = &defaultBoidShader;
+    BoidShader *activeShader = &defaultBoidShader;
 
 #ifndef NDEBUG
     std::cout << "Setup took " << delta(setupStart) << " seconds." << std::endl;
@@ -117,9 +129,9 @@ int run(int width, int height) {
     auto frameStart = high_resolution_clock::now();
 
 #ifndef NDEBUG
-        double eventDurationAverage = 0.0;
-        double updateDurationAverage = 0.0;
-        double renderDurationAverage = 0.0;
+    double eventDurationAverage = 0.0;
+    double updateDurationAverage = 0.0;
+    double renderDurationAverage = 0.0;
 #endif
 
     glEnable(GL_BLEND);
@@ -154,7 +166,7 @@ int run(int width, int height) {
             // Handle events differently if the console's open.
             if (consoleOpen) {
                 if (concrete.type == Event::Type::KeyRelease) {
-                    KeyboardEvent &key_event = std::get<KeyboardEvent>(concrete.event);
+                    auto &key_event = std::get<KeyboardEvent>(concrete.event);
 
                     if (key_event.key == GLFW_KEY_ENTER) {
                         // End the line, interpret input, start new input stream
@@ -163,7 +175,7 @@ int run(int width, int height) {
                         consoleOpen = false;
                     }
                 } else if (concrete.type == Event::Type::TextInput) {
-                    TextEvent &text_event = std::get<TextEvent>(concrete.event);
+                    auto &text_event = std::get<TextEvent>(concrete.event);
                     char key_name = static_cast<char>(text_event.codepoint);
 
                     // Ignore the ~ key. Also don't catch it here.
@@ -173,14 +185,14 @@ int run(int width, int height) {
                 }
             } else {
                 if (concrete.type == Event::Type::KeyRelease) {
-                    KeyboardEvent &key_event = std::get<KeyboardEvent>(concrete.event);
+                    auto &key_event = std::get<KeyboardEvent>(concrete.event);
 
                     // Open console.
                     if (key_event.key == GLFW_KEY_GRAVE_ACCENT) {
                         consoleOpen = true;
                     } else
 
-                    // Boid keybinds.
+                        // Boid keybinds.
                     if (key_event.key == GLFW_KEY_SPACE) {
                         paused ^= true;
                     } else if (key_event.key == GLFW_KEY_1) {

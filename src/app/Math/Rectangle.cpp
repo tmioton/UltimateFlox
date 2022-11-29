@@ -21,8 +21,8 @@ bool Rectangle::intersects(Rectangle &other) const {
 }
 
 int Rectangle::quadrant(Vector p) const {
-    bool x {p.x >= center.x};
-    bool y {p.y >= center.y};
+    bool x{p.x >= center.x};
+    bool y{p.y >= center.y};
     return ((!y << 1) + (((!x) & y) | (x & (!y)))) & 0b11;
 }
 

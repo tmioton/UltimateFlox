@@ -1,14 +1,15 @@
 #pragma once
 
 #include "pch.hpp"
-#include "Controls.hpp"
 #include "Structures/Quadtree.hpp"
 
 
 class QuadtreeRenderer {
 public:
     explicit QuadtreeRenderer(Projection &);
+
     void update(Boidtree const &);
+
     void draw() const;
 
 private:
