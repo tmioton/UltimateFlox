@@ -220,7 +220,7 @@ int run() {
     double renderDurationAverage = 0.0;
 #endif
 
-    lua_pushnumber(raw, 0.0f);
+    lua_pushnumber(raw, 1.0f / 60.0f);
     lua_setglobal(raw, "fps");
 
     glEnable(GL_BLEND);
