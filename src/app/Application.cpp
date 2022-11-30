@@ -1,5 +1,6 @@
 #include "pch.hpp"
 #include "Core/Window.hpp"
+#include "Core/Lua/VirtualMachine.hpp"
 #include "World/Flock.hpp"
 //#include "Algorithm/DirectLoopAlgorithm.hpp"
 #include "Algorithm/QuadtreeAlgorithm.hpp"
@@ -13,11 +14,30 @@ using namespace lwvl::debug;
 using namespace std::chrono;
 
 
-// Ideas:
-//   . Background texture displaying the path of the boid?
-//   . Compute shaders
-//   . Spatial partitioning
-//   . Dev Console
+/* Ideas:
+  . Background texture displaying the path of the boid?
+  . Compute shaders
+  . Shader uniform buffers
+  . Dev console
+  . Lua scripting integration
+
+How do we handle Lua hooks?
+Global state object?
+State object passed to important objects?
+I want to be able to hook into the code before and after each step of making a frame
+
+VM::call("<name of function in lua>")
+
+Every object puts data it wants changeable into a Data object derived from the base Data object?
+Every object gets a reference to a central system object.
+Every object can issue a call to the LuaHook(name) method of the system object.
+  . name is the name of a function possibly defined inside a Lua script.
+  . If this function is defined in a Lua script, that function gets called.
+Use a script to allow the user to set most customization points without recompiling.
+  . Window size
+  . Flock size
+  . Render controls
+*/
 
 static inline double delta(time_point<steady_clock> start) {
     return 0.000001 * static_cast<double>(duration_cast<microseconds>(
@@ -26,9 +46,95 @@ static inline double delta(time_point<steady_clock> start) {
 }
 
 
-int run(int width, int height) {
-    Window window(width, height, "Ultimate Flox");
+void createSettingsTable(lua_State* raw, int flockSize, float worldBound, int width, int height) {
+    lua_createtable(raw, 4, 0);
+
+    lua_pushstring(raw, "flock_size");
+    lua_pushinteger(raw, static_cast<int>(flockSize));
+    lua_settable(raw, -3);
+
+    lua_pushstring(raw, "world_bound");
+    lua_pushnumber(raw, worldBound);
+    lua_settable(raw, -3);
+
+    lua_pushstring(raw, "width");
+    lua_pushinteger(raw, width);
+    lua_settable(raw, -3);
+
+    lua_pushstring(raw, "height");
+    lua_pushinteger(raw, height);
+    lua_settable(raw, -3);
+
+    lua_setglobal(raw, "flox");
+}
+
+
+int run() {
+    size_t flockSize = 1024;
     float worldBound = 450.0f;
+    int width = 800;
+    int height = 450;
+
+    //std::string cmd {"a = 7 + 11"};
+    lua::VirtualMachine L;
+    L.addCommonLibraries();
+    lua_State* raw = lua::raw(L);  // Do things manually while working on the abstraction.
+
+    createSettingsTable(raw, static_cast<int>(flockSize), worldBound, width, height);
+
+    //int r = L.runString(cmd);
+    int r = L.runFile("Data/Scripts/flox.lua");
+    if (L.validate(r)) {
+        lua_getglobal(raw, "flox");
+        if (lua_istable(raw, -1)) {
+            lua_pushstring(raw, "flock_size");
+            lua_gettable(raw, -2);
+            if (lua_isnumber(raw, -1)) {
+                flockSize = static_cast<size_t>(lua_tointeger(raw, -1));
+            } else {
+                lua_pop(raw, 1);
+            }
+            lua_pop(raw, 1);
+
+            lua_pushstring(raw, "width");
+            lua_gettable(raw, -2);
+            if (lua_isnumber(raw, -1)) {
+                width = static_cast<int>(lua_tointeger(raw, -1));
+            } else {
+                lua_pop(raw, 1);
+            }
+            lua_pop(raw, 1);
+
+            lua_pushstring(raw, "height");
+            lua_gettable(raw, -2);
+            if (lua_isnumber(raw, -1)) {
+                height = static_cast<int>(lua_tointeger(raw, -1));
+            } else {
+                lua_pop(raw, 1);
+            }
+            lua_pop(raw, 1);
+
+            lua_pushstring(raw, "world_bound");
+            lua_gettable(raw, -2);
+            if (lua_isnumber(raw, -1)) {
+                worldBound = static_cast<float>(lua_tonumber(raw, -1));
+            } else {
+                lua_pop(raw, 1);
+            }
+
+            lua_pop(raw, 2);
+        }
+
+        //lua_getglobal(lua::raw(L), "a");
+        //if (lua_isnumber(lua::raw(L), -1)) {
+        //    auto a_in_cpp = (float)lua_tonumber(lua::raw(L), -1);
+        //    std::cout << "a_in_cpp = " << a_in_cpp << std::endl;
+        //} else if (lua_isnil(lua::raw(L), -1)) {
+        //    std::cout << "a not found" << std::endl;
+        //}
+    }
+
+    Window window(width, height, "Ultimate Flox");
 
     lwvl::Program::clear();
 #ifndef NDEBUG
@@ -46,30 +152,6 @@ int run(int width, int height) {
 
         const auto setupStart = high_resolution_clock::now();
 #endif
-
-    size_t flockSize = 1024;
-    try {
-        std::ifstream file("flox.txt");
-        if (!file) {
-            throw std::ios_base::failure("");
-        }
-
-        std::stringstream output_stream;
-        std::string line;
-        while (std::getline(file, line)) {
-            if (line.length() == 0) {
-                continue;
-            }
-
-            flockSize = std::stoull(line);
-            break;
-        }
-    } catch (std::ios_base::failure &fb) {
-        //std::cout << fb.what() << ". Defaulting to 8 boids." << std::endl;
-        std::cout << "flox.txt not found. Defaulting to " << flockSize << " boids." << std::endl;
-    } catch (std::invalid_argument &ia) {
-        std::cout << "Could not convert contents of flock.txt. Defaulting to 8 boids." << std::endl;
-    }
 
     // Move all of this to Register type variables
     bool consoleOpen = false;
@@ -128,8 +210,8 @@ int run(int width, int height) {
 
 #ifndef NDEBUG
     std::cout << "Setup took " << delta(setupStart) << " seconds." << std::endl;
-        auto secondStart = high_resolution_clock::now();
 #endif
+    auto secondStart = high_resolution_clock::now();
     auto frameStart = high_resolution_clock::now();
 
 #ifndef NDEBUG
@@ -138,12 +220,24 @@ int run(int width, int height) {
     double renderDurationAverage = 0.0;
 #endif
 
+    lua_pushnumber(raw, 0.0f);
+    lua_setglobal(raw, "fps");
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     for (int frameCount = 0; !window.shouldClose(); frameCount++) {
         // Calculate the time since last frame
         const auto dt = static_cast<float>(delta(frameStart));
         frameStart = high_resolution_clock::now();
+
+        lua_getglobal(raw, "OnFrameStart");
+        if (lua_isfunction(raw, -1)) {
+            lua_pushnumber(raw, dt);
+            lua_setglobal(raw, "delta");
+            L.validate(lua_pcall(raw, 0, 0, 0));
+        } else {
+            lua_pop(raw, 1);
+        }
 
 #ifndef NDEBUG
         auto averageStart = high_resolution_clock::now();
@@ -273,8 +367,20 @@ int run(int width, int height) {
 
         // Framerate display
         if ((frameCount & 63) == 0) {
-#ifndef NDEBUG
             double fps = static_cast<double>(frameCount) / delta(secondStart);
+            lua_getglobal(raw, "OnFrameGroupEnd");
+            if (lua_isfunction(raw, -1)) {
+                lua_pushinteger(raw, frameCount);
+                lua_setglobal(raw, "frame_count");
+                lua_pushnumber(raw, fps);
+                lua_setglobal(raw, "fps");
+                L.validate(lua_pcall(raw, 0, 0, 0));
+            } else {
+                lua_pop(raw, 1);
+            }
+
+            secondStart = high_resolution_clock::now();
+#ifndef NDEBUG
                 std::cout << "Average framerate for last " << frameCount << " frames: " << fps << " | " << 1.0 / fps << 's' << std::endl;
 
                 const auto frameth = 1.0 / static_cast<double>(frameCount);
@@ -284,7 +390,6 @@ int run(int width, int height) {
                 std::cout << std::endl;
 
                 // Reset time variables.
-                secondStart = high_resolution_clock::now();
                 eventDurationAverage = 0.0;
                 updateDurationAverage = 0.0;
                 renderDurationAverage = 0.0;
@@ -298,8 +403,7 @@ int run(int width, int height) {
 
 int main() {
     try {
-        return run(800, 450);
-        //return run(1920, 1080);
+        return run();
     } catch (const std::bad_alloc &e) {
         std::cout << "Unable to allocate memory for program. Exiting." << std::endl;
         return -1;

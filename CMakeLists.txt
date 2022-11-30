@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 3.17)
-project(UltimateFlox VERSION 1.5.0)
+project(UltimateFlox VERSION 1.5.1)
 
 set(CMAKE_CXX_STANDARD 20)
+#if (MSVC)
+#    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+##    set(BUILD_SHARED_LIBS TRUE)
+#endif()
 
 add_executable(${PROJECT_NAME} "")
 
-# Mark the project as C++ 17 and set the output directory.
+# Mark the project as C++ 20 and set the output directory.
 set_target_properties(
     ${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 20

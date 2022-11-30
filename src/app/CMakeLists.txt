@@ -42,6 +42,8 @@ target_sources(
         Core/Window.cpp
         Core/Event.hpp
         Core/Event.cpp
+        Core/Lua/VirtualMachine.hpp
+        Core/Lua/VirtualMachine.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -54,6 +56,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL32)
 target_link_libraries(${PROJECT_NAME} PRIVATE glad)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm)
+target_link_libraries(${PROJECT_NAME} PRIVATE lua)
 
 # Link in LWVL
 target_link_libraries(${PROJECT_NAME} PRIVATE lwvl)

@@ -47,3 +47,9 @@ export_resources(
         speeddebug.vert
         vision.vert
 )
+
+export_resources(
+    DIRECTORY Scripts
+    DEPENDS
+        flox.lua
+)
