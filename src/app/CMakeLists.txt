@@ -36,7 +36,6 @@ target_sources(
         World/Boid.cpp
         World/Flock.hpp
         World/Flock.cpp
-        World/World.hpp
 
         # CORE
         Core/Window.hpp

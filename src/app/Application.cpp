@@ -28,6 +28,7 @@ static inline double delta(time_point<steady_clock> start) {
 
 int run(int width, int height) {
     Window window(width, height, "Ultimate Flox");
+    float worldBound = 450.0f;
 
     lwvl::Program::clear();
 #ifndef NDEBUG
@@ -79,7 +80,10 @@ int run(int width, int height) {
     bool renderQuadtree = false;
 
     const float aspect = static_cast<float>(width) / static_cast<float>(height);
-    const Vector bounds{calculateBounds(aspect)};
+    const Vector bounds {
+        aspect >= 1.0f ? worldBound * aspect : worldBound,
+        aspect < 1.0f ? worldBound * aspect : worldBound
+    };
     Flock flock{flockSize};
     //DirectLoopAlgorithm directLoopAlgorithm{bounds};
     QuadtreeAlgorithm quadtreeAlgorithm{bounds};

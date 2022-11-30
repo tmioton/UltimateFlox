@@ -3,8 +3,8 @@
 QuadtreeAlgorithm::QuadtreeAlgorithm(Vector b) : m_bounds(b), m_tree(m_bounds) {}
 
 void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
-    constexpr float disruptiveRadius = Boid::disruptiveRadius * Boid::disruptiveRadius;
-    constexpr float cohesiveRadius = Boid::cohesiveRadius * Boid::cohesiveRadius;
+    const float disruptiveRadius = Boid::disruptiveRadius * Boid::disruptiveRadius;
+    const float cohesiveRadius = Boid::cohesiveRadius * Boid::cohesiveRadius;
 
     Boid *write = boids.write();
     Boid const *read = boids.read();

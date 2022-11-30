@@ -2,7 +2,6 @@
 
 #include "Algorithm/Algorithm.hpp"
 #include "Structures/DoubleBuffer.hpp"
-#include "World.hpp"
 #include "Boid.hpp"
 
 
