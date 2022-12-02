@@ -1,3 +1,4 @@
+#include "pch.hpp"
 #include "VirtualMachine.hpp"
 
 std::ostream &lua::VirtualMachine::type(std::ostream &out, int type) {
@@ -99,6 +100,18 @@ bool lua::VirtualMachine::validate(int r_code, std::ostream& out) {
         return true;
     }
     return false;
+}
+
+void lua::VirtualMachine::setGlobal(lua::Table &table) {
+    lua_setglobal(m_state, table.name().c_str());
+}
+
+lua::Table lua::VirtualMachine::table(const char *name) {
+    return {m_state, name};
+}
+
+void lua::VirtualMachine::pop(int n) {
+    lua_pop(m_state, n);
 }
 
 lua_State *lua::raw(lua::VirtualMachine &lvm) {

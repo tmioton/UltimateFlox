@@ -42,6 +42,10 @@ target_sources(
         Core/Window.cpp
         Core/Event.hpp
         Core/Event.cpp
+        Core/Lua/Lua.hpp
+        Core/Lua/Lua.cpp
+        Core/Lua/Table.hpp
+        Core/Lua/Table.cpp
         Core/Lua/VirtualMachine.hpp
         Core/Lua/VirtualMachine.cpp
 )

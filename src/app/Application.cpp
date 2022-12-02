@@ -46,29 +46,6 @@ static inline double delta(time_point<steady_clock> start) {
 }
 
 
-void createSettingsTable(lua_State* raw, int flockSize, float worldBound, int width, int height) {
-    lua_createtable(raw, 4, 0);
-
-    lua_pushstring(raw, "flock_size");
-    lua_pushinteger(raw, static_cast<int>(flockSize));
-    lua_settable(raw, -3);
-
-    lua_pushstring(raw, "world_bound");
-    lua_pushnumber(raw, worldBound);
-    lua_settable(raw, -3);
-
-    lua_pushstring(raw, "width");
-    lua_pushinteger(raw, width);
-    lua_settable(raw, -3);
-
-    lua_pushstring(raw, "height");
-    lua_pushinteger(raw, height);
-    lua_settable(raw, -3);
-
-    lua_setglobal(raw, "flox");
-}
-
-
 int run() {
     size_t flockSize = 1024;
     float worldBound = 450.0f;
@@ -80,58 +57,25 @@ int run() {
     L.addCommonLibraries();
     lua_State* raw = lua::raw(L);  // Do things manually while working on the abstraction.
 
-    createSettingsTable(raw, static_cast<int>(flockSize), worldBound, width, height);
+    // Create config table for Lua customization.
+    lua::Table configTable{L.table("flox")};
+    configTable.create(4, 0);
+    configTable.setInteger("flock_size", static_cast<int>(flockSize));
+    configTable.setNumber("world_bound", worldBound);
+    configTable.setInteger("width", width);
+    configTable.setInteger("height", height);
+    L.setGlobal(configTable);  // Consumes the table off the stack
 
     //int r = L.runString(cmd);
     int r = L.runFile("Data/Scripts/flox.lua");
     if (L.validate(r)) {
-        lua_getglobal(raw, "flox");
-        if (lua_istable(raw, -1)) {
-            lua_pushstring(raw, "flock_size");
-            lua_gettable(raw, -2);
-            if (lua_isnumber(raw, -1)) {
-                flockSize = static_cast<size_t>(lua_tointeger(raw, -1));
-            } else {
-                lua_pop(raw, 1);
-            }
-            lua_pop(raw, 1);
-
-            lua_pushstring(raw, "width");
-            lua_gettable(raw, -2);
-            if (lua_isnumber(raw, -1)) {
-                width = static_cast<int>(lua_tointeger(raw, -1));
-            } else {
-                lua_pop(raw, 1);
-            }
-            lua_pop(raw, 1);
-
-            lua_pushstring(raw, "height");
-            lua_gettable(raw, -2);
-            if (lua_isnumber(raw, -1)) {
-                height = static_cast<int>(lua_tointeger(raw, -1));
-            } else {
-                lua_pop(raw, 1);
-            }
-            lua_pop(raw, 1);
-
-            lua_pushstring(raw, "world_bound");
-            lua_gettable(raw, -2);
-            if (lua_isnumber(raw, -1)) {
-                worldBound = static_cast<float>(lua_tonumber(raw, -1));
-            } else {
-                lua_pop(raw, 1);
-            }
-
-            lua_pop(raw, 2);
+        if (configTable.get()) {
+            flockSize = configTable.getInteger("flock_size", flockSize);
+            worldBound = static_cast<float>(configTable.getNumber("world_bound", worldBound));
+            width = configTable.getInteger("width", width);
+            height = configTable.getInteger("height", height);
+            L.pop(1);  // Need to explicitly pop the table off the stack.
         }
-
-        //lua_getglobal(lua::raw(L), "a");
-        //if (lua_isnumber(lua::raw(L), -1)) {
-        //    auto a_in_cpp = (float)lua_tonumber(lua::raw(L), -1);
-        //    std::cout << "a_in_cpp = " << a_in_cpp << std::endl;
-        //} else if (lua_isnil(lua::raw(L), -1)) {
-        //    std::cout << "a not found" << std::endl;
-        //}
     }
 
     Window window(width, height, "Ultimate Flox");
