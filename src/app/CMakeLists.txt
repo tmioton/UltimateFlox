@@ -1,6 +1,5 @@
 target_sources(
-    ${PROJECT_NAME}
-    PRIVATE
+    ${PROJECT_NAME} PRIVATE
         Application.cpp
         Common.hpp
 
@@ -11,7 +10,7 @@ target_sources(
         Algorithm/QuadtreeAlgorithm.hpp
         Algorithm/QuadtreeAlgorithm.cpp
 
-         MATH
+        # MATH
         Math/Rectangle.hpp
         Math/Rectangle.cpp
 
@@ -42,6 +41,8 @@ target_sources(
         Core/Window.cpp
         Core/Event.hpp
         Core/Event.cpp
+        Core/Lua/Function.hpp
+        Core/Lua/Function.cpp
         Core/Lua/Lua.hpp
         Core/Lua/Lua.cpp
         Core/Lua/Table.hpp

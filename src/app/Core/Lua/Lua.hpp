@@ -1,5 +1,4 @@
 #pragma once
-
 #include "pch.hpp"
 
 /* Lua Notes:

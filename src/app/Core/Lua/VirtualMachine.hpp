@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.hpp"
 #include "Table.hpp"
+#include "Function.hpp"
 
 namespace lua {
     class VirtualMachine {
@@ -12,7 +13,6 @@ namespace lua {
 
     public:
         VirtualMachine();
-
         ~VirtualMachine();
 
         int runString(const std::string &command);
@@ -24,7 +24,17 @@ namespace lua {
         bool validate(int code, std::ostream& = std::cout);
 
         Table table(const char* name);
+        Function function(const char*, int, int);
+
         void setGlobal(Table&);
+        void setGlobal(std::string&);
+        void setGlobal(const char*);
+
+        void pushInteger(int);
+        void pushInteger(size_t);
+        void pushNumber(double);
+        void pushString(std::string&);
+        void pushString(const char*);
         void pop(int n);
 
         explicit operator lua_State*();

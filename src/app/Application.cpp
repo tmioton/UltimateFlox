@@ -78,6 +78,9 @@ int run() {
         }
     }
 
+    lua::Function onFrameStart{L.function("OnFrameStart", 0, 0)};
+    lua::Function onFrameGroupEnd{L.function("OnFrameGroupEnd", 0, 0)};
+
     Window window(width, height, "Ultimate Flox");
 
     lwvl::Program::clear();
@@ -164,8 +167,8 @@ int run() {
     double renderDurationAverage = 0.0;
 #endif
 
-    lua_pushnumber(raw, 1.0f / 60.0f);
-    lua_setglobal(raw, "fps");
+    L.pushNumber(1.0 / 60.0);
+    L.setGlobal("fps");
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -174,13 +177,10 @@ int run() {
         const auto dt = static_cast<float>(delta(frameStart));
         frameStart = high_resolution_clock::now();
 
-        lua_getglobal(raw, "OnFrameStart");
-        if (lua_isfunction(raw, -1)) {
-            lua_pushnumber(raw, dt);
-            lua_setglobal(raw, "delta");
-            L.validate(lua_pcall(raw, 0, 0, 0));
-        } else {
-            lua_pop(raw, 1);
+        if (onFrameStart.push()) {
+            L.pushNumber(dt);
+            L.setGlobal("delta");
+            L.validate(onFrameStart.call());
         }
 
 #ifndef NDEBUG
@@ -312,15 +312,12 @@ int run() {
         // Framerate display
         if ((frameCount & 63) == 0) {
             double fps = static_cast<double>(frameCount) / delta(secondStart);
-            lua_getglobal(raw, "OnFrameGroupEnd");
-            if (lua_isfunction(raw, -1)) {
-                lua_pushinteger(raw, frameCount);
-                lua_setglobal(raw, "frame_count");
-                lua_pushnumber(raw, fps);
-                lua_setglobal(raw, "fps");
-                L.validate(lua_pcall(raw, 0, 0, 0));
-            } else {
-                lua_pop(raw, 1);
+            if (onFrameGroupEnd.push()) {
+                L.pushInteger(frameCount);
+                L.setGlobal("frame_count");
+                L.pushNumber(fps);
+                L.setGlobal("fps");
+                L.validate(onFrameGroupEnd.call());
             }
 
             secondStart = high_resolution_clock::now();

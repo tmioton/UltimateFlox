@@ -106,8 +106,40 @@ void lua::VirtualMachine::setGlobal(lua::Table &table) {
     lua_setglobal(m_state, table.name().c_str());
 }
 
+void lua::VirtualMachine::setGlobal(std::string &name) {
+    lua_setglobal(m_state, name.c_str());
+}
+
+void lua::VirtualMachine::setGlobal(const char *name) {
+    lua_setglobal(m_state, name);
+}
+
 lua::Table lua::VirtualMachine::table(const char *name) {
     return {m_state, name};
+}
+
+lua::Function lua::VirtualMachine::function(const char *name, int nargs, int nres) {
+    return {m_state, name, nargs, nres};
+}
+
+void lua::VirtualMachine::pushInteger(int value) {
+    lua_pushinteger(m_state, static_cast<lua_Integer>(value));
+}
+
+void lua::VirtualMachine::pushInteger(size_t value) {
+    lua_pushinteger(m_state, static_cast<lua_Integer>(value));
+}
+
+void lua::VirtualMachine::pushNumber(double value) {
+    lua_pushnumber(m_state, value);
+}
+
+void lua::VirtualMachine::pushString(std::string &value) {
+    lua_pushstring(m_state, value.c_str());
+}
+
+void lua::VirtualMachine::pushString(const char *value) {
+    lua_pushstring(m_state, value);
 }
 
 void lua::VirtualMachine::pop(int n) {
