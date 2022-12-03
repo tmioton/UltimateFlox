@@ -7,6 +7,8 @@
 #include "Render/Boid/FlockRenderer.hpp"
 #include "Render/QuadtreeRenderer.hpp"
 
+#include "binary_default_lua.cpp"
+
 #include <chrono>
 #include <fstream>
 
@@ -52,29 +54,35 @@ int run() {
     int width = 800;
     int height = 450;
 
-    //std::string cmd {"a = 7 + 11"};
-    lua::VirtualMachine L;
-    L.addCommonLibraries();
-    lua_State* raw = lua::raw(L);  // Do things manually while working on the abstraction.
+    lua::VirtualMachine L; {
+        L.addCommonLibraries();
 
-    // Create config table for Lua customization.
-    lua::Table configTable{L.table("flox")};
-    configTable.create(4, 0);
-    configTable.setInteger("flock_size", static_cast<int>(flockSize));
-    configTable.setNumber("world_bound", worldBound);
-    configTable.setInteger("width", width);
-    configTable.setInteger("height", height);
-    L.setGlobal(configTable);  // Consumes the table off the stack
+        // Create config table for Lua customization.
+        lua::Table configTable{L.table("flox")};
+        configTable.create(4, 0);
+        configTable.setInteger("flock_size", static_cast<int>(flockSize));
+        configTable.setNumber("world_bound", worldBound);
+        configTable.setInteger("width", width);
+        configTable.setInteger("height", height);
+        L.setGlobal(configTable);  // Consumes the table off the stack
 
-    //int r = L.runString(cmd);
-    int r = L.runFile("Data/Scripts/flox.lua");
-    if (L.validate(r)) {
-        if (configTable.get()) {
+        bool validLua = false;
+        int r = L.runFile("Data/Scripts/flox.lua");
+        if (L.validate(r)) {
+            validLua = true;
+        } else {
+            r = L.runBuffer(FLOX_DEFAULT_LUA_SCRIPT, FLOX_DEFAULT_LUA_SCRIPT_LENGTH);
+            if (L.validate(r)) {
+                validLua = true;
+            }
+        }
+
+        if (validLua && configTable.push()) {
             flockSize = configTable.getInteger("flock_size", flockSize);
-            worldBound = static_cast<float>(configTable.getNumber("world_bound", worldBound));
+            worldBound = configTable.getNumber("world_bound", worldBound);
             width = configTable.getInteger("width", width);
             height = configTable.getInteger("height", height);
-            L.pop(1);  // Need to explicitly pop the table off the stack.
+            configTable.pop();  // Need to explicitly pop the table off the stack.
         }
     }
 

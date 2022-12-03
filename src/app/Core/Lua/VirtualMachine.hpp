@@ -19,6 +19,8 @@ namespace lua {
 
         int runFile(const std::string &file);
 
+        int runBuffer(const unsigned char* buffer, size_t length);
+
         void addCommonLibraries();
 
         bool validate(int code, std::ostream& = std::cout);

@@ -82,6 +82,10 @@ int lua::VirtualMachine::runFile(const std::string &file) {
     return luaL_dofile(m_state, file.c_str());
 }
 
+int lua::VirtualMachine::runBuffer(const unsigned char *buffer, size_t length) {
+    return luaL_loadbufferx(m_state, (const char*)buffer, length, "", nullptr) || lua_pcall(m_state, 0, LUA_MULTRET, 0);
+}
+
 lua::VirtualMachine::operator lua_State*() {
     return m_state;
 }
