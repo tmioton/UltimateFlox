@@ -9,6 +9,8 @@ target_sources(
 #        Algorithm/DirectLoopAlgorithm.cpp
         Algorithm/QuadtreeAlgorithm.hpp
         Algorithm/QuadtreeAlgorithm.cpp
+        Algorithm/ThreadedAlgorithm.hpp
+        Algorithm/ThreadedAlgorithm.cpp
 
         # MATH
         Math/Rectangle.hpp

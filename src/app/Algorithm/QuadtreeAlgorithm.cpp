@@ -1,6 +1,6 @@
 #include "QuadtreeAlgorithm.hpp"
 
-QuadtreeAlgorithm::QuadtreeAlgorithm(Vector b) : m_bounds(b), m_tree(m_bounds) {}
+QuadtreeAlgorithm::QuadtreeAlgorithm(Vector b) : m_bounds(b), m_treeBounds(m_bounds), m_tree(m_treeBounds) {}
 
 void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
     const float disruptiveRadius = Boid::disruptiveRadius * Boid::disruptiveRadius;
@@ -52,14 +52,15 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
         size_t cohesiveTotal = 0;
         size_t disruptiveTotal = 0;
 
-        Boidtree::ResultVector result = m_tree.search(searchBound);
-        const int resultCount = static_cast<int>(result.size());
+        m_results.clear();
+        m_tree.search(searchBound, m_results);
+        const int resultCount = static_cast<int>(m_results.size());
         for (int j = 0; j < resultCount + failedCount; ++j) {
             if (inCenter && j >= resultCount) {
                 break;
             }
 
-            int k = j < resultCount ? result[j] : m_failed[j - resultCount];
+            int k = j < resultCount ? m_results[j] : m_failed[j - resultCount];
             if (i == k) {
                 continue;
             }
