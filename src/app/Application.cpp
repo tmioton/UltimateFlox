@@ -130,12 +130,12 @@ int run() {
     };
     Flock flock{flockSize};
     //DirectLoopAlgorithm directLoopAlgorithm{bounds};
-    QuadtreeAlgorithm quadtreeAlgorithm{bounds};
-    //ThreadedAlgorithm threadedAlgorithm{bounds};
+    //QuadtreeAlgorithm quadtreeAlgorithm{bounds};
+    ThreadedAlgorithm threadedAlgorithm{bounds};
 
     //Algorithm* algorithm = &directLoopAlgorithm;
-    QuadtreeAlgorithm *qtAlgorithm = &quadtreeAlgorithm;
-    //QuadtreeAlgorithm *qtAlgorithm = &threadedAlgorithm;
+    //QuadtreeAlgorithm *qtAlgorithm = &quadtreeAlgorithm;
+    QuadtreeAlgorithm *qtAlgorithm = &threadedAlgorithm;
     Algorithm *algorithm = qtAlgorithm;
 
     Projection projection{
