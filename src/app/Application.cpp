@@ -1,6 +1,7 @@
 #include "pch.hpp"
 #include "Core/Window.hpp"
 #include "Core/Lua/VirtualMachine.hpp"
+#include "Core/Lua/Types/LuaVector.hpp"
 #include "World/Flock.hpp"
 //#include "Algorithm/DirectLoopAlgorithm.hpp"
 #include "Algorithm/QuadtreeAlgorithm.hpp"
@@ -56,6 +57,7 @@ int run() {
 
     lua::VirtualMachine L; {
         L.addCommonLibraries();
+        lua::LuaVector::addToLua(lua::raw(L));
 
         // Create config table for Lua customization.
         lua::Table configTable{L.table("flox")};

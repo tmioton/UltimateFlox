@@ -11,4 +11,10 @@
 
 namespace lua {
     using CFunction = std::function<int(lua_State *)>;
+
+    // TODO: Compile Lua with C++ to use exceptions.
+    inline void error(lua_State* L, const char* message) {
+        lua_pushstring(L, message);
+        lua_error(L);
+    }
 }

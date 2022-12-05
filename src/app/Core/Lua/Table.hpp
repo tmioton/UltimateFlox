@@ -47,6 +47,8 @@ namespace lua {
 
         void create(int, int);
 
+        // TODO: Make a version of these that accepts a bool reference like lua_to*x(lua_State*, int, int*)
+
         template<typename T>
         T getNumber(const char* name, T backup) {
             return getValue<T, lua_Number>(m_state, name, backup, lua_tonumberx);

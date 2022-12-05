@@ -41,6 +41,8 @@ target_sources(
         Core/Window.cpp
         Core/Event.hpp
         Core/Event.cpp
+
+        # LUA
         Core/Lua/Function.hpp
         Core/Lua/Function.cpp
         Core/Lua/Lua.hpp
@@ -49,6 +51,10 @@ target_sources(
         Core/Lua/Table.cpp
         Core/Lua/VirtualMachine.hpp
         Core/Lua/VirtualMachine.cpp
+
+        # LUA TYPES
+        Core/Lua/Types/LuaVector.hpp
+        Core/Lua/Types/LuaVector.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

@@ -1,3 +1,4 @@
+# TODO: Automate compiling these files
 target_sources(
     ${PROJECT_NAME} PRIVATE
     binary_default_lua.cpp
