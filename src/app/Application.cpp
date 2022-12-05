@@ -13,6 +13,10 @@
 #include <chrono>
 #include <fstream>
 
+#ifndef NDEBUG
+#define FLOX_SHOW_DEBUG_INFO
+#endif
+
 using namespace lwvl::debug;
 using namespace std::chrono;
 
@@ -94,16 +98,16 @@ int run() {
     Window window(width, height, "Ultimate Flox");
 
     lwvl::Program::clear();
-#ifndef NDEBUG
+#ifdef FLOX_SHOW_DEBUG_INFO
     GLEventListener listener(
             [](
                 Source source, Type type,
                 Severity severity, unsigned int id, int length,
                 const char *message, const void *userState
             ) {
-                //if (type != Type::OTHER){
+                if (type != Type::OTHER){
                     std::cout << "[OpenGL] " << message << std::endl;
-                //}
+                }
             }
         );
 
@@ -165,13 +169,13 @@ int run() {
     VisionShader visionShader{projection};
     BoidShader *activeShader = &defaultBoidShader;
 
-#ifndef NDEBUG
+#ifdef FLOX_SHOW_DEBUG_INFO
     std::cout << "Setup took " << delta(setupStart) << " seconds." << std::endl;
 #endif
     auto secondStart = high_resolution_clock::now();
     auto frameStart = high_resolution_clock::now();
 
-#ifndef NDEBUG
+#ifdef FLOX_SHOW_DEBUG_INFO
     double eventDurationAverage = 0.0;
     double updateDurationAverage = 0.0;
     double renderDurationAverage = 0.0;
@@ -193,7 +197,7 @@ int run() {
             L.validate(onFrameStart.call());
         }
 
-#ifndef NDEBUG
+#ifdef FLOX_SHOW_DEBUG_INFO
         auto averageStart = high_resolution_clock::now();
 #endif
 
@@ -269,9 +273,9 @@ int run() {
             }
         }
 
-#ifndef NDEBUG
+#ifdef FLOX_SHOW_DEBUG_INFO
         eventDurationAverage += delta(averageStart);
-            averageStart = high_resolution_clock::now();
+        averageStart = high_resolution_clock::now();
 #endif
 
         // Update engine
@@ -280,9 +284,9 @@ int run() {
             flock.update(algorithm, dt);
         }
 
-#ifndef NDEBUG
+#ifdef FLOX_SHOW_DEBUG_INFO
         updateDurationAverage += delta(averageStart);
-            averageStart = high_resolution_clock::now();
+        averageStart = high_resolution_clock::now();
 #endif
 
         // Rendering
@@ -315,7 +319,7 @@ int run() {
 
         window.swapBuffers();
 
-#ifndef NDEBUG
+#ifdef FLOX_SHOW_DEBUG_INFO
         renderDurationAverage += delta(averageStart);
 #endif
 
@@ -331,7 +335,7 @@ int run() {
             }
 
             secondStart = high_resolution_clock::now();
-#ifndef NDEBUG
+#ifdef FLOX_SHOW_DEBUG_INFO
                 std::cout << "Average framerate for last " << frameCount << " frames: " << fps << " | " << 1.0 / fps << 's' << std::endl;
 
                 const auto frameth = 1.0 / static_cast<double>(frameCount);
