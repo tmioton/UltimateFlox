@@ -27,3 +27,5 @@ public:
     Vector center{0, 0};
     Vector size{0, 0};
 };
+
+std::ostream& operator<<(std::ostream& os, Rectangle const&);

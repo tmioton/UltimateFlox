@@ -5,9 +5,11 @@ Rectangle::Rectangle(Vector c, Vector s) : center(c), size(s) {}
 Rectangle::Rectangle(Vector s) : center(0.0f, 0.0f), size(s) {}
 
 bool Rectangle::contains(Vector p) const {
-    return (
-        (p.x >= center.x - size.x && p.x <= center.x + size.x)
-        && (p.y >= center.y - size.y && p.y <= center.y + size.y)
+    return !(
+        p.x < center.x - size.x ||
+        p.x > center.x + size.x ||
+        p.y < center.y - size.y ||
+        p.y > center.y + size.y
     );
 }
 
@@ -28,4 +30,12 @@ int Rectangle::quadrant(Vector p) const {
 
 Rectangle Rectangle::operator*(float val) const {
     return {center, size * val};
+}
+
+std::ostream& operator<<(std::ostream& os, Rectangle const& r) {
+    os << "Rectangle(center: {"
+    << r.center.x << ", " << r.center.y
+    << "}, size: {" << r.size.x << ", " << r.size.y
+    << "})";
+    return os;
 }
