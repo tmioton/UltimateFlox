@@ -3,6 +3,8 @@
 #include "Core/Lua/VirtualMachine.hpp"
 #include "Core/Lua/Types/LuaVector.hpp"
 #include "World/Flock.hpp"
+//#include "Algorithm/DirectLoopAlgorithm.hpp"
+#include "Algorithm/QuadtreeAlgorithm.hpp"
 #include "Render/Boid/FlockRenderer.hpp"
 #include "Render/QuadtreeRenderer.hpp"
 
@@ -125,7 +127,11 @@ int run() {
         aspect >= 1.0f ? worldBound * aspect : worldBound,
         aspect < 1.0f ? worldBound * aspect : worldBound
     };
-    Flock flock{flockSize, bounds};
+    Flock flock{flockSize};
+    //DirectLoopAlgorithm directLoopAlgorithm{bounds};
+    QuadtreeAlgorithm quadtreeAlgorithm{bounds};
+    //Algorithm* algorithm = &directLoopAlgorithm;
+    Algorithm *algorithm = &quadtreeAlgorithm;
 
     Projection projection{
         1.0f / bounds.x, 0.0f, 0.0f, 0.0f,
@@ -275,7 +281,7 @@ int run() {
         // Update engine
         bool doUpdates = !paused && !consoleOpen;
         if (doUpdates) {
-            flock.update(dt);
+            flock.update(algorithm, dt);
         }
 
 #ifdef FLOX_SHOW_DEBUG_INFO
@@ -290,7 +296,7 @@ int run() {
             }
 
             if (renderQuadtree) {
-                qtRenderer.update(flock.tree());
+                qtRenderer.update(quadtreeAlgorithm.tree());
             }
         }
 

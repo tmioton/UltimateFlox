@@ -63,7 +63,7 @@ class Quadtree {
     using Points = qt_details::Bucket<Vector, bucketSize>;
     using Node = qt_details::Node;
 public:
-    using ResultVector = std::vector<T>;
+    using ResultVector = std::vector<T> const &;
 private:
 
     Rectangle m_bounds;
@@ -71,6 +71,8 @@ private:
     std::vector<Bucket> m_buckets;
     std::vector<Points> m_points;  // Potentially unnecessary
     std::vector<Node> m_nodes;
+
+    mutable std::vector<T> m_search_results;
 
     inline void createBucket() {
         m_lists.emplace_back();
@@ -167,14 +169,15 @@ public:
         }
     }
 
-    void search(Rectangle area, ResultVector &search_results) const {
+    ResultVector search(Rectangle area) const {
+        m_search_results.clear();
         if (m_bounds.intersects(area)) {
             int32_t indices[max_depth + 1];
             indices[0] = 0;
             indices[1] = m_nodes[0].children[0];
             Rectangle bounds[max_depth + 1];  // TODO: test storing just centers
             bounds[0] = Rectangle{m_bounds};
-            if (!indices[1]) { return; }
+            if (!indices[1]) { return m_search_results; }
             uint64_t quadrantState = 0;
             int depth = 1;
             bool ascended = false;
@@ -205,7 +208,7 @@ public:
                             while (true) {
                                 for (int i = 0; i < list->size; ++i) {
                                     if (area.contains(m_points[index].get(i))) {
-                                        search_results.push_back(m_buckets[index].get(i));
+                                        m_search_results.push_back(m_buckets[index].get(i));
                                     }
                                 }
 
@@ -238,6 +241,8 @@ public:
                 }
             }
         }
+
+        return m_search_results;
     }
 
     void clear() {
@@ -245,6 +250,7 @@ public:
         m_buckets.clear();
         m_points.clear();
         m_nodes.clear();
+        m_search_results.clear();
 
         m_nodes.emplace_back();
         createBucket();
@@ -253,15 +259,6 @@ public:
 
     [[nodiscard]] size_t size() const {
         return m_nodes.size();
-    }
-
-    Rectangle bounds() {
-        return m_bounds;
-    }
-
-    void bounds(Rectangle bound) {
-        m_bounds.center = bound.center;
-        m_bounds.size = bound.size;
     }
 
     // TODO: Implement sorting algorithms and test speed
@@ -328,4 +325,4 @@ public:
     }
 };
 
-using Boidtree = Quadtree<int, 16, 4>;
+using Boidtree = Quadtree<int, 7, 4>;
