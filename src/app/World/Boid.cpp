@@ -7,7 +7,7 @@ float Boid::maxSpeed{100.0f};
 float Boid::maxForce{3.0f};
 
 // Have a trigger to update these when scale is changed.
-float Boid::disruptiveRadius = Boid::scale + 4.0f;
+float Boid::disruptiveRadius = Boid::scale + 5.0f;
 float Boid::cohesiveRadius = 2.0f * Boid::disruptiveRadius;
 
 Vector magnitude(Vector vec, float mag) {
