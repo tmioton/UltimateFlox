@@ -3,13 +3,6 @@ target_sources(
         Application.cpp
         Common.hpp
 
-        # ALGORITHM
-        Algorithm/Algorithm.hpp
-#        Algorithm/DirectLoopAlgorithm.hpp
-#        Algorithm/DirectLoopAlgorithm.cpp
-        Algorithm/QuadtreeAlgorithm.hpp
-        Algorithm/QuadtreeAlgorithm.cpp
-
         # MATH
         Math/Rectangle.hpp
         Math/Rectangle.cpp
