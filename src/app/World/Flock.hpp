@@ -7,6 +7,13 @@
 
 
 class Flock {
+    size_t m_count;
+    DoubleBuffer<Boid> m_flock;
+
+    Rectangle m_bounds;
+    Rectangle m_treeBounds;
+    Boidtree m_tree;
+
 public:
     explicit Flock(size_t flock_size, Vector bounds);
 
@@ -22,12 +29,11 @@ private:
         Rectangle bounds;
         Boid* write;
         Boid const* read;
-        Boidtree::ResultVector* search;
         int start;
         int count;
         float delta;
 
-        ThreadState(Boidtree*, Rectangle, Boid*, Boid const*, Boidtree::ResultVector*, int, int, float);
+        ThreadState(Boidtree*, Rectangle, Boid*, Boid const*, int, int, float);
         ThreadState(ThreadState const&) = default;
         ThreadState(ThreadState &&) = default;
 
@@ -36,12 +42,4 @@ private:
     };
 
     static void thread_update(ThreadState);
-
-    size_t m_count;
-    DoubleBuffer<Boid> m_flock;
-    Boidtree::ResultVector m_results[4] {};
-
-    Rectangle m_bounds;
-    Rectangle m_treeBounds;
-    Boidtree m_tree;
 };
