@@ -5,6 +5,7 @@
 #include "World/Flock.hpp"
 //#include "Algorithm/DirectLoopAlgorithm.hpp"
 #include "Algorithm/QuadtreeAlgorithm.hpp"
+#include "Algorithm/ThreadedAlgorithm.hpp"
 #include "Render/Boid/FlockRenderer.hpp"
 #include "Render/QuadtreeRenderer.hpp"
 
@@ -130,8 +131,12 @@ int run() {
     Flock flock{flockSize};
     //DirectLoopAlgorithm directLoopAlgorithm{bounds};
     QuadtreeAlgorithm quadtreeAlgorithm{bounds};
+    //ThreadedAlgorithm threadedAlgorithm{bounds};
+
     //Algorithm* algorithm = &directLoopAlgorithm;
-    Algorithm *algorithm = &quadtreeAlgorithm;
+    QuadtreeAlgorithm *qtAlgorithm = &quadtreeAlgorithm;
+    //QuadtreeAlgorithm *qtAlgorithm = &threadedAlgorithm;
+    Algorithm *algorithm = qtAlgorithm;
 
     Projection projection{
         1.0f / bounds.x, 0.0f, 0.0f, 0.0f,
@@ -296,7 +301,7 @@ int run() {
             }
 
             if (renderQuadtree) {
-                qtRenderer.update(quadtreeAlgorithm.tree());
+                qtRenderer.update(qtAlgorithm->tree());
             }
         }
 

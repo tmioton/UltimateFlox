@@ -17,5 +17,6 @@
 #include <array>
 #include <unordered_map>
 #include <utility>
+#include <thread>
 
 #include "Common.hpp"

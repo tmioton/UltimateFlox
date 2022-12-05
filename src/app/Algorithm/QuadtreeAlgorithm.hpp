@@ -5,7 +5,7 @@
 #include "Structures/Quadtree.hpp"
 
 // Expose tree for rendering
-class QuadtreeAlgorithm final : public Algorithm {
+class QuadtreeAlgorithm : public Algorithm {
 public:
     explicit QuadtreeAlgorithm(Vector bounds);
 
@@ -15,9 +15,11 @@ public:
 
     [[nodiscard]] Boidtree const &tree() const;
 
-private:
+protected:
     Rectangle m_bounds;
+    Rectangle m_treeBounds;
     Boidtree m_tree;
 
     std::vector<int> m_failed; // Boids that failed to get into the tree
+    Boidtree::ResultVector m_results;
 };
