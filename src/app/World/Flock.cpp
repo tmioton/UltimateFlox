@@ -46,9 +46,10 @@ void Flock::update(float dt) {
         int actualCount = boidsPerThread;
         if (!i) { actualCount += leftover; }
         threads[i] = std::thread(
-            thread_update, ThreadState {
+            thread_update, ThreadState{
                 &m_tree, m_bounds,
                 write, read,
+                &m_results[i],
                 nextStart,
                 actualCount,
                 dt
@@ -123,13 +124,14 @@ void Flock::thread_update(Flock::ThreadState state) {
     Rectangle const& bounds = state.bounds;
     Boid *write = state.write;
     Boid const *read = state.read;
+    Boidtree::ResultVector& results = *state.search;
     int start = state.start;
     int count = state.count;
     float delta = state.delta;
 
     const float disruptiveRadius = Boid::disruptiveRadius * Boid::disruptiveRadius;
     const float cohesiveRadius = Boid::cohesiveRadius * Boid::cohesiveRadius;
-    Boidtree::ResultVector results;
+    //Boidtree::ResultVector& results = *;
 
     Rectangle centerBound{bounds * 0.75f};
     Rectangle hardBound{bounds * 0.90f};
@@ -214,7 +216,7 @@ void Flock::thread_update(Flock::ThreadState state) {
     }
 }
 
-Flock::ThreadState::ThreadState(Boidtree *t, Rectangle b, Boid *w, const Boid *r, int s, int c, float d):
-    tree(t), bounds(b), write(w), read(r), start(s), count(c), delta(d)
+Flock::ThreadState::ThreadState(Boidtree *t, Rectangle b, Boid *w, const Boid *r, Boidtree::ResultVector* res, int s, int c, float d):
+    tree(t), bounds(b), write(w), read(r), search(res), start(s), count(c), delta(d)
 {}
 
