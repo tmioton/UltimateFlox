@@ -1,5 +1,6 @@
 #include "pch.hpp"
 #include "Object.hpp"
+#include "Structures/RawArray.hpp"
 
 Object::Object(size_t vertexCount, size_t indexCount, lwvl::PrimitiveMode mode) :
     m_vertexCount(vertexCount), m_indexCount(indexCount), m_drawMode(mode), m_vertices(vertexCount), m_indices(indexCount)
@@ -53,23 +54,16 @@ lwvl::PrimitiveMode Object::drawMode() const {
 }
 
 Object loadObject(
-    const float *vertices, size_t vertexCount,
-    const unsigned int *indices, size_t indexCount,
+    const float *_vertices, size_t vertexCount,
+    const unsigned int *_indices, size_t indexCount,
     lwvl::PrimitiveMode mode
 ) {
+    auto vertices = RawArray(_vertices, vertexCount);
+    auto indices = RawArray(_indices, indexCount);
     Object obj{vertexCount, indexCount, mode};
 
-    std::vector<float> &objVertices = obj.vertices();
-    auto svc = static_cast<ptrdiff_t>(vertexCount);
-    for (ptrdiff_t i = 0; i < svc; i++) {
-        objVertices[i] = vertices[i];
-    }
-
-    std::vector<unsigned int> &objIndices = obj.indices();
-    auto sic = static_cast<ptrdiff_t>(indexCount);
-    for (ptrdiff_t i = 0; i < sic; i++) {
-        objIndices[i] = indices[i];
-    }
+    std::copy(vertices.begin(), vertices.end(), obj.vertices().data());
+    std::copy(indices.begin(), indices.end(), obj.indices().data());
 
     return obj;
 }

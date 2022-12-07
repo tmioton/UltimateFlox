@@ -1,5 +1,6 @@
 #include "pch.hpp"
 #include "ThreadedAlgorithm.hpp"
+#include "Structures/RawArray.hpp"
 
 ThreadedAlgorithm::ThreadedAlgorithm(Vector bounds) : QuadtreeAlgorithm(bounds) {}
 
@@ -43,9 +44,7 @@ void ThreadedAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
     }
 
     // Separate loop for thread-safety. Does this slow the program down?
-    for (int i = 0; i < count; ++i) {
-        Boid const &current = write[i];
-
+    for (auto const& current: RawArray(write, count)) {
         if (current.position.x < xBound.r) {
             xBound.r = current.position.x;
         } else if (current.position.x > xBound.g) {
@@ -117,7 +116,7 @@ void ThreadedAlgorithm::thread_update(ThreadedAlgorithm::ThreadState state) {
 
         results.clear();
         tree->search(searchBound, results);  // Thread-unsafe
-        for (auto k : results) {
+        for (int k : results) {
             if (i == k) {
                 continue;
             }

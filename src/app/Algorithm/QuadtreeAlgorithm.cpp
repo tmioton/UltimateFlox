@@ -1,4 +1,5 @@
 #include "QuadtreeAlgorithm.hpp"
+#include "Structures/RawArray.hpp"
 
 QuadtreeAlgorithm::QuadtreeAlgorithm(Vector b) : m_bounds(b), m_treeBounds(m_bounds), m_tree(m_treeBounds) {}
 
@@ -10,15 +11,14 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
     Boid const *read = boids.read();
     const int count = static_cast<int>(boids.count());
 
-    m_failed.clear();
     m_tree.clear();
-    for (int i = 0; i < count; i++) {
-        if (!m_tree.insert(i, read[i].position)) {
-            m_failed.push_back(i);
-        }
-    }
+    m_tree.bounds(m_treeBounds);
+    Vector xBound {m_treeBounds.center.x - m_treeBounds.size.x, m_treeBounds.center.x + m_treeBounds.size.x};
+    Vector yBound {m_treeBounds.center.y - m_treeBounds.size.y, m_treeBounds.center.y + m_treeBounds.size.y};
 
-    const int failedCount = static_cast<int>(m_failed.size());
+    for (int i = 0; i < count; i++) {
+        m_tree.insert(i, read[i].position);
+    }
 
     Rectangle centerBound{m_bounds * 0.75f};
     Rectangle hardBound{m_bounds * 2.0f};
@@ -54,13 +54,7 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
 
         m_results.clear();
         m_tree.search(searchBound, m_results);
-        const int resultCount = static_cast<int>(m_results.size());
-        for (int j = 0; j < resultCount + failedCount; ++j) {
-            if (inCenter && j >= resultCount) {
-                break;
-            }
-
-            int k = j < resultCount ? m_results[j] : m_failed[j - resultCount];
+        for (int k : m_results) {
             if (i == k) {
                 continue;
             }
@@ -107,6 +101,31 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
         current.velocity += acceleration;
         current.position += current.velocity * delta;
     }
+
+    // Separate loop. Does this slow the program down?
+    for (auto const& current: RawArray(write, count)) {
+        if (current.position.x < xBound.r) {
+            xBound.r = current.position.x;
+        } else if (current.position.x > xBound.g) {
+            xBound.g = current.position.x;
+        }
+
+        if (current.position.y < yBound.r) {
+            yBound.r = current.position.y;
+        } else if (current.position.y > yBound.g) {
+            yBound.g = current.position.y;
+        }
+    }
+
+    float xBoundCenter = (xBound.r + xBound.g) * 0.5f;
+    float yBoundCenter = (yBound.r + yBound.g) * 0.5f;
+
+    Rectangle newBounds{
+        {xBoundCenter, yBoundCenter},
+        {xBound.g - xBoundCenter, yBound.g - yBoundCenter}
+    };
+
+    m_treeBounds = newBounds;
 }
 
 Boidtree const &QuadtreeAlgorithm::tree() const {
