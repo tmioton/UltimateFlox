@@ -4,7 +4,7 @@
 #include "Core/Lua/Types/LuaVector.hpp"
 #include "World/Flock.hpp"
 //#include "Algorithm/DirectLoopAlgorithm.hpp"
-#include "Algorithm/QuadtreeAlgorithm.hpp"
+//#include "Algorithm/QuadtreeAlgorithm.hpp"
 #include "Algorithm/ThreadedAlgorithm.hpp"
 #include "Render/Boid/FlockRenderer.hpp"
 #include "Render/QuadtreeRenderer.hpp"
