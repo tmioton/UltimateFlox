@@ -30,5 +30,7 @@ private:
     };
 
     static void thread_update(ThreadState);
-    Boidtree::ResultVector m_results[4];
+
+    static constexpr int ThreadCount = 4;
+    Boidtree::ResultVector m_results[ThreadCount];
 };

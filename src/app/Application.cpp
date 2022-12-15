@@ -126,6 +126,8 @@ int run() {
         aspect < 1.0f ? worldBound * aspect : worldBound
     };
     Flock flock{flockSize};
+
+    // Unused algorithms are dead code, but having them as components allows easier testing.
     //DirectLoopAlgorithm directLoopAlgorithm{bounds};
     //QuadtreeAlgorithm quadtreeAlgorithm{bounds};
     ThreadedAlgorithm threadedAlgorithm{bounds};

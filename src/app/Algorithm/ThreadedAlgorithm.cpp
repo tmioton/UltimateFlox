@@ -17,12 +17,11 @@ void ThreadedAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
         m_tree.insert(i, read[i].position);
     }
 
-    const int threadCount = 4;
-    std::thread threads[threadCount];
-    int boidsPerThread = count / threadCount;
-    int leftover = count - boidsPerThread * threadCount;
+    std::thread threads[ThreadCount];
+    int boidsPerThread = count / ThreadCount;
+    int leftover = count - boidsPerThread * ThreadCount;
     int nextStart = 0;
-    for (int i = 0; i < threadCount; ++i) {
+    for (int i = 0; i < ThreadCount; ++i) {
         int actualCount = boidsPerThread;
         if (!i) { actualCount += leftover; }
         threads[i] = std::thread(
