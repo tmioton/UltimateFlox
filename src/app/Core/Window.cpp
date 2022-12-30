@@ -39,8 +39,8 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor) :
     glfwWindowHint(GLFW_RESIZABLE, config.resizable ? GLFW_TRUE : GLFW_FALSE);
     glfwWindowHint(GLFW_SCALE_TO_MONITOR, true);
     glfwWindowHint(GLFW_REFRESH_RATE, 60);
-
     //glfwWindowHint(GLFW_SRGB_CAPABLE, true);
+    //glfwWindowHint(GLFW_DOUBLEBUFFER, true);
 
     /* Create a GLFW window and its OpenGL context. */
     m_window = glfwCreateWindow(width, height, title, monitor, nullptr);
@@ -60,7 +60,7 @@ Window::Window(int width, int height, const char *title, GLFWmonitor *monitor) :
     }
 
     glfwSetWindowUserPointer(m_window, this);
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
     glfwSetKeyCallback(
         m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
@@ -134,6 +134,13 @@ void Window::update() {
 
 void Window::clear() {
     glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void Window::init() {
+    /* Initialize GLFW. */
+    if (!glfwInit()) {
+        throw std::exception("Failed to initialize GLFW.");
+    }
 }
 
 

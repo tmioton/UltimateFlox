@@ -11,7 +11,7 @@ struct Config {
     int width;
     int height;
 
-    uint8_t samples = 8;
+    uint8_t samples = 1;
     bool resizable = false;  // This can be converted to a flag bit type thing when additional features are required.
 };
 
@@ -40,6 +40,8 @@ public:
     static void update();
 
     static void clear();
+
+    static void init();
 
     void pushEvent(Event event);
 
