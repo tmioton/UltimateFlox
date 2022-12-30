@@ -14,11 +14,11 @@ GLuint lwvl::Buffer::id() const {
     return m_offsite_id->id;
 }
 
-void lwvl::Buffer::bind(lwvl::Buffer::Target t) {
+void lwvl::Buffer::bind(lwvl::Buffer::Target t) const {
     glBindBuffer(static_cast<GLenum>(t), id());
 }
 
-void lwvl::Buffer::bind(lwvl::Buffer::IndexedTarget t, GLuint index) {
+void lwvl::Buffer::bind(lwvl::Buffer::IndexedTarget t, GLuint index) const {
     glBindBufferBase(static_cast<GLenum>(t), index, id());
 }
 

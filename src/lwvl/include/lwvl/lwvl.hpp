@@ -189,9 +189,9 @@ namespace lwvl {
     public:
         [[nodiscard]] GLuint id() const;
 
-        void bind(Target);
+        void bind(Target) const;
 
-        void bind(IndexedTarget, GLuint);
+        void bind(IndexedTarget, GLuint) const;
 
         static void clear(Target);
 
