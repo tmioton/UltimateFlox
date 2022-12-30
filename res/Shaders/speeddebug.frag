@@ -1,4 +1,4 @@
-#version 410 core
+#version 430 core
 #define pi 3.1415926538
 
 layout(location = 0) in float speed;

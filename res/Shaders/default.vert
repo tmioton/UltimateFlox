@@ -1,4 +1,4 @@
-#version 410 core
+#version 430 core
 
 layout(location = 0) in vec4 position;
 uniform mat4 projection = mat4(1.0);
