@@ -21,6 +21,10 @@ public:
     explicit DefaultBoidShader(Projection &proj);
 
     ~DefaultBoidShader() override = default;
+    void nextColor();
+
+protected:
+    uint8_t m_color = 0;
 };
 
 

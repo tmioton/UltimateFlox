@@ -16,8 +16,17 @@ DefaultBoidShader::DefaultBoidShader(Projection &proj) {
 
     control.bind();
     control.uniform("scale").setF(Boid::scale);
-    control.uniform("color").setF(Boid::color.r, Boid::color.g, Boid::color.b);
+    Color color = BoidColors[m_color];
+    control.uniform("color").setF(color.r, color.g, color.b);
     control.uniform("projection").matrix4F(&proj[0][0]);
+}
+
+void DefaultBoidShader::nextColor() {
+    m_color = (m_color + 1) % BoidColorCount;
+    Color color = BoidColors[m_color];
+    control.bind();
+    control.uniform("color").setF(color.r, color.g, color.b);
+    lwvl::Program::clear();
 }
 
 SpeedDebugShader::SpeedDebugShader(Projection &proj) {

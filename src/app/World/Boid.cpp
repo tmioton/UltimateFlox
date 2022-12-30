@@ -2,7 +2,6 @@
 #include "Boid.hpp"
 
 float Boid::scale{5.0f};
-Color Boid::color{0.76471f, 0.04314f, 0.30588f};
 float Boid::maxSpeed{100.0f};
 float Boid::maxForce{3.0f};
 

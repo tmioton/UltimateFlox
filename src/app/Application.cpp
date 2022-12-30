@@ -250,15 +250,23 @@ int run() {
                     // Open console.
                     if (key_event.key == GLFW_KEY_GRAVE_ACCENT) {
                         consoleOpen = true;
-                    } else
+                    }
 
-                        // Boid keybinds.
+                    // Boid keybinds.
                     if (key_event.key == GLFW_KEY_SPACE) {
                         paused ^= true;
                     } else if (key_event.key == GLFW_KEY_1) {
-                        activeModel = &filledModel;
+                        if (activeModel == &filledModel && activeShader == &defaultBoidShader) {
+                            defaultBoidShader.nextColor();
+                        } else {
+                            activeModel = &filledModel;
+                        }
                     } else if (key_event.key == GLFW_KEY_2) {
-                        activeModel = &classicModel;
+                        if (activeModel == &classicModel && activeShader == &defaultBoidShader) {
+                            defaultBoidShader.nextColor();
+                        } else {
+                            activeModel = &classicModel;
+                        }
                     } else if (key_event.key == GLFW_KEY_B) {
                         renderBoids ^= true;
                     } else if (key_event.key == GLFW_KEY_V) {
