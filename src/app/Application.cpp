@@ -11,9 +11,9 @@
 
 #include "binary_default_lua.cpp"
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
 #define FLOX_SHOW_DEBUG_INFO
-#endif
+//#endif
 
 using namespace lwvl::debug;
 using namespace std::chrono;
@@ -25,6 +25,11 @@ using namespace std::chrono;
   . Shader uniform buffers
   . Dev console
   . Lua scripting integration
+  . Single large renderer class
+    . Maintains small objects that represent a piece of the pipeline like a texture
+    . Attach small objects to one "pipeline", can be easily swapped out
+    . Helps with the "attach camera to every shader" issue.
+    ? Objects like uniforms have "Static", "Dynamic", and "Stream" properties to mark how often they should be updated.
 
 How do we handle Lua hooks?
 Global state object?
@@ -93,6 +98,16 @@ int run() {
     lua::Function onFrameStart{L.function("OnFrameStart", 0, 0)};
     lua::Function onFrameGroupEnd{L.function("OnFrameGroupEnd", 0, 0)};
 
+    //Window::init();
+    //GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+    //const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    //
+    //glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+    //glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+    //glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+    //glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+    //
+    //Window window(mode->width, mode->height, "Ultimate Flox", monitor);
     Window window(width, height, "Ultimate Flox");
 
     lwvl::Program::clear();
@@ -118,7 +133,8 @@ int run() {
     bool debugVisual = false;
     bool renderBoids = true;
     bool renderVision = false;
-    bool renderQuadtree = false;
+    bool renderQuadtreeColored = false;
+    bool renderQuadtreeLines = false;
 
     const float aspect = static_cast<float>(width) / static_cast<float>(height);
     const Vector bounds {
@@ -182,6 +198,7 @@ int run() {
 #ifdef FLOX_SHOW_DEBUG_INFO
     double eventDurationAverage = 0.0;
     double updateDurationAverage = 0.0;
+    double renderUpdateDurationAverage = 0.0;
     double renderDurationAverage = 0.0;
 #endif
 
@@ -190,7 +207,7 @@ int run() {
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    for (int frameCount = 0; !window.shouldClose(); frameCount++) {
+    for (int frameCount = 1; !window.shouldClose(); frameCount++) {
         // Calculate the time since last frame
         const auto dt = static_cast<float>(delta(frameStart));
         frameStart = high_resolution_clock::now();
@@ -272,7 +289,9 @@ int run() {
                     } else if (key_event.key == GLFW_KEY_V) {
                         renderVision ^= true;
                     } else if (key_event.key == GLFW_KEY_Q) {
-                        renderQuadtree ^= true;
+                        renderQuadtreeLines ^= true;
+                    } else if (key_event.key == GLFW_KEY_C) {
+                        renderQuadtreeColored ^= true;
                     } else if (key_event.key == GLFW_KEY_S) {
                         debugVisual ^= true;
                         if (debugVisual) {
@@ -302,20 +321,20 @@ int run() {
 #endif
 
         // Rendering
-        if (doUpdates) {
-            if (renderBoids || renderVision) {
-                renderer.update(flock.boids());
-            }
-
-            if (renderQuadtree) {
-                qtRenderer.update(qtAlgorithm->tree());
-            }
+        if (renderBoids || renderVision) {
+            renderer.update(flock.boids());
         }
+
+        if (renderQuadtreeColored || renderQuadtreeLines) {
+            qtRenderer.update(qtAlgorithm->tree());
+        }
+        renderUpdateDurationAverage += delta(averageStart);
+        averageStart = high_resolution_clock::now();
 
         lwvl::clear();
 
-        if (renderQuadtree) {
-            qtRenderer.draw();
+        if (renderQuadtreeColored || renderQuadtreeLines) {
+            qtRenderer.draw(renderQuadtreeColored, renderQuadtreeLines);
         }
 
         if (renderVision) {
@@ -335,9 +354,13 @@ int run() {
         renderDurationAverage += delta(averageStart);
 #endif
 
+        if (delta(frameStart) <= 0.008) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
         // Framerate display
-        if ((frameCount & 63) == 0) {
-            double fps = static_cast<double>(frameCount) / delta(secondStart);
+        if ((frameCount & 0x3F) == 0) {
+            double fps = 64.0 / delta(secondStart);
             if (onFrameGroupEnd.push()) {
                 L.pushInteger(frameCount);
                 L.setGlobal("frame_count");
@@ -348,18 +371,19 @@ int run() {
 
             secondStart = high_resolution_clock::now();
 #ifdef FLOX_SHOW_DEBUG_INFO
-                std::cout << "Average framerate for last " << frameCount << " frames: " << fps << " | " << 1.0 / fps << 's' << std::endl;
+            const auto frameth = 1.0 / static_cast<double>(frameCount);
+            std::cout << "Average framerate for last " << frameCount << " frames: " << fps << " | " << 1.0 / fps << 's' << std::endl;
+            std::cout << "Event updates: " << eventDurationAverage * frameth << "s, ";
+            std::cout << "Flock updates: " << updateDurationAverage * frameth << "s, ";
+            std::cout << "Rendering Updates: " << renderUpdateDurationAverage * frameth << "s, ";
+            std::cout << "Rendering: " << renderDurationAverage * frameth << 's' << std::endl;
+            std::cout << std::endl;
 
-                const auto frameth = 1.0 / static_cast<double>(frameCount);
-                std::cout << "Event updates: " << eventDurationAverage * frameth << "s, ";
-                std::cout << "Flock updates: " << updateDurationAverage * frameth << "s, ";
-                std::cout << "Rendering: " << renderDurationAverage * frameth << 's' << std::endl;
-                std::cout << std::endl;
-
-                // Reset time variables.
-                eventDurationAverage = 0.0;
-                updateDurationAverage = 0.0;
-                renderDurationAverage = 0.0;
+            // Reset time variables.
+            eventDurationAverage = 0.0;
+            updateDurationAverage = 0.0;
+            renderUpdateDurationAverage = 0.0;
+            renderDurationAverage = 0.0;
 #endif
             frameCount = 0;
         }

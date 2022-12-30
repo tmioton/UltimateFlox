@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(UltimateFlox VERSION 1.5.2)
+project(UltimateFlox VERSION 1.5.3)
 
 set(CMAKE_CXX_STANDARD 20)
 #if (MSVC)

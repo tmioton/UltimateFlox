@@ -25,6 +25,9 @@ target_sources(
         Render/Boid/Models.cpp
         Render/Boid/FlockRenderer.hpp
         Render/Boid/FlockRenderer.cpp
+        Render/Geometry/Geometry.hpp
+        Render/Geometry/QuadtreeGeometry.hpp
+        Render/Geometry/QuadtreeGeometry.cpp
         Render/QuadtreeRenderer.hpp
         Render/QuadtreeRenderer.cpp
 
@@ -36,6 +39,7 @@ target_sources(
         # WORLD
         World/Boid.hpp
         World/Boid.cpp
+        World/Boidtree.hpp
         World/Flock.hpp
         World/Flock.cpp
 

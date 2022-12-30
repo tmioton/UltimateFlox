@@ -39,6 +39,8 @@ export_resources(
     DEPENDS
         boid.frag
         boid.vert
+        colorquadtree.frag
+        colorquadtree.vert
         default.frag
         default.vert
         quadtree.geom
