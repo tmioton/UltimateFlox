@@ -13,8 +13,8 @@ void ThreadedAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
     Vector xBound {m_treeBounds.center.x - m_treeBounds.size.x, m_treeBounds.center.x + m_treeBounds.size.x};
     Vector yBound {m_treeBounds.center.y - m_treeBounds.size.y, m_treeBounds.center.y + m_treeBounds.size.y};
 
-    for (int i = 0; i < count; ++i) {
-        m_tree.insert(i, read[i].position);
+    for (Boid const& boid : RawArray(read, count)) {
+        m_tree.insert(boid, boid.position);
     }
 
     std::thread threads[ThreadCount];
@@ -27,9 +27,8 @@ void ThreadedAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
         threads[i] = std::thread(
             thread_update, ThreadState {
                 &m_tree, m_bounds,
-                write, read,
+                write + nextStart,
                 &m_results[i],
-                nextStart,
                 actualCount,
                 delta
             }
@@ -72,9 +71,7 @@ void ThreadedAlgorithm::thread_update(ThreadedAlgorithm::ThreadState state) {
     Boidtree* tree = state.tree;
     Rectangle const& bounds = state.bounds;
     Boid *write = state.write;
-    Boid const *read = state.read;
     Boidtree::ResultVector &results = *state.search;
-    int start = state.start;
     int count = state.count;
     float delta = state.delta;
 
@@ -86,9 +83,7 @@ void ThreadedAlgorithm::thread_update(ThreadedAlgorithm::ThreadState state) {
 
     Rectangle boidBound{Vector{Boid::scale}};
     Rectangle searchBound{Vector{Boid::cohesiveRadius}};
-    for (int i = start; i < start + count; ++i) {
-        Boid &current = write[i];
-
+    for (Boid &current : RawArray(write, count)) {
         boidBound.center = current.position;  // Currently thread-unsafe, easy fix
         searchBound.center = current.position;
         Vector centerSteer{0.0f, 0.0f};
@@ -114,13 +109,16 @@ void ThreadedAlgorithm::thread_update(ThreadedAlgorithm::ThreadState state) {
         size_t disruptiveTotal = 0;
 
         results.clear();
-        tree->search(searchBound, results);  // Thread-unsafe
-        for (int k : results) {
-            if (i == k) {
+        tree->search(searchBound, results);
+        for (Boid const &other : results) {
+
+            // It is theoretically possible that two boids share the same position.
+            // Two or more birds in this situation using this if statement will then receive exactly the same
+            //   forces acting upon it, ensuring they remain in the situation. Alleviated by random walk?
+            if (current.position == other.position) {
                 continue;
             }
 
-            const Boid &other = read[k];
             const float d2 = glm::distance2(current.position, other.position);
             if (d2 < disruptiveRadius && d2 > 0.0f) {
                 Vector diff = current.position - other.position;
@@ -164,6 +162,6 @@ void ThreadedAlgorithm::thread_update(ThreadedAlgorithm::ThreadState state) {
     }
 }
 
-ThreadedAlgorithm::ThreadState::ThreadState(Boidtree *t, Rectangle b, Boid *w, const Boid *r, Boidtree::ResultVector *res, int s, int c, float d):
-    tree(t), bounds(b), write(w), search(res), read(r), start(s), count(c), delta(d)
+ThreadedAlgorithm::ThreadState::ThreadState(Boidtree *t, Rectangle b, Boid *w, Boidtree::ResultVector *res, int c, float d):
+    tree(t), bounds(b), write(w), search(res), count(c), delta(d)
 {}

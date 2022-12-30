@@ -3,6 +3,7 @@
 #include "pch.hpp"
 #include "Algorithm.hpp"
 #include "Structures/Quadtree.hpp"
+#include "World/Boidtree.hpp"
 
 // Expose tree for rendering
 class QuadtreeAlgorithm : public Algorithm {

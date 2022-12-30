@@ -1,7 +1,9 @@
 #include "QuadtreeAlgorithm.hpp"
 #include "Structures/RawArray.hpp"
 
-QuadtreeAlgorithm::QuadtreeAlgorithm(Vector b) : m_bounds(b), m_treeBounds(m_bounds), m_tree(m_treeBounds) {}
+QuadtreeAlgorithm::QuadtreeAlgorithm(Vector b) : m_bounds(b), m_treeBounds(m_bounds), m_tree(m_treeBounds) {
+    m_results.reserve(128);
+}
 
 void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
     const float disruptiveRadius = Boid::disruptiveRadius * Boid::disruptiveRadius;
@@ -16,8 +18,8 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
     Vector xBound {m_treeBounds.center.x - m_treeBounds.size.x, m_treeBounds.center.x + m_treeBounds.size.x};
     Vector yBound {m_treeBounds.center.y - m_treeBounds.size.y, m_treeBounds.center.y + m_treeBounds.size.y};
 
-    for (int i = 0; i < count; i++) {
-        m_tree.insert(i, read[i].position);
+    for (Boid const& boid : RawArray(read, count)) {
+        m_tree.insert(boid, boid.position);
     }
 
     Rectangle centerBound{m_bounds * 0.75f};
@@ -25,9 +27,7 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
 
     Rectangle boidBound{Vector{Boid::scale}};
     Rectangle searchBound{Vector{Boid::cohesiveRadius}};
-    for (int i = 0; i < count; ++i) {
-        Boid &current = write[i];
-
+    for (Boid &current : RawArray(write, count)) {
         boidBound.center = current.position;
         searchBound.center = current.position;
         Vector centerSteer{0.0f, 0.0f};
@@ -54,12 +54,11 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
 
         m_results.clear();
         m_tree.search(searchBound, m_results);
-        for (int k : m_results) {
-            if (i == k) {
+        for (Boid const &other : m_results) {
+            if (current.position == other.position) {
                 continue;
             }
 
-            const Boid &other = read[k];
             const float d2 = glm::distance2(current.position, other.position);
             if (d2 < disruptiveRadius && d2 > 0.0f) {
                 Vector diff = current.position - other.position;

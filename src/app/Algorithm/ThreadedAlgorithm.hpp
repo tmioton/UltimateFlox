@@ -15,13 +15,11 @@ private:
         Boidtree* tree;
         Rectangle bounds;
         Boid* write;
-        Boid const* read;
         Boidtree::ResultVector* search;
-        int start;
         int count;
         float delta;
 
-        ThreadState(Boidtree*, Rectangle, Boid*, Boid const*, Boidtree::ResultVector*, int, int, float);
+        ThreadState(Boidtree*, Rectangle, Boid*, Boidtree::ResultVector*, int, float);
         ThreadState(ThreadState const&) = default;
         ThreadState(ThreadState &&) = default;
 
