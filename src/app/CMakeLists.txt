@@ -50,6 +50,8 @@ target_sources(
         Core/Event.cpp
 
         # LUA
+        Core/Lua/Common.hpp
+        Core/Lua/Common.cpp
         Core/Lua/Function.hpp
         Core/Lua/Function.cpp
         Core/Lua/Lua.hpp
