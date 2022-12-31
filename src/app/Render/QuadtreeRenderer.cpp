@@ -78,7 +78,7 @@ QuadtreeRenderer::QuadtreeRenderer(Projection &proj) {
     m_layout.attribute(0, 0, 2, lwvl::ByteFormat::Float, offsetof(QuadtreeVertex, position));
     m_layout.attribute(0, 1, 1, lwvl::ByteFormat::UnsignedInt, offsetof(QuadtreeVertex, depth));
 
-    m_vertices.store<float>(nullptr, std::numeric_limits<uint16_t>::max() * 12 * sizeof(float), lwvl::bits::Dynamic);
+    m_vertices.store<QuadtreeVertex>(nullptr, m_bufferSize, lwvl::bits::Dynamic);
     m_colors.store<glm::vec4>(DepthColors, sizeof(DepthColors));
 
     lwvl::VertexShader vs = lwvl::VertexShader::fromFile("Data/Shaders/quadtree.vert");

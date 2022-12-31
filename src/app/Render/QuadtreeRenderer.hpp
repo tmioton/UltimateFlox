@@ -93,8 +93,17 @@ public:
             geometry(m_vertexData.data());
         }
 
-        GLsizeiptr bufferSize = vertexCount * sizeof(QuadtreeVertex);
-        m_vertices.update(m_vertexData.data(), bufferSize);
+        auto bufferSize = static_cast<GLsizeiptr>(vertexCount * sizeof(QuadtreeVertex));
+        if (bufferSize > m_bufferSize) {
+            m_vertices = lwvl::Buffer();
+            m_bufferSize = bufferSize + 1024;
+            m_vertices.store<QuadtreeVertex>(
+                nullptr, static_cast<GLsizeiptr>(m_bufferSize), lwvl::bits::Dynamic
+            );
+            m_layout.array(m_vertices, 0, 0, sizeof(QuadtreeVertex));
+        }
+
+        m_vertices.update(m_vertexData.begin(), m_vertexData.end());
     }
 
     void draw(bool drawColors = false, bool drawLines = false) const;
@@ -109,5 +118,5 @@ private:
     std::vector<QuadtreeVertex> m_vertexData;
 
     int m_primitiveCount = 0;
-    ptrdiff_t m_bufferSize = 0;
+    GLsizeiptr m_bufferSize = 1024 * QuadtreeNodeVertexCount * sizeof(QuadtreeVertex);
 };
