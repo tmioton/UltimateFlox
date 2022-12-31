@@ -11,9 +11,9 @@
 
 #include "binary_default_lua.cpp"
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
 #define FLOX_SHOW_DEBUG_INFO
-//#endif
+#endif
 
 using namespace lwvl::debug;
 using namespace std::chrono;
@@ -113,18 +113,18 @@ int run() {
     lwvl::Program::clear();
 #ifdef FLOX_SHOW_DEBUG_INFO
     GLEventListener listener(
-            [](
-                Source source, Type type,
-                Severity severity, unsigned int id, int length,
-                const char *message, const void *userState
-            ) {
-                if (type != Type::OTHER){
-                    std::cout << "[OpenGL] " << message << std::endl;
-                }
+        [](
+            Source source, Type type,
+            Severity severity, unsigned int id, int length,
+            const char *message, const void *userState
+        ) {
+            if (type != Type::OTHER){
+                std::cout << "[OpenGL] " << message << std::endl;
             }
-        );
+        }
+    );
 
-        const auto setupStart = high_resolution_clock::now();
+    const auto setupStart = high_resolution_clock::now();
 #endif
 
     // Move all of this to Register type variables
@@ -204,6 +204,8 @@ int run() {
 
     L.pushNumber(1.0 / 60.0);
     L.setGlobal("fps");
+
+    // glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -328,8 +330,11 @@ int run() {
         if (renderQuadtreeColored || renderQuadtreeLines) {
             qtRenderer.update(qtAlgorithm->tree());
         }
+
+#ifdef FLOX_SHOW_DEBUG_INFO
         renderUpdateDurationAverage += delta(averageStart);
         averageStart = high_resolution_clock::now();
+#endif
 
         lwvl::clear();
 
