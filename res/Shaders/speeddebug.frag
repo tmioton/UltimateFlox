@@ -5,8 +5,8 @@ layout(location = 0) in float speed;
 out vec4 final;
 
 uniform float maxSpeed;
-uniform vec3 topColor = vec3(0.19216, 0.91373, 0.50588);
-uniform vec3 midColor = vec3(1.00000, 0.87843, 0.40000);
+uniform vec3 topColor = vec3(0.30588, 0.76471, 0.04314);
+uniform vec3 midColor = vec3(0.76863, 0.45098, 0.00000);
 uniform vec3 lowColor = vec3(0.76471, 0.04314, 0.30588);
 
 void main() {
