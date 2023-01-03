@@ -396,12 +396,26 @@ int run() {
     return 0;
 }
 
-
-int main() {
+#ifdef WIN32
+//#ifdef NDEBUG
+//#include <windows.h>
+//int WINAPI wWinMain(
+//    HINSTANCE hInstance,     // HANDLE TO AN INSTANCE.
+//    HINSTANCE hPrevInstance, // USELESS on modern windows (totally ignore hPrevInstance).
+//    PWSTR szCmdLine,         // Command line arguments.
+//    int iCmdShow             // Start window maximized, minimized, etc.
+//)
+//#else // NDEBUG
+int wmain()
+//#endif // NDEBUG
+#else // WIN32
+int main()
+#endif // WIN32
+{
     try {
         return run();
     } catch (const std::bad_alloc &e) {
-        std::cout << "Unable to allocate memory for program. Exiting." << std::endl;
+        std::cerr << "Unable to allocate memory for program. Exiting." << std::endl;
         return -1;
     } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;
