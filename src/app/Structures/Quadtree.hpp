@@ -13,7 +13,7 @@ static constexpr size_t ChildCount = 4;
 static constexpr Vector QuadrantOffsets[ChildCount] {{1.0f, 1.0f}, {-1.0f, 1.0f}, {-1.0f, -1.0f}, {1.0f, -1.0f}};
 
 namespace qt_details {
-    template<typename T, size_t bucket_size>
+    template<class T, size_t bucket_size>
     class Bucket {
         T m_data[bucket_size]{};
     public:
@@ -46,11 +46,11 @@ namespace qt_details {
 }
 
 
-template<typename T, int max_depth, size_t bucket_size>
+template<class T, int max_depth, size_t bucket_size>
 class QuadtreeGeometry;
 
 
-template<typename T, int max_depth, size_t bucket_size = 4>
+template<class T, int max_depth, size_t bucket_size = 4>
 class Quadtree {
     using BucketList = qt_details::BucketList;
     using Bucket = qt_details::Bucket<T, bucket_size>;

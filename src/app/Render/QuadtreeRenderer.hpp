@@ -113,7 +113,7 @@ class QuadtreeRenderer {
 public:
     explicit QuadtreeRenderer(Projection &);
 
-    template<typename T, int max_depth, size_t bucket_size>
+    template<class T, int max_depth, size_t bucket_size>
     void update(Quadtree<T, max_depth, bucket_size> const &tree) {
         int nodes = static_cast<int>(tree.size());
         int vertexCount = nodes * static_cast<int>(QuadtreeNodeVertexCount);
