@@ -2,7 +2,7 @@
 #include "World/Boid.hpp"
 #include "Controls.hpp"
 
-void BoidShader::draw(Model *model) {
+void BoidShader::draw(Model const *model) const {
     control.bind();
     model->draw();
     lwvl::Program::clear();

@@ -20,7 +20,7 @@ public:
 
     void attachData(Model *);
 
-    static void draw(Model *, BoidShader *);
+    static void draw(Model const *, BoidShader const *);
 private:
     lwvl::Buffer data;
     size_t flockSize;

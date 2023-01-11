@@ -14,7 +14,7 @@ void FlockRenderer::resize(size_t size) {
     flockSize = size;
 }
 
-void FlockRenderer::draw(Model *model, BoidShader *shader) {
+void FlockRenderer::draw(Model const *model, BoidShader const *shader) {
     shader->draw(model);
 }
 
