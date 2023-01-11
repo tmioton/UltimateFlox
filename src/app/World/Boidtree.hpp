@@ -3,4 +3,4 @@
 #include "Boid.hpp"
 #include "Structures/Quadtree.hpp"
 
-using Boidtree = Quadtree<Boid, 8, 5>;
+using Boidtree = Quadtree<Boid, MaxDepth, 5>;
