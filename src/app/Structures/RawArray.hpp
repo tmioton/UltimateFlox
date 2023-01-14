@@ -34,7 +34,7 @@ class RawArray {
     };
 
     T *m_data;
-    std::size_t m_size;
+    const std::size_t m_size;
 public:
     RawArray(T *data, std::size_t size) : m_data(data), m_size(size) {}
 
