@@ -60,13 +60,12 @@ int lua::LuaVector::destroy(lua_State *L) {
     return 0;
 }
 
-int lua::LuaVector::add(lua_State *L) { return operation(L, add); }
-int lua::LuaVector::sub(lua_State *L) { return operation(L, sub); }
-int lua::LuaVector::mul(lua_State *L) { return operation(L, mul); }
-int lua::LuaVector::div(lua_State *L) { return operation(L, div); }
+int lua::LuaVector::add(lua_State *L) { return binary_operation(L, [](Vector_t lhs, Vector_t rhs) { return lhs + rhs; }); }
+int lua::LuaVector::sub(lua_State *L) { return binary_operation(L, [](Vector_t lhs, Vector_t rhs) { return lhs - rhs; }); }
+int lua::LuaVector::mul(lua_State *L) { return binary_operation(L, [](Vector_t lhs, Vector_t rhs) { return lhs * rhs; }); }
+int lua::LuaVector::div(lua_State *L) { return binary_operation(L, [](Vector_t lhs, Vector_t rhs) { return lhs / rhs; }); }
 
-int lua::LuaVector::operation(lua_State *L, lua::LuaVector::Vector_t (*f)(Vector_t, Vector_t)) {
-    //
+int lua::LuaVector::binary_operation(lua_State *L, lua::LuaVector::Vector_t (*f)(Vector_t, Vector_t)) {
     if (lua_gettop(L) != 2) {
         // This is possible with getmetatable(CreateVector()).__add(1, 1, 1)
         lua::error(L, "Invalid number of arguments in Vector addition.");
@@ -123,8 +122,3 @@ int lua::LuaVector::operation(lua_State *L, lua::LuaVector::Vector_t (*f)(Vector
 
     return 1;
 }
-
-lua::LuaVector::Vector_t lua::LuaVector::add(lua::LuaVector::Vector_t lhs, lua::LuaVector::Vector_t rhs) { return lhs + rhs; }
-lua::LuaVector::Vector_t lua::LuaVector::sub(lua::LuaVector::Vector_t lhs, lua::LuaVector::Vector_t rhs) { return lhs - rhs; }
-lua::LuaVector::Vector_t lua::LuaVector::mul(lua::LuaVector::Vector_t lhs, lua::LuaVector::Vector_t rhs) { return lhs * rhs; }
-lua::LuaVector::Vector_t lua::LuaVector::div(lua::LuaVector::Vector_t lhs, lua::LuaVector::Vector_t rhs) { return lhs / rhs; }

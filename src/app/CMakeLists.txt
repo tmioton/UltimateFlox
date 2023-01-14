@@ -60,6 +60,8 @@ target_sources(
         Core/Lua/Table.cpp
         Core/Lua/VirtualMachine.hpp
         Core/Lua/VirtualMachine.cpp
+        Core/Lua/Errors.hpp
+        Core/Lua/Errors.cpp
 
         # LUA TYPES
         Core/Lua/Types/LuaVector.hpp

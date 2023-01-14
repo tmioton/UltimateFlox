@@ -1,46 +1,79 @@
 #pragma once
+
 #include "pch.hpp"
+#include "Errors.hpp"
+#include "Common.hpp"
 #include "Table.hpp"
 #include "Function.hpp"
 
 namespace lua {
+    // Singleton Lua Virtual Machine. I don't see any use for another Lua instance.
+    //   Users can only access data pushed to Lua through the first instance.
     class VirtualMachine {
-        lua_State *m_state;
+    public:
+        static VirtualMachine &get();
 
-        static std::ostream &type(std::ostream &, int);
+    private:
+        template<typename T, typename luaT>
+        T toValue(int* isNum, luaT(*lua_get)(lua_State*, int, int*)) {
+            const T value = static_cast<T>(lua_get(state, -1, isNum));
+            lua_pop(state, 1);
+            return value;
+        }
 
-        static std::ostream &status(std::ostream &, int);
+        template<typename T, typename luaT>
+        T toValueBackup(T backup, luaT(*lua_get)(lua_State*, int, int*)) {
+            int isNum;
+            T value = static_cast<T>(lua_get(state, -1, &isNum));
+            if (!isNum) {
+                value = backup;
+            }
+            lua_pop(state, 1);
+            return value;
+        }
+
+        VirtualMachine();
 
     public:
-        VirtualMachine();
-        ~VirtualMachine();
+        VirtualMachine(VirtualMachine const &) = delete;
 
-        int runString(const std::string &command);
+        VirtualMachine(VirtualMachine &&) = delete;
 
-        int runFile(const std::string &file);
+        void addBasicLibraries() const;
 
-        int runBuffer(const unsigned char* buffer, size_t length);
+        template<Code C>
+        [[nodiscard]] int run(C& code) {
+            return code.run(state);
+        }
 
-        void addCommonLibraries();
+        [[nodiscard]] int run(std::string const &) const;
+        [[nodiscard]] int run(const char*) const;
 
-        bool validate(int code, std::ostream& = std::cout);
+        [[nodiscard]] Table table(std::string name) const;
+        [[nodiscard]] Function function(std::string name, int arguments = 0, int results = 0) const;
 
-        Table table(const char* name);
-        Function function(const char*, int, int);
+        void pushGlobal(Table const&) const;
 
-        void setGlobal(Table&);
-        void setGlobal(std::string&);
-        void setGlobal(const char*);
+        [[nodiscard]] lua_Integer toInteger(int* isNum = nullptr);
+        [[nodiscard]] lua_Number toNumber(int* isNum = nullptr);
+        [[nodiscard]] std::string toString();
 
-        void pushInteger(int);
-        void pushInteger(size_t);
-        void pushNumber(double);
-        void pushString(std::string&);
-        void pushString(const char*);
-        void pop(int n);
+        template<std::integral T>
+        [[nodiscard]] T toInteger(T backup) {
+            return toValueBackup(backup, lua_tointegerx);
+        }
 
-        explicit operator lua_State*();
+        template<std::floating_point T>
+        [[nodiscard]] T toNumber(T backup) {
+            return toValueBackup(backup, lua_tonumberx);
+        }
+
+        [[nodiscard]] std::string toString(std::string const& backup);
+
+        void validate(int) const;
+
+        void log(int) const;
+
+        lua_State *state = luaL_newstate();
     };
-
-    lua_State *raw(VirtualMachine &lvm);
 }

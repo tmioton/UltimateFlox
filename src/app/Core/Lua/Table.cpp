@@ -1,79 +1,86 @@
 #include "pch.hpp"
 #include "Table.hpp"
+#include "Errors.hpp"
 
-lua::Table::Table(lua_State *L, std::string name) : m_state(L), m_name(std::move(name)) {}
+lua::Table::Table(lua_State* s, std::string n) : m_state(s), m_name(std::move(n)) {}
 
-void lua::Table::create(int narr, int nrec) {
-    lua_createtable(m_state, narr, nrec);
-}
-
-std::string lua::Table::getString(const char *name, std::string backup) {
-    std::string value;
-    lua_pushstring(m_state, name);
-    lua_gettable(m_state, -2);
-    if (lua_isstring(m_state, -1)) {
-        value = lua_tostring(m_state, -1);
-    } else {
-        lua_pop(m_state, 1);
-        value = std::move(backup);
-    }
-
-    lua_pop(m_state, 1);
-    return value;
-}
-
-std::optional<std::string> lua::Table::getString(const char *name) {
-    std::optional<std::string> value;
-    lua_pushstring(m_state, name);
-    lua_gettable(m_state, -2);
-    if (lua_isstring(m_state, -1)) {
-        value = lua_tostring(m_state, -1);
-    } else {
-        lua_pop(m_state, 1);
-        value = std::nullopt;
-    }
-    lua_pop(m_state, 1);
-    return value;
-}
-
-void lua::Table::setNumber(const char* name, double value) {
-    lua_pushstring(m_state, name);
-    lua_pushnumber(m_state, value);
-    lua_settable(m_state, -3);
-}
-
-void lua::Table::setInteger(const char *name, int value) {
-    lua_pushstring(m_state, name);
-    lua_pushinteger(m_state, static_cast<lua_Integer>(value));
-    lua_settable(m_state, -3);
-}
-
-void lua::Table::setInteger(const char *name, size_t value) {
-    lua_pushstring(m_state, name);
-    lua_pushinteger(m_state, static_cast<lua_Integer>(value));
-    lua_settable(m_state, -3);
-}
-
-void lua::Table::setString(const char *name, std::string &value) {
-    lua_pushstring(m_state, name);
-    lua_pushstring(m_state, value.c_str());
-    lua_settable(m_state, -3);
-}
-
-std::string &lua::Table::name() {
-    return m_name;
+void lua::Table::create(int sl, int ol) {
+    // The error handling for this is checking the stack before calling this.
+    lua_createtable(m_state, sl, ol);
+    m_index = lua_gettop(m_state);
 }
 
 bool lua::Table::push() {
     lua_getglobal(m_state, m_name.c_str());
-    if (lua_istable(m_state, -1)) {
-        return true;
-    } else {
-        lua_pop(m_state, 1);  // Need to pop off the "nil" Lua placed on the stack.
+    if (!lua_istable(m_state, -1)) [[unlikely]] {
+        lua_pop(m_state, 1);
         return false;
     }
+    m_index = lua_gettop(m_state);
+    return true;
 }
 
-void lua::Table::pop() {
+bool lua::Table::pop() {
+    bool ret = lua_istable(m_state, -1) || lua_isnil(m_state, -1);
     lua_pop(m_state, 1);
+#ifdef LUA_DEBUG
+    if (!ret) {
+        throw lua::exception("Attempt to pop unrelated value from lua stack.");
+    }
+#endif
+    return ret;
+}
+
+std::string const &lua::Table::name() const {
+    return m_name;
+}
+
+void lua::Table::pushInteger(const char *key, lua_Integer value) {
+    lua_pushstring(m_state, key);
+    lua_pushinteger(m_state, value);
+    lua_settable(m_state, m_index);
+}
+
+void lua::Table::pushNumber(const char *key, lua_Number value) {
+    lua_pushstring(m_state, key);
+    lua_pushnumber(m_state, value);
+    lua_settable(m_state, m_index);
+}
+
+void lua::Table::pushString(const char *key, const char *value) {
+    lua_pushstring(m_state, key);
+    lua_pushstring(m_state, value);
+    lua_settable(m_state, m_index);
+}
+
+lua_Integer lua::Table::toInteger(const char *key, int* isNum) {
+    return toValue<lua_Integer>(key, isNum, lua_tointegerx);
+}
+
+lua_Number lua::Table::toNumber(const char *key, int *isNum) {
+    return toValue<lua_Number>(key, isNum, lua_tonumberx);
+}
+
+std::string lua::Table::toString(const char *key) {
+    lua_pushstring(m_state, key);
+    lua_gettable(m_state, m_index);
+    std::size_t length;
+    const char* internal = lua_tolstring(m_state, -1, &length);
+    std::string value{internal, length};
+    lua_pop(m_state, 1);
+    return value;
+}
+
+std::string lua::Table::toString(const char *key, const std::string &backup) {
+    lua_pushstring(m_state, key);
+    lua_gettable(m_state, m_index);
+    std::size_t length;
+    const char* internal_string = lua_tolstring(m_state, -1, &length);
+    if (length == 0) {
+        lua_pop(m_state, 1);
+        return backup;
+    }
+    std::string value{internal_string, length};
+    lua_pop(m_state, 1);
+    return value;
 }

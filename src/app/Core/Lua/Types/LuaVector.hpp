@@ -1,19 +1,23 @@
 #pragma once
 
 #include "pch.hpp"
-#include "Core/Lua/Lua.hpp"
+#include "../Common.hpp"
 
 
 namespace lua {
+    class VirtualMachine;
+
     struct LuaVector {
         // Vector using double because Lua operates in doubles
-        using Vector_t = glm::vec<Vector::length(), double, glm::highp>;
-
-        static void addToLua(lua_State *);
+        using Vector_t = glm::vec<Vector::length(), double, glm::defaultp>;
 
         static Vector toVector(Vector_t *);
 
+        static void addToLua(lua_State *);
     private:
+        friend VirtualMachine;
+
+
         static int create(lua_State *);
 
         static int destroy(lua_State *);
@@ -30,14 +34,6 @@ namespace lua {
 
         //static int pow(lua_State*);
 
-        static int operation(lua_State *, Vector_t(f)(Vector_t, Vector_t));
-
-        static Vector_t add(Vector_t lhs, Vector_t rhs);
-
-        static Vector_t sub(Vector_t lhs, Vector_t rhs);
-
-        static Vector_t mul(Vector_t lhs, Vector_t rhs);
-
-        static Vector_t div(Vector_t lhs, Vector_t rhs);
+        static int binary_operation(lua_State *L, Vector_t(f)(Vector_t, Vector_t));
     };
 }

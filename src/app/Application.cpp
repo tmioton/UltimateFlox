@@ -1,7 +1,6 @@
 #include "pch.hpp"
 #include "Core/Window.hpp"
 #include "Core/Lua/VirtualMachine.hpp"
-#include "Core/Lua/Types/LuaVector.hpp"
 #include "World/Flock.hpp"
 //#include "Algorithm/DirectLoopAlgorithm.hpp"
 //#include "Algorithm/QuadtreeAlgorithm.hpp"
@@ -20,6 +19,7 @@ using namespace std::chrono;
 
 
 /* Ideas:
+  . Job system with local and global queues https://www.youtube.com/watch?v=1ZMasi_9g_A
   . Background texture displaying the path of the boid?
   . Compute shaders
   . Shader uniform buffers
@@ -55,48 +55,70 @@ static inline double delta(time_point<steady_clock> start) {
     ).count());
 }
 
+namespace app {
+    struct WindowConfiguration {
+        int width;
+        int height;
+    };
+}
+
+
+void runStartupScript(lua::VirtualMachine &L, size_t &flockSize, float &worldBound, app::WindowConfiguration &window) {
+    L.addBasicLibraries();
+
+    // Create config table for Lua customization.
+    lua::Table appConfig{L.table("flox")};
+    appConfig.create(4, 0);
+    appConfig.pushInteger("flock_size", static_cast<int>(flockSize));
+    appConfig.pushNumber("world_bound", worldBound);
+    appConfig.pushInteger("width", window.width);
+    appConfig.pushInteger("height", window.height);
+    L.pushGlobal(appConfig);
+
+    const bool validLua = [](lua::VirtualMachine& L) {
+        lua::CodeFile customStart{"Data/Scripts/flox.lua"};
+        int r = L.run(customStart);
+        if (r == LUA_OK) {
+            return true;
+        }
+
+        // Pop error message.
+        std::cout << "Error from external script file:\n    " << L.toString() << std::endl;
+
+        lua::CodeBuffer defaultStart{(const char *) (FLOX_DEFAULT_LUA_SCRIPT), FLOX_DEFAULT_LUA_SCRIPT_LENGTH};
+        r = L.run(defaultStart);
+        if (r == LUA_OK) {
+            return true;
+        }
+
+        // Pop error message.
+        std::cout << "Error from default script:\n    " << L.toString() << std::endl;
+
+        return false;
+    }(L);
+
+    if (validLua && appConfig.push()) {
+        flockSize = appConfig.toInteger("flock_size", flockSize);
+        worldBound = appConfig.toNumber("world_bound", worldBound);
+        window.width = appConfig.toInteger("width", window.width);
+        window.height = appConfig.toInteger("height", window.height);
+        appConfig.pop();
+    }
+}
+
 
 int run() {
     size_t flockSize = 1024;
     float worldBound = 450.0f;
-    int width = 800;
-    int height = 450;
+    app::WindowConfiguration wConfig{800, 450};
 
-    lua::VirtualMachine L; {
-        L.addCommonLibraries();
-        lua::LuaVector::addToLua(lua::raw(L));
+    //lua::OldVirtualMachine L;
+    //runStartupScript(L, flockSize, worldBound, width, height);
+    auto &L{lua::VirtualMachine::get()};
+    runStartupScript(L, flockSize, worldBound, wConfig);
 
-        // Create config table for Lua customization.
-        lua::Table configTable{L.table("flox")};
-        configTable.create(4, 0);
-        configTable.setInteger("flock_size", static_cast<int>(flockSize));
-        configTable.setNumber("world_bound", worldBound);
-        configTable.setInteger("width", width);
-        configTable.setInteger("height", height);
-        L.setGlobal(configTable);  // Consumes the table off the stack
-
-        bool validLua = false;
-        int r = L.runFile("Data/Scripts/flox.lua");
-        if (L.validate(r)) {
-            validLua = true;
-        } else {
-            r = L.runBuffer(FLOX_DEFAULT_LUA_SCRIPT, FLOX_DEFAULT_LUA_SCRIPT_LENGTH);
-            if (L.validate(r)) {
-                validLua = true;
-            }
-        }
-
-        if (validLua && configTable.push()) {
-            flockSize = configTable.getInteger("flock_size", flockSize);
-            worldBound = configTable.getNumber("world_bound", worldBound);
-            width = configTable.getInteger("width", width);
-            height = configTable.getInteger("height", height);
-            configTable.pop();  // Need to explicitly pop the table off the stack.
-        }
-    }
-
-    lua::Function onFrameStart{L.function("OnFrameStart", 0, 0)};
-    lua::Function onFrameGroupEnd{L.function("OnFrameGroupEnd", 0, 0)};
+    //lua::Function onFrameStart{L.function("OnFrameStart", 0, 0)};
+    //lua::Function onFrameGroupEnd{L.function("OnFrameGroupEnd", 0, 0)};
 
     //Window::init();
     //GLFWmonitor *monitor = glfwGetPrimaryMonitor();
@@ -136,7 +158,7 @@ int run() {
     bool renderQuadtreeColored = false;
     bool renderQuadtreeLines = false;
 
-    const float aspect = static_cast<float>(width) / static_cast<float>(height);
+    const float aspect = static_cast<float>(wConfig.width) / static_cast<float>(wConfig.height);
     const Vector bounds {
         aspect >= 1.0f ? worldBound * aspect : worldBound,
         aspect < 1.0f ? worldBound * aspect : worldBound
@@ -202,8 +224,8 @@ int run() {
     double renderDurationAverage = 0.0;
 #endif
 
-    L.pushNumber(1.0 / 60.0);
-    L.setGlobal("fps");
+    //L.pushNumber(1.0 / 60.0);
+    //L.setGlobal("fps");
 
     // glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
@@ -214,11 +236,11 @@ int run() {
         const auto dt = static_cast<float>(delta(frameStart));
         frameStart = high_resolution_clock::now();
 
-        if (onFrameStart.push()) {
-            L.pushNumber(dt);
-            L.setGlobal("delta");
-            L.validate(onFrameStart.call());
-        }
+        //if (onFrameStart.push()) {
+        //    L.pushNumber(dt);
+        //    L.setGlobal("delta");
+        //    L.validate(onFrameStart.call());
+        //}
 
 #ifdef FLOX_SHOW_DEBUG_INFO
         auto averageStart = high_resolution_clock::now();
@@ -366,13 +388,13 @@ int run() {
         // Framerate display
         if ((frameCount & 0x3F) == 0) {
             double fps = 64.0 / delta(secondStart);
-            if (onFrameGroupEnd.push()) {
-                L.pushInteger(frameCount);
-                L.setGlobal("frame_count");
-                L.pushNumber(fps);
-                L.setGlobal("fps");
-                L.validate(onFrameGroupEnd.call());
-            }
+            //if (onFrameGroupEnd.push()) {
+            //    L.pushInteger(frameCount);
+            //    L.setGlobal("frame_count");
+            //    L.pushNumber(fps);
+            //    L.setGlobal("fps");
+            //    L.validate(onFrameGroupEnd.call());
+            //}
 
             secondStart = high_resolution_clock::now();
 #ifdef FLOX_SHOW_DEBUG_INFO
