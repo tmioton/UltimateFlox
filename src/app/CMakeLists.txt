@@ -44,10 +44,10 @@ target_sources(
         World/Flock.cpp
 
         # CORE
-        Core/Window.hpp
-        Core/Window.cpp
-        Core/Event.hpp
-        Core/Event.cpp
+        Core/Window/Window.hpp
+        Core/Window/Window.cpp
+        Core/Window/Event.hpp
+        Core/Window/Event.cpp
 
         # LUA
         Core/Lua/Common.hpp

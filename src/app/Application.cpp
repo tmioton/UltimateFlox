@@ -1,5 +1,5 @@
 #include "pch.hpp"
-#include "Core/Window.hpp"
+#include "Core/Window/Window.hpp"
 #include "Core/Lua/VirtualMachine.hpp"
 #include "World/Flock.hpp"
 //#include "Algorithm/DirectLoopAlgorithm.hpp"
@@ -16,6 +16,7 @@
 
 using namespace lwvl::debug;
 using namespace std::chrono;
+using namespace window;
 
 
 /* Ideas:
@@ -130,7 +131,8 @@ int run() {
     //glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
     //
     //Window window(mode->width, mode->height, "Ultimate Flox", monitor);
-    Window window(width, height, "Ultimate Flox");
+    Window& window{Window::get()};
+    window.create("Ultimate Flox", {wConfig.width, wConfig.height, 1, false});
 
     lwvl::Program::clear();
 #ifdef FLOX_SHOW_DEBUG_INFO
@@ -231,7 +233,7 @@ int run() {
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    for (int frameCount = 1; !window.shouldClose(); frameCount++) {
+    for (int frameCount = 1; !window.should_close(); frameCount++) {
         // Calculate the time since last frame
         const auto dt = static_cast<float>(delta(frameStart));
         frameStart = high_resolution_clock::now();
@@ -247,10 +249,10 @@ int run() {
 #endif
 
         // Fill event stack
-        Window::update();
+        window.update();
 
         // Handle incoming events
-        while (std::optional<Event> possible = window.pollEvent()) {
+        while (std::optional<Event> possible = window.poll_event()) {
             if (!possible.has_value()) {
                 continue;
             }
@@ -261,7 +263,7 @@ int run() {
             if (concrete.type == Event::Type::KeyRelease
                 && std::get<KeyboardEvent>(concrete.event).key == GLFW_KEY_ESCAPE
                 ) {
-                window.shouldClose(true);
+                window.should_close(true);
             }
 
             // Handle events differently if the console's open.
@@ -375,7 +377,7 @@ int run() {
             FlockRenderer::draw(activeModel, activeShader);
         }
 
-        window.swapBuffers();
+        window.swap_buffers();
 
 #ifdef FLOX_SHOW_DEBUG_INFO
         renderDurationAverage += delta(averageStart);
