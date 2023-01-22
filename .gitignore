@@ -1,5 +1,5 @@
 CppCaptures/
-cmake-build-*/
+.cmake-build-*/
 .idea/
 blender/
 *.ngfx-proj
