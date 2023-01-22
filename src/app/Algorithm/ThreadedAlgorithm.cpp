@@ -3,9 +3,12 @@
 #include "Structures/RawArray.hpp"
 
 
+constexpr ptrdiff_t BOID_GROUP = 8;
+
+
 // ****** ThreadedAlgorithm ******
 ThreadedAlgorithm::ThreadedAlgorithm(Vector b) : m_bounds(b), m_treeBounds(m_bounds), m_tree(m_treeBounds) {
-    for(auto & m_result : m_results) {
+    for (auto &m_result: m_results) {
         m_result.reserve(128);
     }
 
@@ -16,51 +19,108 @@ ThreadedAlgorithm::~ThreadedAlgorithm() {
     m_pool.shutdown();
 }
 
-void ThreadedAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
+void ThreadedAlgorithm::update(DoubleBuffer<Boid> &boids, const float delta) {
+    const auto count = static_cast<ptrdiff_t>(boids.count());
+    if (count == 0) { return; }
+
+    const Boid *read = boids.read();
     Boid *write = boids.write();
-    Boid const *read = boids.read();
-    const int count = static_cast<int>(boids.count());
+
+    // Insert the boids into the quadtree
+    populate_tree(boids.read(), count);
+
+    // Distribute the calculation work evenly among the available threads.
+    distribute_work(read, write, count, delta);
+
+    // Recalculate the bounds of the quadtree to keep the birds inside.
+    recalculate_bounds(boids.write(), count);
+}
+
+void ThreadedAlgorithm::populate_tree(const Boid *read, const ptrdiff_t count) {
     m_tree.clear();
     m_tree.bounds(m_treeBounds);
-    Vector xBound{m_treeBounds.center.x - m_treeBounds.size.x, m_treeBounds.center.x + m_treeBounds.size.x};
-    Vector yBound{m_treeBounds.center.y - m_treeBounds.size.y, m_treeBounds.center.y + m_treeBounds.size.y};
-
     for (Boid const &boid: RawArray(read, count)) {
-    //for (int i = 0; i < count; ++i) {
-    //    m_tree.insert(i, read[i].position);
-    //    m_tree.insert(boid, boid.position);
         m_tree.insert(&boid, boid.position);
     }
+}
 
-    const ptrdiff_t boids_per_thread = count / ThreadCount;
-    const ptrdiff_t leftover = count - boids_per_thread * ThreadCount;
-    std::future<void> futures[ThreadCount - 1];
-    ptrdiff_t next_start = boids_per_thread + leftover;
-    for (int i = 1; i < ThreadCount; ++i) {
-        futures[i - 1] = m_pool.submit(
-            [](ThreadWork thread_work) { thread_work(); },
-            ThreadWork{
-                this, i, delta,
-                //write + next_start,
-                read, write,
-                boids_per_thread,
-                next_start
-            }
-        );
+void ThreadedAlgorithm::distribute_work(const Boid *read, Boid *write, const ptrdiff_t count, const float delta) {
+    // Maybe compute these values only when flock size changes?
+    // Compiler should see div/mod and combine operations.
+    // Number of groups of boids.
+    const ptrdiff_t boid_groups = count / BOID_GROUP;
 
-        next_start += boids_per_thread;
+    // Number of boids outside a group. Always less than boid group size. Fine. I'll process them myself.
+    const ptrdiff_t leftover_boids = count % BOID_GROUP;
+
+    // Number of boid groups per thread. 0 if less than ThreadCount groups.
+    const ptrdiff_t boid_groups_per_thread = boid_groups / ThreadCount;
+
+    // Number of groups not evenly distributed across the threads. Evenly distribute them across the threads.
+    ptrdiff_t leftover_groups = boid_groups % ThreadCount;
+    const ptrdiff_t boids_per_thread = BOID_GROUP * boid_groups_per_thread;
+
+    //std::cout << '\n'
+    //          << boid_groups << " groups.\n"
+    //          << boid_groups_per_thread << " groups per thread.\n"
+    //          << leftover_groups << " leftover groups.\n"
+    //          << leftover_boids << " leftover boids.\n";
+
+    // Leftover boids have to be added to the last thread.
+    // The last thread only takes a leftover group if there are no leftover boids.
+    // If the first thread took two birds extra, each of the other threads' processing would start offset by two.
+
+    const bool primary_thread_needs_work = !(boids_per_thread || leftover_boids);
+
+    // See if we need to take a group here.
+    const ptrdiff_t final_start {
+        primary_thread_needs_work ?
+        BOID_GROUP * (boid_groups_per_thread * (ThreadCount - 1) + leftover_groups - (leftover_groups > 0)) :
+        BOID_GROUP * (boid_groups_per_thread * (ThreadCount - 1) + leftover_groups)
+    };
+
+    // Take the group here.
+    const ptrdiff_t final_count {
+        primary_thread_needs_work ?
+        boids_per_thread + leftover_boids + (leftover_groups-- > 0) * BOID_GROUP :
+        boids_per_thread + leftover_boids
+    };
+
+    ThreadFutures futures {};
+    if (boid_groups_per_thread > 0 || leftover_groups > 0) {
+        ptrdiff_t next_start = 0;
+        for (int i = 0; i < ThreadCount - 1; ++i) {
+            if (boid_groups_per_thread == 0 && leftover_groups <= 0) { break; }
+            futures[i] = m_pool.submit(
+                [](ThreadWork thread_work) { thread_work(); },
+                ThreadWork {
+                    this, i, delta,
+                    read, write,
+                    boids_per_thread + (leftover_groups > 0) * BOID_GROUP,  // I might take a group below.
+                    next_start
+                }
+            );
+
+            next_start += boids_per_thread + (leftover_groups-- > 0) * BOID_GROUP;  // Take a group here.
+        }
     }
 
     //Do my work.
-    ThreadWork{this, 0, delta, read, write, boids_per_thread + leftover, 0}();
-    //ThreadWork{this, 0, delta, write, boids_per_thread + leftover}();
+    ThreadWork {this, ThreadCount - 1, delta, read, write, final_count, final_start}();
 
     // Wait for the others to finish their work.
     for (auto &update_future: futures) {
-        update_future.get();
+        if (update_future.valid()) {
+            update_future.get();
+        }
     }
+}
 
+void ThreadedAlgorithm::recalculate_bounds(Boid *write, const ptrdiff_t count) {
     // Separate loop for thread-safety. Does this slow the program down?
+    // Maybe have an array where the results of this test from each thread are stored and join them after.
+    Vector xBound {m_treeBounds.center.x - m_treeBounds.size.x, m_treeBounds.center.x + m_treeBounds.size.x};
+    Vector yBound {m_treeBounds.center.y - m_treeBounds.size.y, m_treeBounds.center.y + m_treeBounds.size.y};
     for (auto const &current: RawArray(write, count)) {
         if (current.position.x < xBound.r) {
             xBound.r = current.position.x;
@@ -78,7 +138,7 @@ void ThreadedAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
     float xBoundCenter = (xBound.r + xBound.g) * 0.5f;
     float yBoundCenter = (yBound.r + yBound.g) * 0.5f;
 
-    Rectangle newBounds{
+    Rectangle newBounds {
         {xBoundCenter,            yBoundCenter},
         {xBound.g - xBoundCenter, yBound.g - yBoundCenter}
     };
@@ -87,25 +147,28 @@ void ThreadedAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
 }
 
 void ThreadedAlgorithm::ThreadWork::operator()() const {
+    //{
+    //    std::unique_lock<std::mutex> lock(algorithm->m_mutex);
+    //    std::cout << "Thread " << id << " processing " << count << " boids starting at " << start << ".\n";
+    //}
     const Boidtree &tree = algorithm->m_tree;
     const Rectangle bounds = algorithm->m_bounds;
     Boidtree::ResultVector &results = algorithm->m_results[id];
     const float disruptiveRadius = Boid::disruptiveRadius * Boid::disruptiveRadius;
     const float cohesiveRadius = Boid::cohesiveRadius * Boid::cohesiveRadius;
 
-    const Rectangle centerBound{bounds * 0.75f};
-    const Rectangle hardBound{bounds * 0.90f};
+    const Rectangle centerBound {bounds * 0.75f};
+    const Rectangle hardBound {bounds * 0.90f};
 
-    Rectangle boidBound{Vector{Boid::scale}};
-    Rectangle searchBound{Vector{Boid::cohesiveRadius}};
-    //for (Boid &current: RawArray(write + start, count)) {
+    Rectangle boidBound {Vector {Boid::scale}};
+    Rectangle searchBound {Vector {Boid::cohesiveRadius}};
     for (ptrdiff_t i = start; i < start + count; ++i) {
         Boid &current = write[i];
         const Boid &previous = read[i];
 
         boidBound.center = current.position;
         searchBound.center = current.position;
-        Vector centerSteer{0.0f, 0.0f};
+        Vector centerSteer {0.0f, 0.0f};
 
         const bool inCenter = centerBound.intersects(boidBound);
         float centerSteerWeight = Boid::primadonnaWeight;
@@ -122,7 +185,6 @@ void ThreadedAlgorithm::ThreadWork::operator()() const {
         fullSpeed = current.steer(fullSpeed);
 
         results.clear();
-        //tree.search(searchBound, results);
         tree.search(&previous, searchBound, results);
         //std::sort(
         //    results.begin(), results.end(),
@@ -131,23 +193,13 @@ void ThreadedAlgorithm::ThreadWork::operator()() const {
         //    }
         //);
 
-        Vector separation{0.0f, 0.0f};
-        Vector alignment{0.0f, 0.0f};
-        Vector cohesion{0.0f, 0.0f};
+        Vector separation {0.0f, 0.0f};
+        Vector alignment {0.0f, 0.0f};
+        Vector cohesion {0.0f, 0.0f};
         size_t cohesiveTotal = 0;
         size_t disruptiveTotal = 0;
 
-        for (const Boid& other : results) {
-        //for (const ptrdiff_t j: results) {
-            // It is theoretically possible that two boids share the same position.
-            // Two or more birds in this situation using this if statement will then receive exactly the same
-            //   forces acting upon it, ensuring they remain in the situation. Alleviated by random walk?
-            //if (current.position == other.position) {
-            //if (i == j) {
-            //    continue;
-            //}
-
-            //const Boid &other = read[j];
+        for (const Boid &other: results) {
             const float d2 = glm::distance2(current.position, other.position);
             if (d2 < disruptiveRadius && d2 > 0.0f) {
                 Vector diff = current.position - other.position;
@@ -155,17 +207,17 @@ void ThreadedAlgorithm::ThreadWork::operator()() const {
                 disruptiveTotal++;
             }
 
-            const auto in_cohesive_range = d2 < cohesiveRadius;
-            const auto fin_cohesive_range = static_cast<float>(d2 < cohesiveRadius);
-            alignment += fin_cohesive_range * other.velocity;
-            cohesion += fin_cohesive_range * other.position;
-            cohesiveTotal += in_cohesive_range;
+            //const auto in_cohesive_range = d2 < cohesiveRadius;
+            //const auto fin_cohesive_range = static_cast<float>(d2 < cohesiveRadius);
+            //alignment += fin_cohesive_range * other.velocity;
+            //cohesion += fin_cohesive_range * other.position;
+            //cohesiveTotal += in_cohesive_range;
 
-            //if (d2 < cohesiveRadius) {
-            //    alignment += other.velocity;
-            //    cohesion += other.position;
-            //    cohesiveTotal++;
-            //}
+            if (d2 < cohesiveRadius) {
+                alignment += other.velocity;
+                cohesion += other.position;
+                cohesiveTotal++;
+            }
         }
 
         if (disruptiveTotal > 0) {
@@ -184,7 +236,7 @@ void ThreadedAlgorithm::ThreadWork::operator()() const {
         }
 
         const Vector acceleration = magnitude(
-            Vector{
+            Vector {
                 centerSteer * centerSteerWeight
                 + fullSpeed * Boid::speedWeight
                 + separation * Boid::separationWeight
@@ -199,10 +251,10 @@ void ThreadedAlgorithm::ThreadWork::operator()() const {
     }
 }
 
-ThreadedAlgorithm::ThreadWork::ThreadWork(ThreadedAlgorithm *a, int i, float d, const Boid *r, Boid *w, ptrdiff_t c, ptrdiff_t s) :
+ThreadedAlgorithm::ThreadWork::ThreadWork(
+    ThreadedAlgorithm *a, int i, float d, const Boid *r, Boid *w, ptrdiff_t c, ptrdiff_t s
+) :
     algorithm(a), id(i), delta(d), read(r), write(w), count(c), start(s) {}
-//ThreadedAlgorithm::ThreadWork::ThreadWork(ThreadedAlgorithm *a, int i, float d, Boid *w, ptrdiff_t c) :
-//    algorithm(a), id(i), delta(d), write(w), count(c) {}
 
 Boidtree const &ThreadedAlgorithm::tree() const {
     return m_tree;
