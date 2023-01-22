@@ -157,6 +157,9 @@ window::Window &window::Window::get() {
 }
 
 void window::Window::glfw_init() {
+    glfwSetErrorCallback([](int code, const char* message) {
+        std::cerr << message << '\n';
+    });
     /* Initialize GLFW. */
     if (!glfwInit()) {
 // FIXME: Hack just to compile on linux
