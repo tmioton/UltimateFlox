@@ -2,7 +2,14 @@
 
 #include "pch.hpp"
 
-inline Vector magnitude(Vector vec, float mag);
+inline Vector magnitude(Vector vec, float mag) {
+    const float l2 = glm::length2(vec);
+    if (l2 != 0.0f) {
+        return vec * glm::fastInverseSqrt(l2) * mag;
+    } else {
+        return vec;
+    }
+}
 
 constexpr std::size_t BoidColorCount = 5;
 constexpr Color BoidColors[BoidColorCount] {
