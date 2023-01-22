@@ -14,6 +14,8 @@
 #define FLOX_SHOW_DEBUG_INFO
 #endif
 
+//#define FLOX_DEBUG_TIMINGS
+
 using namespace lwvl::debug;
 using namespace std::chrono;
 using namespace window;
@@ -232,12 +234,26 @@ int run() {
 
     // glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
+#ifdef FLOX_DEBUG_TIMINGS
+    std::ofstream file;
+    file.open("UltimateFlox - Frame Times.txt");
+    int total_frame_count = 0;
+#endif
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     for (int frameCount = 1; !window.should_close(); frameCount++) {
         // Calculate the time since last frame
         const auto dt = static_cast<float>(delta(frameStart));
         frameStart = high_resolution_clock::now();
+
+#ifdef FLOX_DEBUG_TIMINGS
+        if (total_frame_count >= 1800) {
+            window.should_close(true);
+            continue;
+        }
+#endif
+
 
         //if (onFrameStart.push()) {
         //    L.pushNumber(dt);
@@ -334,6 +350,10 @@ int run() {
 #ifdef FLOX_SHOW_DEBUG_INFO
         eventDurationAverage += delta(averageStart);
         averageStart = high_resolution_clock::now();
+#else
+#ifdef FLOX_DEBUG_TIMINGS
+        auto averageStart = high_resolution_clock::now();
+#endif
 #endif
 
         // Update engine
@@ -342,6 +362,20 @@ int run() {
             flock.update(algorithm, dt);
         }
 
+#ifdef FLOX_DEBUG_TIMINGS
+        auto update_delta = duration_cast<microseconds>(
+            high_resolution_clock::now() - averageStart
+        ).count();
+        if (total_frame_count > 1199) {
+            if (total_frame_count == 1200) {
+                std::cout << "Started timing capture." << std::endl;
+                file << update_delta;
+            } else {
+                file << ',' << update_delta;
+            }
+        }
+        ++total_frame_count;
+#endif
 #ifdef FLOX_SHOW_DEBUG_INFO
         updateDurationAverage += delta(averageStart);
         averageStart = high_resolution_clock::now();
