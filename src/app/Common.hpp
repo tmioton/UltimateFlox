@@ -1,6 +1,6 @@
 #pragma once
 
-constexpr size_t MaxDepth = 8;
+constexpr size_t MaxDepth = 11;
 constexpr size_t BucketSize = 16;
 using Vector = glm::vec2;
 using Color = glm::vec3;
