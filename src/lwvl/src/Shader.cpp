@@ -1,4 +1,7 @@
 #include "lwvl/lwvl.hpp"
+#ifndef _WIN32
+#include <iostream>
+#endif
 
 
 /* ****** Uniform ****** */
@@ -106,12 +109,16 @@ lwvl::Program::ID::~ID() {
 int lwvl::Program::uniformLocation(const char *name) const {
     const int location = glGetUniformLocation(id(), name);
     if (location == -1) {
+#ifdef _WIN32
         std::stringstream msg;
         msg << "Uniform " << name << " not found.";
         throw std::exception(msg.str().c_str());
-    } else {
-        return location;
+#else
+        std::cerr << "Uniform " << name << " not found.\n";
+        throw std::exception();
+#endif
     }
+    return location;
 }
 
 GLuint lwvl::Program::id() const {
@@ -222,13 +229,6 @@ void lwvl::Program::link(std::string const &vertexSource, std::string const &fra
 
 void lwvl::Program::bind() const {
     glUseProgram(id());
-}
-
-void lwvl::Program::draw(const void *user_ptr, LWVLProgramProc func) const {
-    int current = active();
-    bind();
-    func(user_ptr);
-    glUseProgram(current);
 }
 
 void lwvl::Program::clear() {

@@ -8,7 +8,11 @@ void lwvl::debug::clearErrors() {
     while (glGetError() != GL_NO_ERROR) {}
 }
 
+#ifdef _WIN32
 void __stdcall lwvl::debug::glDebugCallback(
+#else
+    void lwvl::debug::glDebugCallback(
+#endif
     GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
     const GLchar *message, const void *state
 ) {

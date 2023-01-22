@@ -304,7 +304,12 @@ namespace lwvl {
             void invoke(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message);
         };
 
+
+#ifdef _WIN32
         static void __stdcall glDebugCallback(
+#else
+    static void glDebugCallback(
+#endif
             GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message,
             const void *state
         );
@@ -566,9 +571,9 @@ namespace lwvl {
     using ComputeShader = details::Shader<details::ShaderType::Compute>;
 
 #ifdef _WIN32
-    using LWVLProgramProc = void (__stdcall *)(
+    typedef void (__stdcall *LWVLProgramProc)(
 #else
-        using LWVLDebugProc = void(*)(
+        typedef void(*LWVLDebugProc)(
 #endif
         const void *userState
     );
@@ -618,7 +623,6 @@ namespace lwvl {
         void link(std::string const &vertexSource, std::string const &fragmentSource);
 
         void bind() const;
-        void draw(const void* user_ptr, LWVLProgramProc) const;
 
         static void clear();
 
