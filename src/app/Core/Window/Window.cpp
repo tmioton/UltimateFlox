@@ -153,7 +153,7 @@ void window::Window::glfw_init() {
 
 window::Window::Window() {
     glfw_init();
-    m_events.reserve(EventStackCapacity);
+    m_events.reserve(DefaultEventStackCapacity);
 }
 
 window::Window *window::Window::get_state(GLFWwindow* state) {

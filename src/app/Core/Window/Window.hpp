@@ -4,9 +4,6 @@
 #include "Event.hpp"
 
 
-extern constexpr size_t EventStackCapacity = 8;
-
-
 namespace window {
     struct Config {
         int width;
@@ -79,6 +76,7 @@ namespace window {
     private:
         static void glfw_init();
         static Window* get_state(GLFWwindow*);
+        static constexpr size_t DefaultEventStackCapacity = 8;
 
         Window();
     public:
