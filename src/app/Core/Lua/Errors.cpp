@@ -1,9 +1,25 @@
 #include "pch.hpp"
 #include "Errors.hpp"
 
-lua::exception::exception(const std::string &message) noexcept : ExceptionBase(message.c_str()) {}
+// FIXME: Hack just to compile on linux
+lua::exception::exception(const std::string &message) noexcept
+#ifdef _WIN32
+: ExceptionBase(message.c_str()) {}
+#else
+{
+    std::cerr << message << '\n';
+}
+#endif
 
-lua::exception::exception(const char *message) noexcept: ExceptionBase(message) {}
+// FIXME Hack just to compile on linux
+lua::exception::exception(const char *message) noexcept
+#ifdef _WIN32
+: ExceptionBase(message) {}
+#else
+{
+    std::cerr << message << '\n';
+}
+#endif
 
 static void LuaError_lua_resource_delete(lua_State *L) {
     lua_pop(L, 1);

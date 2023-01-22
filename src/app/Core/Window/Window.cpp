@@ -81,12 +81,24 @@ window::details::CreatedGLFWState::CreatedGLFWState(const char* title, const win
     glfwMakeContextCurrent(m_state);
     if (!m_state) {
         destroy();
+// FIXME: Hack just to compile on linux
+#ifdef _WIN32
         throw std::exception("Failed to create GLFW window.");
+#else
+        std::cerr << "Failed to create GLFW window.\n";
+        throw std::exception();
+#endif
     }
 
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         destroy();
+// FIXME: Hack just to compile on linux
+#ifdef _WIN32
         throw std::exception("Failed to initialize Glad.");
+#else
+        std::cerr << "Failed to initialize Glad.\n";
+        throw std::exception();
+#endif
     }
 
     if (config.samples > 1) {
@@ -147,7 +159,13 @@ window::Window &window::Window::get() {
 void window::Window::glfw_init() {
     /* Initialize GLFW. */
     if (!glfwInit()) {
+// FIXME: Hack just to compile on linux
+#ifdef _WIN32
         throw std::exception("Failed to initialize GLFW.");
+#else
+        std::cerr << "Failed to initialize GLFW.\n";
+        throw std::exception();
+#endif
     }
 }
 
