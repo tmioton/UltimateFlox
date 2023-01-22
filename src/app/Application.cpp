@@ -50,7 +50,8 @@ Use a script to allow the user to set most customization points without recompil
   . Render controls
 */
 
-static inline double delta(time_point<steady_clock> start) {
+template<class Clock>
+static inline double delta(time_point<Clock> start) {
     return 0.000001 * static_cast<double>(duration_cast<microseconds>(
         high_resolution_clock::now() - start
     ).count());
