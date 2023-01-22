@@ -436,12 +436,12 @@ int run() {
             secondStart = high_resolution_clock::now();
 #ifdef FLOX_SHOW_DEBUG_INFO
             const auto frameth = 1.0 / static_cast<double>(frameCount);
-            std::cout << "Average framerate for last " << frameCount << " frames: " << fps << " | " << 1.0 / fps << 's' << std::endl;
+            std::cout << "Average framerate for last " << frameCount << " frames: " << fps << " | " << 1.0 / fps << 's' << '\n';
             std::cout << "Event updates: " << eventDurationAverage * frameth << "s, ";
             std::cout << "Flock updates: " << updateDurationAverage * frameth << "s, ";
             std::cout << "Rendering Updates: " << renderUpdateDurationAverage * frameth << "s, ";
-            std::cout << "Rendering: " << renderDurationAverage * frameth << 's' << std::endl;
-            std::cout << std::endl;
+            std::cout << "Rendering: " << renderDurationAverage * frameth << 's' << '\n';
+            std::cout << '\n';
 
             // Reset time variables.
             eventDurationAverage = 0.0;
