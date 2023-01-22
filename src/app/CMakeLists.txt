@@ -74,7 +74,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
 target_precompile_headers(${PROJECT_NAME} PRIVATE pch.hpp pch.cpp)
 
 # Link in glad and glfw libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL32)
 target_link_libraries(${PROJECT_NAME} PRIVATE glad)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm)
