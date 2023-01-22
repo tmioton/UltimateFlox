@@ -125,8 +125,10 @@ public:
 
         auto bufferSize = static_cast<GLsizeiptr>(vertexCount * sizeof(QuadtreeVertex));
         if (bufferSize > m_bufferSize) {
+            // Create a new fixed-length buffer and set it as the array buffer of the layout.
+            // This is probably how glCreateBuffer supports variable-length buffers behind the scenes.
             m_vertices = lwvl::Buffer();
-            m_bufferSize = bufferSize + 1024;
+            m_bufferSize = bufferSize + 1024; // 1024 bytes of headroom before growing again.
             m_vertices.store<QuadtreeVertex>(
                 nullptr, static_cast<GLsizeiptr>(m_bufferSize), lwvl::bits::Dynamic
             );
