@@ -11,15 +11,18 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
 
     Boid *write = boids.write();
     Boid const *read = boids.read();
-    const int count = static_cast<int>(boids.count());
+    const auto count = static_cast<ptrdiff_t>(boids.count());
 
     m_tree.clear();
     m_tree.bounds(m_treeBounds);
     Vector xBound {m_treeBounds.center.x - m_treeBounds.size.x, m_treeBounds.center.x + m_treeBounds.size.x};
     Vector yBound {m_treeBounds.center.y - m_treeBounds.size.y, m_treeBounds.center.y + m_treeBounds.size.y};
 
+    //for (ptrdiff_t i = 0; i < count; ++i) {
     for (Boid const& boid : RawArray(read, count)) {
-        m_tree.insert(boid, boid.position);
+        //m_tree.insert(boid, boid.position);
+        m_tree.insert(&boid, boid.position);
+        //m_tree.insert(i, read[i].position);
     }
 
     Rectangle centerBound{m_bounds * 0.75f};
@@ -27,7 +30,11 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
 
     Rectangle boidBound{Vector{Boid::scale}};
     Rectangle searchBound{Vector{Boid::cohesiveRadius}};
-    for (Boid &current : RawArray(write, count)) {
+    //for (Boid &current : RawArray(write, count)) {
+    for(int i = 0; i < count; ++i) {
+        Boid &current = write[i];
+        const Boid &previous = read[i];
+
         boidBound.center = current.position;
         searchBound.center = current.position;
         Vector centerSteer{0.0f, 0.0f};
@@ -53,12 +60,16 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
         size_t disruptiveTotal = 0;
 
         m_results.clear();
-        m_tree.search(searchBound, m_results);
+        //m_tree.search(searchBound, m_results);
+        m_tree.search(&previous, searchBound, m_results);
+        //for(const auto j: m_results) {
         for (Boid const &other : m_results) {
-            if (current.position == other.position) {
-                continue;
-            }
+            //if (current.position == other.position) {
+            //if (i == j) {
+            //    continue;
+            //}
 
+            //const Boid& other = read[j];
             const float d2 = glm::distance2(current.position, other.position);
             if (d2 < disruptiveRadius && d2 > 0.0f) {
                 Vector diff = current.position - other.position;

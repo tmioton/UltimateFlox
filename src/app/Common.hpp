@@ -1,6 +1,7 @@
 #pragma once
 
-constexpr int MaxDepth = 8;
+constexpr size_t MaxDepth = 8;
+constexpr size_t BucketSize = 16;
 using Vector = glm::vec2;
 using Color = glm::vec3;
 using Projection = glm::mat4;

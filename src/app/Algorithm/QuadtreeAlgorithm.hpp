@@ -2,7 +2,6 @@
 
 #include "pch.hpp"
 #include "Algorithm.hpp"
-#include "Structures/Quadtree.hpp"
 #include "World/Boidtree.hpp"
 
 // Expose tree for rendering
@@ -21,6 +20,5 @@ protected:
     Rectangle m_treeBounds;
     Boidtree m_tree;
 
-    std::vector<int> m_failed; // Boids that failed to get into the tree
     Boidtree::ResultVector m_results;
 };

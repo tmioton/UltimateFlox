@@ -2,33 +2,37 @@
 
 #include "pch.hpp"
 #include "Algorithm.hpp"
-#include "QuadtreeAlgorithm.hpp"
+#include "World/Boidtree.hpp"
 
-class ThreadedAlgorithm: public QuadtreeAlgorithm {
-public:
-    explicit ThreadedAlgorithm(Vector bounds);
-    ~ThreadedAlgorithm() override = default;
 
-    void update(DoubleBuffer<Boid> &boids, float delta) override;
-private:
-    struct ThreadState {
-        Boidtree* tree;
-        Rectangle bounds;
-        Boid* write;
-        Boidtree::ResultVector* search;
-        int count;
+class ThreadedAlgorithm: public Algorithm {
+    struct ThreadWork {
+        ThreadedAlgorithm* algorithm;
+        int id;
         float delta;
+        const Boid* read;
+        Boid* write;
+        ptrdiff_t count;
+        ptrdiff_t start;
 
-        ThreadState(Boidtree*, Rectangle, Boid*, Boidtree::ResultVector*, int, float);
-        ThreadState(ThreadState const&) = default;
-        ThreadState(ThreadState &&) = default;
-
-        ThreadState& operator=(ThreadState const&) = default;
-        ThreadState& operator=(ThreadState&&) = default;
+        ThreadWork(ThreadedAlgorithm*, int, float, const Boid*, Boid*, ptrdiff_t, ptrdiff_t);
+        //ThreadWork(ThreadedAlgorithm*, int, float, Boid*, ptrdiff_t);
+        void operator()() const;
     };
 
-    static void thread_update(ThreadState);
+public:
+    explicit ThreadedAlgorithm(Vector bounds);
+    ~ThreadedAlgorithm() override;
 
+    void update(DoubleBuffer<Boid> &thread_work, float delta) override;
+    [[nodiscard]] Boidtree const &tree() const;
+private:
     static constexpr int ThreadCount = 4;
+
+    Rectangle m_bounds;
+    Rectangle m_treeBounds;
+    Boidtree m_tree;
+
+    ThreadPool m_pool{ThreadCount - 1};
     Boidtree::ResultVector m_results[ThreadCount];
 };

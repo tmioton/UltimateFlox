@@ -175,7 +175,7 @@ int run() {
 
     //Algorithm* algorithm = &directLoopAlgorithm;
     //QuadtreeAlgorithm *qtAlgorithm = &quadtreeAlgorithm;
-    QuadtreeAlgorithm *qtAlgorithm = &threadedAlgorithm;
+    ThreadedAlgorithm *qtAlgorithm = &threadedAlgorithm;
     Algorithm *algorithm = qtAlgorithm;
 
     Projection projection{

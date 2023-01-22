@@ -7,8 +7,8 @@ target_sources(
         Algorithm/Algorithm.hpp
 #        Algorithm/DirectLoopAlgorithm.hpp
 #        Algorithm/DirectLoopAlgorithm.cpp
-        Algorithm/QuadtreeAlgorithm.hpp
-        Algorithm/QuadtreeAlgorithm.cpp
+#        Algorithm/QuadtreeAlgorithm.hpp
+#        Algorithm/QuadtreeAlgorithm.cpp
         Algorithm/ThreadedAlgorithm.hpp
         Algorithm/ThreadedAlgorithm.cpp
 
@@ -77,6 +77,7 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE pch.hpp pch.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE glad)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm)
+target_link_libraries(${PROJECT_NAME} PRIVATE thread-pool)
 target_link_libraries(${PROJECT_NAME} PRIVATE lua)
 
 # Link in LWVL

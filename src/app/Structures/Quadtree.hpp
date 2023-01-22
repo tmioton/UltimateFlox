@@ -14,25 +14,7 @@ static constexpr Vector QuadrantOffsets[ChildCount] {{1.0f, 1.0f}, {-1.0f, 1.0f}
 
 namespace qt_details {
     template<class T, size_t bucket_size>
-    class Bucket {
-        T m_data[bucket_size]{};
-    public:
-        Bucket() = default;
-
-        Bucket(Bucket const &lhs) {
-            for (ptrdiff_t i = 0; i < static_cast<ptrdiff_t>(bucket_size); ++i) {
-                m_data[i] = lhs.m_data[i];
-            }
-        }
-
-        T const &get(size_t index) const {
-            return m_data[index];
-        }
-
-        T &operator[](size_t index) {
-            return m_data[index];
-        }
-    };
+    using Bucket = std::array<T, bucket_size>;
 
     struct BucketList {
         ptrdiff_t next = 0; // offset to next bucket
@@ -40,125 +22,207 @@ namespace qt_details {
     };
 
     struct Node {
-        size_t children[ChildCount]{0, 0, 0, 0};  // Since node 0 can never be a child, 0 is safe to use as a sentry.
-        ptrdiff_t bucketIndex = -1;
+        std::array<size_t, ChildCount> children{0, 0, 0, 0};  // Since node 0 can never be a child, 0 is safe to use as a sentry.
+        ptrdiff_t bucket_index = -1;
+
+        size_t &operator[](const size_t index) {
+            return children[index];
+        }
+
+        [[nodiscard]] inline bool has_children() const {
+            return children.at(0) > 0;
+        }
+    };
+
+    template<class T, size_t bucket_max>
+    struct QuadtreeData {
+        using BucketList = qt_details::BucketList;
+        using Bucket = qt_details::Bucket<T, bucket_max>;
+        using Points = qt_details::Bucket<Vector, bucket_max>;
+        using Node = qt_details::Node;
+    private:
+        inline void initialize() {
+            nodes.emplace_back();
+            create_bucket();
+            nodes[0].bucket_index = 0;
+        }
+
+        inline void create_child(size_t node, size_t child, const ptrdiff_t bucket) {
+            const size_t new_node_index = nodes.size();
+            nodes.emplace_back();
+            nodes[node][child] = new_node_index;
+            nodes[new_node_index].bucket_index = bucket;
+        }
+
+        inline void create_bucket() {
+            lists.emplace_back();
+            buckets.emplace_back();
+            points.emplace_back();
+        }
+    public:
+        QuadtreeData() {
+            initialize();
+        }
+
+        inline void add(int point, T data, Vector position) {
+            const int point_count = lists[point].size++;
+            buckets[point][point_count] = data;
+            points[point][point_count] = position;
+        }
+
+        inline void clear() {
+            lists.clear();
+            buckets.clear();
+            points.clear();
+            nodes.clear();
+
+            initialize();
+        }
+
+        inline void new_linked_bucket(ptrdiff_t node) {
+            // Create a new bucket
+            // Set that bucket as the node's bucket
+            // Have the BucketList point backwards to the previous bucket
+            const ptrdiff_t new_bucket_index = buckets.size();
+            create_bucket();
+            lists[new_bucket_index].next = nodes[node].bucket_index - new_bucket_index;
+            nodes[node].bucket_index = new_bucket_index;
+        }
+
+        void subdivide(const size_t node, const ptrdiff_t bucket, Rectangle bound) {
+            create_child(node, 0, bucket);
+            for(size_t i = 1; i < ChildCount; ++i) {
+                create_child(node, i, buckets.size());
+                create_bucket();
+            }
+
+            Bucket current_bucket{buckets[bucket]};
+            Points current_points{points[bucket]};
+            lists[bucket].size = 0;
+
+            for(size_t i = 0; i < bucket_max; ++i) {
+                const Vector point_position = current_points[i];
+                const int quadrant = bound.quadrant(point_position);
+                add(node_bucket(node_child(node, quadrant)), current_bucket[i], point_position);
+            }
+
+            nodes[node].bucket_index = -1;
+        }
+
+        void push(const Rectangle area, const size_t node, std::vector<T> &search_results) const {
+            if (node_bucket(node) > -1 && bucket_size(node_bucket(node)) > 0) {
+                ptrdiff_t index = node_bucket(node);
+                BucketList const *list = &lists.at(index);
+                while(true) {
+                    for (size_t i = 0; i < list->size; ++i) {
+                        if (area.contains(position(index, i))) {
+                            search_results.push_back(data(index, i));
+                        }
+                    }
+
+                    if (list->next == 0) {
+                        break;
+                    }
+
+                    index += list->next;
+                    list = &lists.at(index);
+                }
+            }
+        }
+
+        [[nodiscard]] inline bool node_has_children(size_t node) const {
+            return nodes.at(node).has_children();
+        }
+
+        [[nodiscard]] inline size_t node_child(size_t node, size_t child) const {
+            return nodes.at(node).children.at(child);
+        }
+
+        [[nodiscard]] inline ptrdiff_t node_bucket(size_t node) const {
+            return nodes.at(node).bucket_index;
+        }
+
+        [[nodiscard]] inline size_t bucket_size(size_t bucket) const {
+            return lists.at(bucket).size;
+        }
+
+        [[nodiscard]] inline T data(size_t bucket, size_t index) const {
+            return buckets.at(bucket).at(index);
+        }
+
+        [[nodiscard]] inline Vector position(size_t point_list, size_t index) const {
+            return points.at(point_list).at(index);
+        }
+
+        [[nodiscard]] inline size_t size() const {
+            return nodes.size();
+        }
+
+        Node &operator[](const size_t index) {
+            return nodes[index];
+        }
+
+        std::vector<BucketList> lists;
+        std::vector<Bucket> buckets;
+        std::vector<Points> points;  // Potentially unnecessary
+        std::vector<Node> nodes;
     };
 }
 
 
-template<class T, int max_depth, size_t bucket_size>
+template<class T, int depth_max, size_t bucket_max>
 class QuadtreeGeometry;
 
 
-template<class T, int max_depth, size_t bucket_size = 4>
+template<class T, int depth_max, size_t bucket_max = 4>
 class Quadtree {
-    using BucketList = qt_details::BucketList;
-    using Bucket = qt_details::Bucket<T, bucket_size>;
-    using Points = qt_details::Bucket<Vector, bucket_size>;
-    using Node = qt_details::Node;
 public:
+    using BucketList = qt_details::BucketList;
+    using Bucket = qt_details::Bucket<T, bucket_max>;
+    using Points = qt_details::Bucket<Vector, bucket_max>;
+    using Node = qt_details::Node;
     using ResultVector = std::vector<T>;
-    using Type = T;
-    static constexpr int MaxDepth = max_depth;
-    static constexpr int BucketSize = bucket_size;
 private:
-    friend QuadtreeGeometry<T, max_depth, bucket_size>;
+    friend QuadtreeGeometry<T, depth_max, bucket_max>;
 
     Rectangle m_bounds;
-    std::vector<BucketList> m_lists;
-    std::vector<Bucket> m_buckets;
-    std::vector<Points> m_points;  // Potentially unnecessary
-    std::vector<Node> m_nodes;
-
-    inline void createBucket() {
-        m_lists.emplace_back();
-        m_buckets.emplace_back();
-        m_points.emplace_back();
-    }
-
-    inline void addPoint(int point, T data, Vector position) {
-        int pointCount = m_lists[point].size++;
-        m_buckets[point][pointCount] = data;
-        m_points[point][pointCount] = position;
-    }
+    qt_details::QuadtreeData<T, bucket_max> m_data;
 
 public:
-
-    explicit Quadtree(Rectangle bounds) : m_bounds(bounds) {
-        m_nodes.emplace_back();
-        createBucket();
-        m_nodes[0].bucketIndex = 0;
-    }
+    explicit Quadtree(Rectangle bounds) : m_bounds(bounds) {}
 
     bool insert(T data, Vector position) {
         int depth = 0;
-        size_t nodeIndex = 0;
-        Rectangle currentBound{m_bounds};
-        if (!currentBound.contains(position)) {
+        size_t node_index = 0;
+        Rectangle current_bound{m_bounds};
+        if (!current_bound.contains(position)) {
             return false;
         }
 
         while (true) {
-            if (!*m_nodes[nodeIndex].children) {
-                const ptrdiff_t bucket = m_nodes[nodeIndex].bucketIndex;
+            if (!m_data.node_has_children(node_index)) {
+                const ptrdiff_t bucket = m_data.node_bucket(node_index);
                 // No children. See if we can fit.
-                if (m_lists[bucket].size < bucket_size) {
+                if (m_data.bucket_size(bucket) < bucket_max) {
                     // Add to the current point list.
-                    addPoint(bucket, data, position);
+                    m_data.add(bucket, data, position);
                     return true;
                 } else {
-                    if (depth < max_depth) {
-                        // Create children.
-                        for (int i = 0; i < ChildCount; i++) {
-                            int newNodeIndex = m_nodes.size();
-                            m_nodes.emplace_back();
-                            m_nodes[nodeIndex].children[i] = newNodeIndex;
-                            if (i) {
-                                m_nodes[newNodeIndex].bucketIndex = m_buckets.size();
-                                createBucket();
-                            } else {
-                                m_nodes[newNodeIndex].bucketIndex = bucket;
-                            }
-                        }
-
-                        // Reassign points. When not at max depth we can assume number of points is always bucketSize;
-                        Bucket currentBucket{m_buckets[bucket]};
-                        Points currentPoints{m_points[bucket]};
-                        m_lists[bucket].size = 0;
-
-                        for (int i = 0; i < static_cast<int>(bucket_size); i++) {
-                            Vector pointPosition = currentPoints[i];
-                            int quadrant = currentBound.quadrant(pointPosition);
-                            //addPoint(currentNode->children[quadrant], currentBucket[i], pointPosition);
-                            addPoint(
-                                m_nodes[m_nodes[nodeIndex].children[quadrant]].bucketIndex, currentBucket[i],
-                                pointPosition
-                            );
-                        }
-
-                        m_nodes[nodeIndex].bucketIndex = -1;
-                        continue;
-
-                        // Do another loop to see where the new point can fit.
+                    if (depth < depth_max) {
+                        m_data.subdivide(node_index, bucket, current_bound);
+                        continue; // Do another loop to see where the new point can fit.
                     } else {
                         // Do not create children. Fill and create PointLists as needed.
-                        // Create a new bucket
-                        // Set that bucket as the node's bucket
-                        // Have the BucketList point backwards to the previous bucket
-                        ptrdiff_t newBucketIndex = m_buckets.size();
-                        createBucket();
-
-                        m_lists[newBucketIndex].next = m_nodes[nodeIndex].bucketIndex - newBucketIndex;
-                        m_nodes[nodeIndex].bucketIndex = newBucketIndex;
+                        m_data.new_linked_bucket(node_index);
                         continue;
                     }
                 }
             } else {
                 // Figure out which child node we're in.
-                int quadrant = currentBound.quadrant(position);
-                nodeIndex = m_nodes[nodeIndex].children[quadrant];
-                currentBound.size = currentBound.size * 0.5f;
-                currentBound.center += currentBound.size * QuadrantOffsets[quadrant];
+                int quadrant = current_bound.quadrant(position);
+                node_index = m_data.node_child(node_index, quadrant);
+                current_bound.size = current_bound.size * 0.5f;
+                current_bound.center += current_bound.size * QuadrantOffsets[quadrant];
                 ++depth;
                 continue;
             }
@@ -167,10 +231,10 @@ public:
 
     void search(Rectangle area, ResultVector &search_results) const {
         if (m_bounds.intersects(area)) {
-            int32_t indices[max_depth + 1];
+            int32_t indices[depth_max + 1];
             indices[0] = 0;
-            indices[1] = m_nodes[0].children[0];
-            Rectangle bounds[max_depth + 1];  // TODO: test storing just centers
+            indices[1] = m_data.node_child(0, 0);
+            Rectangle bounds[depth_max + 1];  // TODO: test storing just centers
             bounds[0] = Rectangle{m_bounds};
             if (!indices[1]) { return; }
             uint64_t quadrantState = 0;
@@ -181,7 +245,7 @@ public:
             while (true) {
                 // The last 2 bits of the state are the current quadrant
                 uint8_t quadrant = quadrantState & 0b11;
-                int nodeIndex = indices[depth];
+                const size_t nodeIndex = indices[depth];
 
                 // Critical operations happen when descending the tree
                 if (!ascended) {
@@ -190,36 +254,18 @@ public:
                     newBound.center = newBound.center + newBound.size * QuadrantOffsets[quadrant];
                     bounds[depth] = newBound;
 
-                    if (*m_nodes[nodeIndex].children && newBound.intersects(area)) {
-                        indices[++depth] = *m_nodes[nodeIndex].children;
+                    if (m_data.node_has_children(nodeIndex) && newBound.intersects(area)) {
+                        indices[++depth] = m_data.node_child(nodeIndex, 0);
                         // Shift left 2 bits to go down
                         quadrantState <<= 2;
                         continue;
                     } else if (newBound.intersects(area)) {
                         // Bottom. Add my contents to the search.
-                        if (m_nodes[nodeIndex].bucketIndex > -1 && m_lists[m_nodes[nodeIndex].bucketIndex].size > 0) {
-                            ptrdiff_t index = m_nodes[nodeIndex].bucketIndex;
-                            BucketList const *list = &m_lists[index];
-                            while (true) {
-                                for (size_t i = 0; i < list->size; ++i) {
-                                    if (area.contains(m_points[index].get(i))) {
-                                        search_results.push_back(m_buckets[index].get(i));
-                                    }
-                                }
-
-                                if (list->next == 0) {
-                                    break;
-                                }
-
-                                index += list->next;
-                                list = &m_lists[index];
-                            }
-                        }
+                        m_data.push(area, nodeIndex, search_results);
                     }
                 }
 
                 ++quadrant;
-                indices[depth] = m_nodes[indices[depth - 1]].children[quadrant];
 
                 if (quadrant >= ChildCount) {
                     // Shift right 2 bits to go up
@@ -231,6 +277,7 @@ public:
                         break;
                     }
                 } else {
+                    indices[depth] = m_data.node_child(indices[depth - 1], quadrant);
                     quadrantState += 1;
                     ascended = false;
                 }
@@ -239,50 +286,11 @@ public:
     }
 
     void clear() {
-        m_lists.clear();
-        m_buckets.clear();
-        m_points.clear();
-        m_nodes.clear();
-
-        m_nodes.emplace_back();
-        createBucket();
-        m_nodes[0].bucketIndex = 0;
-    }
-
-    void reserve(size_t size) {
-        const double d_bucketsNeeded = glm::ceil((static_cast<double>(size) - bucket_size) / (bucket_size * ChildCount));
-        if (d_bucketsNeeded < 0.0) {
-            return;
-        }
-
-        const int bucketsNeeded = static_cast<int>(d_bucketsNeeded);
-        m_lists.reserve(bucketsNeeded);
-        m_buckets.reserve(bucketsNeeded);
-        m_points.reserve(bucketsNeeded);
-
-        if (max_depth < 2) {
-            // Just reserve all possible nodes.
-            m_nodes.reserve(5);
-        } else {
-            //m_nodes.reserve(bucketsNeeded);  // Works but doesn't take max_depth into account
-            uint64_t sum = 1;
-            uint64_t last = 1;
-            for (int i = 0; i < max_depth; i++) {
-                last <<= 2;
-                sum += last;
-            }
-            if (bucketsNeeded < sum) {
-                m_nodes.reserve(bucketsNeeded);
-                std::cout << "reserved " << bucketsNeeded << " nodes." << std::endl;
-            } else {
-                m_nodes.reserve(sum);
-                std::cout << "reserved " << sum << " nodes." << std::endl;
-            }
-        }
+        m_data.clear();
     }
 
     [[nodiscard]] size_t size() const {
-        return m_nodes.size();
+        return m_data.size();
     }
 
     Rectangle bounds() {

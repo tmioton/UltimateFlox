@@ -22,6 +22,7 @@
 #include <glm/gtx/fast_square_root.hpp>
 #include <glm/gtx/norm.hpp>
 #include <lua/lua.hpp>
+#include <thread-pool/ThreadPool.hpp>
 
 // APPLICATION
 #include "Common.hpp"
