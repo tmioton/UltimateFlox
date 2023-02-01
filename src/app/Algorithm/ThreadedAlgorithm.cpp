@@ -119,28 +119,28 @@ void ThreadedAlgorithm::distribute_work(const Boid *read, Boid *write, const ptr
 void ThreadedAlgorithm::recalculate_bounds(Boid *write, const ptrdiff_t count) {
     // Separate loop for thread-safety. Does this slow the program down?
     // Maybe have an array where the results of this test from each thread are stored and join them after.
-    Vector xBound {m_treeBounds.center.x - m_treeBounds.size.x, m_treeBounds.center.x + m_treeBounds.size.x};
-    Vector yBound {m_treeBounds.center.y - m_treeBounds.size.y, m_treeBounds.center.y + m_treeBounds.size.y};
+    Vector x_bound {m_treeBounds.center.x - m_treeBounds.size.x, m_treeBounds.center.x + m_treeBounds.size.x};
+    Vector y_bound {m_treeBounds.center.y - m_treeBounds.size.y, m_treeBounds.center.y + m_treeBounds.size.y};
     for (auto const &current: RawArray(write, count)) {
-        if (current.position.x < xBound.r) {
-            xBound.r = current.position.x;
-        } else if (current.position.x > xBound.g) {
-            xBound.g = current.position.x;
+        if (current.position.x < x_bound.r) {
+            x_bound.r = current.position.x;
+        } else if (current.position.x > x_bound.g) {
+            x_bound.g = current.position.x;
         }
 
-        if (current.position.y < yBound.r) {
-            yBound.r = current.position.y;
-        } else if (current.position.y > yBound.g) {
-            yBound.g = current.position.y;
+        if (current.position.y < y_bound.r) {
+            y_bound.r = current.position.y;
+        } else if (current.position.y > y_bound.g) {
+            y_bound.g = current.position.y;
         }
     }
 
-    float xBoundCenter = (xBound.r + xBound.g) * 0.5f;
-    float yBoundCenter = (yBound.r + yBound.g) * 0.5f;
+    float x_bound_center = (x_bound.r + x_bound.g) * 0.5f;
+    float y_bound_center = (y_bound.r + y_bound.g) * 0.5f;
 
     Rectangle newBounds {
-        {xBoundCenter,            yBoundCenter},
-        {xBound.g - xBoundCenter, yBound.g - yBoundCenter}
+        {x_bound_center,             y_bound_center},
+        {x_bound.g - x_bound_center, y_bound.g - y_bound_center}
     };
 
     m_treeBounds = newBounds;
@@ -154,38 +154,38 @@ void ThreadedAlgorithm::ThreadWork::operator()() const {
     const Boidtree &tree = algorithm->m_tree;
     const Rectangle bounds = algorithm->m_bounds;
     Boidtree::ResultVector &results = algorithm->m_results[id];
-    const float disruptiveRadius = Boid::disruptiveRadius * Boid::disruptiveRadius;
-    const float cohesiveRadius = Boid::cohesiveRadius * Boid::cohesiveRadius;
+    const float disruptive_radius = Boid::disruptiveRadius * Boid::disruptiveRadius;
+    const float cohesive_radius = Boid::cohesiveRadius * Boid::cohesiveRadius;
 
-    const Rectangle centerBound {bounds * 0.75f};
-    const Rectangle hardBound {bounds * 0.90f};
+    const Rectangle center_bound {bounds * 0.75f};
+    const Rectangle hard_bound {bounds * 0.90f};
 
-    Rectangle boidBound {Vector {Boid::scale}};
-    Rectangle searchBound {Vector {Boid::cohesiveRadius}};
+    Rectangle boid_bound {Vector {Boid::scale}};
+    Rectangle search_bound {Vector {Boid::cohesiveRadius}};
     for (ptrdiff_t i = start; i < start + count; ++i) {
         Boid &current = write[i];
-        const Boid &previous = read[i];
+        const Boid *previous = read + i;
 
-        boidBound.center = current.position;
-        searchBound.center = current.position;
-        Vector centerSteer {0.0f, 0.0f};
+        boid_bound.center = current.position;
+        search_bound.center = current.position;
+        Vector center_steer {0.0f, 0.0f};
 
-        const bool inCenter = centerBound.intersects(boidBound);
-        float centerSteerWeight = Boid::primadonnaWeight;
-        if (!inCenter) {
-            if (!hardBound.intersects(boidBound)) {
-                centerSteerWeight *= 2.0f;
+        const bool in_center = center_bound.intersects(boid_bound);
+        float center_steer_weight = Boid::primadonnaWeight;
+        if (!in_center) {
+            if (!hard_bound.intersects(boid_bound)) {
+                center_steer_weight *= 2.0f;
             }
 
-            centerSteer -= current.position;
-            centerSteer = current.steer(centerSteer);
+            center_steer -= current.position;
+            center_steer = steer(center_steer, current.velocity);
         }
 
-        Vector fullSpeed = current.velocity;
-        fullSpeed = current.steer(fullSpeed);
+        Vector full_speed = current.velocity;
+        full_speed = steer(full_speed, current.velocity);
 
         results.clear();
-        tree.search(&previous, searchBound, results);
+        tree.search(previous, search_bound, results);
         //std::sort(
         //    results.begin(), results.end(),
         //    [&current](const Boid &a, const Boid &b) {
@@ -196,49 +196,54 @@ void ThreadedAlgorithm::ThreadWork::operator()() const {
         Vector separation {0.0f, 0.0f};
         Vector alignment {0.0f, 0.0f};
         Vector cohesion {0.0f, 0.0f};
-        size_t cohesiveTotal = 0;
-        size_t disruptiveTotal = 0;
+        size_t cohesive_total = 0;
+        size_t disruptive_total = 0;
 
         for (const Boid &other: results) {
             const float d2 = glm::distance2(current.position, other.position);
-            if (d2 < disruptiveRadius && d2 > 0.0f) {
-                Vector diff = current.position - other.position;
-                separation += diff / d2;
-                disruptiveTotal++;
-            }
 
-            //const auto in_cohesive_range = d2 < cohesiveRadius;
-            //const auto fin_cohesive_range = static_cast<float>(d2 < cohesiveRadius);
-            //alignment += fin_cohesive_range * other.velocity;
-            //cohesion += fin_cohesive_range * other.position;
-            //cohesiveTotal += in_cohesive_range;
+            const size_t is_disruptive = d2 < disruptive_radius;
+            const size_t is_cohesive = d2 < cohesive_radius;
 
-            if (d2 < cohesiveRadius) {
-                alignment += other.velocity;
-                cohesion += other.position;
-                cohesiveTotal++;
-            }
+            separation += FloatEnable[is_disruptive] * ((current.position - other.position) / (d2 + Epsilon));
+            alignment += FloatEnable[is_cohesive] * other.velocity;
+            cohesion += FloatEnable[is_cohesive] * other.position;
+
+            disruptive_total += is_disruptive;
+            cohesive_total += is_cohesive;
+
+            //if (d2 < disruptiveRadius) {
+            //    separation += (current.position - other.position) / d2 + epsilon;
+            //    disruptive_total++;
+            //}
+
+            //if (d2 < cohesiveRadius) {
+            //    alignment += other.velocity;
+            //    cohesion += other.position;
+            //    cohesive_total++;
+            //}
         }
 
-        if (disruptiveTotal > 0) {
-            separation /= static_cast<float>(disruptiveTotal);
-            separation = current.steer(separation);
+        if (disruptive_total > 0) {
+            separation /= static_cast<float>(disruptive_total);
+            separation = steer(separation, current.velocity);
         }
 
-        if (cohesiveTotal > 0) {
-            const float countFactor = 1.0f / static_cast<float>(cohesiveTotal);
+        if (cohesive_total > 0) {
+            const float countFactor = 1.0f / static_cast<float>(cohesive_total);
             alignment *= countFactor;
-            alignment = current.steer(alignment);
 
             cohesion *= countFactor;
             cohesion -= current.position;
-            cohesion = current.steer(cohesion);
+
+            alignment = steer(alignment, current.velocity);
+            cohesion = steer(cohesion, current.velocity);
         }
 
         const Vector acceleration = magnitude(
             Vector {
-                centerSteer * centerSteerWeight
-                + fullSpeed * Boid::speedWeight
+                center_steer * center_steer_weight
+                + full_speed * Boid::speedWeight
                 + separation * Boid::separationWeight
                 + alignment * Boid::alignmentWeight
                 + cohesion * Boid::cohesionWeight

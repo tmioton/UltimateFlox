@@ -2,23 +2,16 @@
 
 #include "pch.hpp"
 
-inline Vector magnitude(Vector vec, float mag) {
-    const float l2 = glm::length2(vec);
-    if (l2 != 0.0f) {
-        return vec * glm::fastInverseSqrt(l2) * mag;
-    } else {
-        return vec;
-    }
-}
 
 constexpr std::size_t BoidColorCount = 5;
 constexpr Color BoidColors[BoidColorCount] {
-    Color{1.00000f, 1.00000f, 1.00000f},  // White
-    Color{0.76471f, 0.04314f, 0.30588f},  // Pictoral Carmine
-    Color{1.00000f, 0.00000f, 0.00000f},  // Red
-    Color{0.94118f, 0.63529f, 0.00784f},  // Marigold
-    Color{0.05098f, 0.19608f, 0.30196f},  // Prussian Blue
+    Color {1.00000f, 1.00000f, 1.00000f},  // White
+    Color {0.76471f, 0.04314f, 0.30588f},  // Pictoral Carmine
+    Color {1.00000f, 0.00000f, 0.00000f},  // Red
+    Color {0.94118f, 0.63529f, 0.00784f},  // Marigold
+    Color {0.05098f, 0.19608f, 0.30196f},  // Prussian Blue
 };
+
 
 struct Boid {
     static float scale;
@@ -34,7 +27,19 @@ struct Boid {
 
     // Non-static members
     Vector position, velocity;
-
-    // Methods
-    [[nodiscard]] Vector steer(Vector vec) const;
 };
+
+inline Vector magnitude(const Vector vec, const float mag) {
+    return glm::fastNormalize(vec) * mag;
+}
+
+inline Vector truncate(const Vector vec, const float max) {
+    const float i = max * glm::fastInverseSqrt(glm::dot(vec, vec));
+    const bool do_truncate = i < 1.0f;
+    return vec * (i * FloatEnable[do_truncate] + FloatDisable[do_truncate]);
+    //return vec * (i < 1.0f ? i : 1.0f);  ~7% slower with branch
+}
+
+inline Vector steer(const Vector vec, const Vector velocity) {
+    return truncate(magnitude(vec, Boid::maxSpeed) - velocity, Boid::maxForce);
+}
