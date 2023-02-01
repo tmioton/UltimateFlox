@@ -5,6 +5,8 @@
 
 
 namespace window {
+    using ContentScale = glm::vec2;
+
     struct Config {
         int width;
         int height;
@@ -28,6 +30,8 @@ namespace window {
             virtual void swap_buffers() = 0;
             virtual void clear() = 0;
             virtual bool created() = 0;
+            virtual ContentScale content_scale() = 0;
+            virtual GLFWwindow* window() = 0;
 
             virtual ~GLFWState() = default;
         };
@@ -46,6 +50,8 @@ namespace window {
             void swap_buffers() override;
             void clear() override;
             bool created() override;
+            GLFWwindow* window() override;
+            ContentScale content_scale() override;
         };
 
         class CreatedGLFWState final : public GLFWState {
@@ -64,8 +70,11 @@ namespace window {
             void swap_buffers() override;
             void clear() override;
             bool created() override;
+            GLFWwindow* window() override;
+            ContentScale content_scale() override;
         private:
             GLFWwindow* m_state;
+            GLFWmonitor* m_primary_monitor;
         };
     }
 
@@ -91,6 +100,10 @@ namespace window {
         void swap_buffers();
         void clear();
         void update();
+
+        // Need a good name for a function that passes window state.
+        void extend(void(*caller)(GLFWwindow*));
+        ContentScale content_scale();
 
         std::optional<Event> poll_event();
     private:

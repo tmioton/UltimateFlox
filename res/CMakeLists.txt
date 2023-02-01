@@ -55,3 +55,9 @@ export_resources(
     DEPENDS
         flox.lua
 )
+
+export_resources(
+    DIRECTORY Fonts
+    DEPENDS
+        Inter-Regular.ttf
+)

@@ -1,7 +1,7 @@
 flox.flock_size = 1024
-flox.world_bound = 450.0
-flox.width = 800
-flox.height = 450
+flox.world_bound = 500.0
+flox.width = 1920
+flox.height = 1080
 
 --provided:
 --  frame_count

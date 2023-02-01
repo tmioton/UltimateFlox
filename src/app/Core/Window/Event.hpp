@@ -2,6 +2,13 @@
 
 #include "pch.hpp"
 
+// Two Event Classes ?
+// Low Density: Event { typedef union{glm::vec2<T...> } Data; Data data; }
+// High Density: Event { typedef union{glm::vec4<T...> } Data; Data data[4]; }
+
+// byte[64] Event?
+
+
 namespace window {
     struct KeyboardEvent { int scancode; int16_t key, mods; };
     struct TextEvent { unsigned int codepoint; };

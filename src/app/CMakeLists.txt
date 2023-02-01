@@ -35,6 +35,8 @@ target_sources(
         Structures/DoubleBuffer.hpp
         Structures/Quadtree.hpp
         Structures/RawArray.hpp
+        Structures/StringArray.hpp
+        Structures/StringArray.cpp
 
         # WORLD
         World/Boid.hpp
@@ -42,12 +44,6 @@ target_sources(
         World/Boidtree.hpp
         World/Flock.hpp
         World/Flock.cpp
-
-        # CORE
-        Core/Window/Window.hpp
-        Core/Window/Window.cpp
-        Core/Window/Event.hpp
-        Core/Window/Event.cpp
 
         # LUA
         Core/Lua/Common.hpp
@@ -66,6 +62,29 @@ target_sources(
         # LUA TYPES
         Core/Lua/Types/LuaVector.hpp
         Core/Lua/Types/LuaVector.cpp
+
+        # PLATFORM
+        Core/Platform/GLFW/imgui_impl_glfw.hpp
+        Core/Platform/GLFW/imgui_impl_glfw.cpp
+        Core/Platform/OpenGL/imgui_impl_opengl3.hpp
+        Core/Platform/OpenGL/imgui_impl_opengl3.cpp
+        Core/Platform/OpenGL/imgui_impl_opengl3_loader.hpp
+
+        # WINDOW
+        Core/Window/Window.hpp
+        Core/Window/Window.cpp
+        Core/Window/Event.hpp
+        Core/Window/Event.cpp
+
+        # USER INTERFACE
+        Core/UserInterface/UserInterface.hpp
+        Core/UserInterface/UserInterface.cpp
+        Core/UserInterface/UIComponent.hpp
+        Core/UserInterface/UIComponent.cpp
+        Core/UserInterface/UIDemoWindow.hpp
+        Core/UserInterface/UIDemoWindow.cpp
+        Core/UserInterface/UIConsole.hpp
+        Core/UserInterface/UIConsole.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -77,8 +96,10 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE pch.hpp pch.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE glad)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm)
+target_link_libraries(${PROJECT_NAME} PRIVATE ImGui)
 target_link_libraries(${PROJECT_NAME} PRIVATE thread-pool)
 target_link_libraries(${PROJECT_NAME} PRIVATE lua)
+target_link_libraries(${PROJECT_NAME} PRIVATE spdlog)
 
 # Link in LWVL
 target_link_libraries(${PROJECT_NAME} PRIVATE lwvl)

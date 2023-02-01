@@ -1,10 +1,12 @@
 #include "pch.hpp"
 #include "Window.hpp"
+#include "Math/Rectangle.hpp"
 
 
 static void called_empty_state(const char* method_name) {
     // Inform user here. Probably log.
-    std::cout << "Attempted " << method_name << " operation on uninitialized window.\n";
+    spdlog::info("Attempted {0} operation on uninitialized window.", method_name);
+    //std::cout << "Attempted " << method_name << " operation on uninitialized window.\n";
 }
 
 void window::details::EmptyGLFWState::set_user_pointer(void *) {
@@ -46,6 +48,15 @@ void window::details::EmptyGLFWState::clear() {
 
 bool window::details::EmptyGLFWState::created() {
     return false;
+}
+
+GLFWwindow* window::details::EmptyGLFWState::window() {
+    called_empty_state("window()");
+    return nullptr;
+}
+
+window::ContentScale window::details::EmptyGLFWState::content_scale() {
+    return {1.0f, 1.0f};
 }
 
 
@@ -106,7 +117,8 @@ window::details::CreatedGLFWState::CreatedGLFWState(const char* title, const win
     }
 
     /* Output the current OpenGL version. */
-    std::cout << "OpenGL " << glGetString(GL_VERSION) << std::endl;
+    //std::cout << "OpenGL " << glGetString(GL_VERSION) << std::endl;
+    spdlog::info("OpenGL {0}", (const char*)glGetString(GL_VERSION));
 }
 
 void window::details::CreatedGLFWState::set_user_pointer(void *user_ptr) {
@@ -148,6 +160,18 @@ void window::details::CreatedGLFWState::clear() {
 
 bool window::details::CreatedGLFWState::created() {
     return true;
+}
+
+GLFWwindow *window::details::CreatedGLFWState::window() {
+    return m_state;
+}
+
+window::ContentScale window::details::CreatedGLFWState::content_scale() {
+    // Use content scale callback to detect scale changes
+    // void window_content_scale_callback(GLFWwindow* window, float xscale, float yscale)
+    float x, y;
+    glfwGetWindowContentScale(m_state, &x, &y);
+    return {x, y};
 }
 
 
@@ -252,6 +276,10 @@ bool window::Window::created() {
     return m_state->created();
 }
 
+window::ContentScale window::Window::content_scale() {
+    return m_state->content_scale();
+}
+
 std::optional<window::Event> window::Window::poll_event() {
     if (m_events.empty()) {
         return std::nullopt;
@@ -260,4 +288,8 @@ std::optional<window::Event> window::Window::poll_event() {
         m_events.pop_back();
         return event;
     }
+}
+
+void window::Window::extend(void (*caller)(GLFWwindow *)) {
+    caller(m_state->window());
 }

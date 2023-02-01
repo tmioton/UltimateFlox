@@ -252,7 +252,7 @@ void ThreadedAlgorithm::ThreadWork::operator()() const {
 }
 
 ThreadedAlgorithm::ThreadWork::ThreadWork(
-    ThreadedAlgorithm *a, int i, float d, const Boid *r, Boid *w, ptrdiff_t c, ptrdiff_t s
+    ThreadedAlgorithm *a, const int i, const float d, const Boid *r, Boid *w, const ptrdiff_t c, const ptrdiff_t s
 ) :
     algorithm(a), id(i), delta(d), read(r), write(w), count(c), start(s) {}
 
