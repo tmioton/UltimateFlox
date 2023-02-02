@@ -9,6 +9,7 @@ Use the ```q``` key to toggle display of the quadtree (lines).<br>
 Use the ```c``` key to toggle display of the quadtree (color).<br>
 Use the ```s``` key to toggle speed debug vision mode.<br>
 Use the ```Space``` key to pause the simulation.<br>
+Use the ```Esc``` key to exit.<br>
 
 ```flox.lua``` is provided in the Data/Scripts directory to configure the application.
 The program will continue to work without this file.
