@@ -41,7 +41,7 @@ namespace lua {
 
         void addBasicLibraries() const;
 
-        template<Code C>
+        template<lua::Code C>
         [[nodiscard]] int run(C& code) {
             return code.run(state);
         }
@@ -53,6 +53,9 @@ namespace lua {
         [[nodiscard]] Function function(std::string name, int arguments = 0, int results = 0) const;
 
         void pushGlobal(Table const&) const;
+        void pushNumber(lua_Number value) const;
+        void pushInteger(lua_Integer value) const;
+        void pushString(const char* value) const;
 
         [[nodiscard]] lua_Integer toInteger(int* isNum = nullptr);
         [[nodiscard]] lua_Number toNumber(int* isNum = nullptr);

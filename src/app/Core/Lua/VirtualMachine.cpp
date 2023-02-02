@@ -35,7 +35,7 @@ void lua::VirtualMachine::log(int result) const {
     if (result != LUA_OK) {
         // Just cout for now.
         //std::string error_msg {lua_tostring(state, -1)};
-        //std::cout << "Lua status " << status(result) << error_msg << std::endl;
+        //std::cout << "Lua status " << lua::status(std::cout, result) << error_msg << std::endl;
     }
 }
 
@@ -49,6 +49,18 @@ lua::Function lua::VirtualMachine::function(std::string name, int arguments, int
 
 void lua::VirtualMachine::pushGlobal(const Table &table) const {
     lua_setglobal(state, table.name().c_str());
+}
+
+void lua::VirtualMachine::pushNumber(lua_Number value) const {
+    lua_pushnumber(state, value);
+}
+
+void lua::VirtualMachine::pushInteger(lua_Integer value) const {
+    lua_pushinteger(state, value);
+}
+
+void lua::VirtualMachine::pushString(const char *value) const {
+    lua_pushstring(state, value);
 }
 
 lua_Integer lua::VirtualMachine::toInteger(int* isNum) {
