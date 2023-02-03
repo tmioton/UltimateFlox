@@ -11,6 +11,7 @@ target_sources(
 #        Algorithm/QuadtreeAlgorithm.cpp
         Algorithm/ThreadedAlgorithm.hpp
         Algorithm/ThreadedAlgorithm.cpp
+        Algorithm/ThreadWork.cpp
 
         # MATH
         Math/Rectangle.hpp
