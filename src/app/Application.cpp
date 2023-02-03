@@ -34,10 +34,12 @@ using namespace window;
     . Helps with the "attach camera to every shader" issue.
     ? Objects like uniforms have "Static", "Dynamic", and "Stream" properties to mark how often they should be updated.
 
-How do we handle Lua hooks?
-Global state object?
-State object passed to important objects?
-I want to be able to hook into the code before and after each step of making a frame
+spdlog is just a less readable output to the console.
+ When we have something special to output to, then we'll use spdlog.
+
+How do we handle Lua hooks? I want to be able to hook into the code before and after each step of making a frame.
+  . Global state object?
+  . State object passed to important objects?
 
 VM::call("<name of function in lua>")
 
