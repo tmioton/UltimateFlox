@@ -128,6 +128,7 @@ int run() {
 
     Window &window {Window::get()};
     window.create("Ultimate Flox", {window_configuration.width, window_configuration.height, 1, false});
+    if (!window.created()) { return -1; }
 
     lwvl::Program::clear();
 #ifdef FLOX_SHOW_DEBUG_INFO
