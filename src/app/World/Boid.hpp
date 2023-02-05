@@ -29,12 +29,20 @@ struct Boid {
     Vector position, velocity;
 };
 
+inline float fastInverseSqrt(const float d) {
+    constexpr std::uint32_t magic = 0x5f3759df;
+    // reinterpret_cast doesn't appear to have too much effect compared to *(long*)&d
+    const std::uint32_t i = magic - (*reinterpret_cast<std::uint32_t*>(const_cast<float*>(&d)) >> 1);
+    const float y = *reinterpret_cast<float*>(const_cast<std::uint32_t*>(&i));
+    return y * (1.5f - (d * 0.5f * y * y));
+}
+
 inline Vector magnitude(const Vector vec, const float mag) {
-    return glm::fastNormalize(vec) * mag;
+    return vec * fastInverseSqrt(glm::dot(vec, vec)) * mag;
 }
 
 inline Vector truncate(const Vector vec, const float max) {
-    const float i = max * glm::fastInverseSqrt(glm::dot(vec, vec));
+    const float i = max * fastInverseSqrt(glm::dot(vec, vec));
     const bool do_truncate = i < 1.0f;
     return vec * (i * FloatEnable[do_truncate] + FloatDisable[do_truncate]);
     //return vec * (i < 1.0f ? i : 1.0f);  ~7% slower with branch
