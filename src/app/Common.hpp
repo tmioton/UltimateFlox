@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef NDEBUG
+#define FLOX_SHOW_DEBUG_INFO
+#endif
+
 constexpr size_t MaxDepth {11};
 constexpr size_t BucketSize {16};
 constexpr std::array<float, 2> FloatEnable {0.0f, 1.0f};
