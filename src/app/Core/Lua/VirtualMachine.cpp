@@ -34,8 +34,9 @@ void lua::VirtualMachine::validate(int result) const {
 void lua::VirtualMachine::log(int result) const {
     if (result != LUA_OK) {
         // Just cout for now.
-        //std::string error_msg {lua_tostring(state, -1)};
-        //std::cout << "Lua status " << lua::status(std::cout, result) << error_msg << std::endl;
+        std::cout << "Lua status ";
+        lua::status(std::cout, result);
+        std::cout << lua_tostring(state, -1) << '\n';
     }
 }
 
