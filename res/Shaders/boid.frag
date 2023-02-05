@@ -8,7 +8,7 @@
 #define W 11.2
 
 out vec4 final;
-uniform vec3 color = vec3(A, 1.0, 1.0);
+uniform vec3 color = vec3(1.0, 1.0, 1.0);
 
 vec3 Uncharted2Tonemap(vec3 x) {
     return ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-E/F;
