@@ -10,10 +10,6 @@
 
 #include "binary_default_lua.cpp"
 
-#ifndef NDEBUG
-#define FLOX_SHOW_DEBUG_INFO
-#endif
-
 //#define FLOX_DEBUG_TIMINGS
 
 using namespace lwvl::debug;
