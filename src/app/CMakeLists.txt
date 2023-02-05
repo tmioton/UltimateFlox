@@ -44,9 +44,11 @@ target_sources(
         World/Flock.hpp
         World/Flock.cpp
 
-        # CORE
+        # WINDOW
         Core/Window/Window.hpp
         Core/Window/Window.cpp
+        Core/Window/GLFWState.cpp
+        Core/Window/GLFWStateEmpty.cpp
         Core/Window/Event.hpp
         Core/Window/Event.cpp
 

@@ -9,14 +9,33 @@ namespace window {
         int width;
         int height;
 
-        uint8_t samples = 1;
+        uint8_t samples = 0;
         bool resizable = false;  // This can be converted to a flag bit type thing when additional features are required.
     };
 
 
     namespace details {
         // Strategy pattern.
-        struct GLFWState {
+        // Why do we need this?
+        //   . GLFW doesn't give good messages when calling a window method on nullptr. Should we care?
+        //   . If we fix the underlying issue, we don't need this indirection.
+        //     . Keep it but strip it out in release mode?
+        //       . Might get it somewhere you don't expect.
+        //   . Fine here because everything gets called at most a few times per frame.
+        //   . Global "Window" object will initialize GLFW but can't create a window on its own.
+        //      With this, any code that calls out to this uninitialized global will get a good message about it.
+        //   . They might just use if(!window.created()) to avoid fixing the problem
+        //      This can happen with or without this abstraction.
+        //   . Tried this as a union where uninitialized gets instantiated by default. Compiler doesn't like it.
+        //   . Code needs the window to be created.
+        //     . With this, we get a message about it, then the actual code fails.
+        //     . Undefined behavior territory. Code is made expecting a window to be there.
+        //        The code might not actually fail.
+        //       . We still get a message about it
+        //         . Buried in a log somewhere
+        //           . Do we just want errors instead of messages?
+        //             . Errors will be disabled or turned into messages buried in a log somewhere.
+        struct GLFWStateAbstract {
             virtual void set_user_pointer(void*) = 0;
             virtual void set_key_callback(GLFWkeyfun) = 0;
             virtual void set_cursor_callback(GLFWcursorposfun) = 0;
@@ -29,11 +48,11 @@ namespace window {
             virtual void clear() = 0;
             virtual bool created() = 0;
 
-            virtual ~GLFWState() = default;
+            virtual ~GLFWStateAbstract() = default;
         };
 
-        struct EmptyGLFWState final : public GLFWState {
-            EmptyGLFWState() = default;
+        struct GLFWStateEmpty final : public GLFWStateAbstract {
+            GLFWStateEmpty() = default;
 
             void set_user_pointer(void*) override;
             void set_key_callback(GLFWkeyfun) override;
@@ -48,10 +67,10 @@ namespace window {
             bool created() override;
         };
 
-        class CreatedGLFWState final : public GLFWState {
+        class GLFWState final : public GLFWStateAbstract {
             void destroy();
         public:
-            CreatedGLFWState(const char* title, Config const&);
+            GLFWState(const char* title, Config const&);
 
             void set_user_pointer(void*) override;
             void set_key_callback(GLFWkeyfun) override;
@@ -96,6 +115,6 @@ namespace window {
     private:
         // Fight the urge to optimize this.
         std::vector<Event> m_events {};
-        std::unique_ptr<details::GLFWState> m_state = std::make_unique<details::EmptyGLFWState>();
+        std::unique_ptr<details::GLFWStateAbstract> m_state = std::make_unique<details::GLFWStateEmpty>();
     };
 }
