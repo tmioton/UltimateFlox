@@ -436,11 +436,16 @@ int run() {
             frame_count = 0;
         }
     }
+
+    lua::Function lua_on_exit {L.function("OnExit", 0, 0)};
+    if (lua_on_exit.push()) {
+        L.log(lua_on_exit.call());
+    }
+
     return 0;
 }
 
 #ifdef WIN32
-
 //#ifdef NDEBUG
 //#include <windows.h>
 //int WINAPI wWinMain(
