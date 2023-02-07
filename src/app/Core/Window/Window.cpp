@@ -24,8 +24,6 @@ void window::Window::glfw_init() {
         throw std::exception();
 #endif
     }
-
-    std::cout << "GLFW initialization success.\n";
 }
 
 window::Window::Window() {
