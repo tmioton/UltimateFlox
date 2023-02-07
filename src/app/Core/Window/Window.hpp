@@ -99,8 +99,9 @@ namespace window {
 
         Window();
     public:
-        Window(Window const&) = delete;
-        Window(Window&&) = delete;
+        Window(Window const &) = delete;
+        Window(Window &&) = delete;
+        ~Window();
 
         void create(const char* title, Config const&);
         bool created();

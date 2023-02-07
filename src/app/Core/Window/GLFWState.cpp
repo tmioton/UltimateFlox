@@ -8,8 +8,6 @@ void window::details::GLFWState::destroy() {
         glfwDestroyWindow(m_state);
         glfwPollEvents();
     }
-
-    glfwTerminate();
 }
 
 window::details::GLFWState::GLFWState(const char *title, const window::Config &config) {

@@ -33,6 +33,10 @@ window::Window::Window() {
     m_events.reserve(DefaultEventStackCapacity);
 }
 
+window::Window::~Window() {
+    glfwTerminate();
+}
+
 window::Window *window::Window::get_state(GLFWwindow *state) {
     return static_cast<Window *>(glfwGetWindowUserPointer(state));
 }
