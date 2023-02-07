@@ -8,7 +8,7 @@ void ThreadedAlgorithm::ThreadWork::operator()() const {
     //}
     const Boidtree &tree = algorithm->m_tree;
     const Rectangle bounds = algorithm->m_bounds;
-    Boidtree::ResultVector &results = algorithm->m_results[id];
+    auto &results = algorithm->m_results[id];
     const float disruptive_radius = Boid::disruptiveRadius * Boid::disruptiveRadius;
     const float cohesive_radius = Boid::cohesiveRadius * Boid::cohesiveRadius;
 
@@ -40,7 +40,7 @@ void ThreadedAlgorithm::ThreadWork::operator()() const {
         full_speed = steer(full_speed, current.velocity);
 
         results.clear();
-        tree.search(previous, search_bound, results);
+        search(tree, previous, search_bound, results);
         //std::sort(
         //    results.begin(), results.end(),
         //    [&current](const Boid &a, const Boid &b) {

@@ -38,7 +38,7 @@ void ThreadedAlgorithm::update(DoubleBuffer<Boid> &boids, const float delta) {
 
 void ThreadedAlgorithm::populate_tree(const Boid *read, const ptrdiff_t count) {
     m_tree.clear();
-    m_tree.bounds(m_treeBounds);
+    m_tree.bounds = m_treeBounds;
     for (Boid const &boid: RawArray(read, count)) {
         m_tree.insert(&boid, boid.position);
     }

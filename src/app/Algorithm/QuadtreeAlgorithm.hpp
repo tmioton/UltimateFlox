@@ -16,9 +16,11 @@ public:
     [[nodiscard]] Boidtree const &tree() const;
 
 protected:
+    using QuadtreeResults = std::vector<Boid>;
+
     Rectangle m_bounds;
     Rectangle m_treeBounds;
     Boidtree m_tree;
 
-    Boidtree::ResultVector m_results;
+    QuadtreeResults m_results;
 };

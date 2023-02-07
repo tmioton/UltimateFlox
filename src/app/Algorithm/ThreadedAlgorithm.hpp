@@ -33,7 +33,7 @@ public:
 private:
     static constexpr int ThreadCount = 8;
     using ThreadFutures = std::array<std::future<void>, ThreadCount - 1>;
-    using QuadtreeResults = Boidtree::ResultVector;
+    using QuadtreeResults = std::vector<Boid>;
 
     Rectangle m_bounds;
     Rectangle m_treeBounds;

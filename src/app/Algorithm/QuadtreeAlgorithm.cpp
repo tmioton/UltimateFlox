@@ -14,7 +14,7 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
     const auto count = static_cast<ptrdiff_t>(boids.count());
 
     m_tree.clear();
-    m_tree.bounds(m_treeBounds);
+    m_tree.bounds = m_treeBounds;
     Vector xBound {m_treeBounds.center.x - m_treeBounds.size.x, m_treeBounds.center.x + m_treeBounds.size.x};
     Vector yBound {m_treeBounds.center.y - m_treeBounds.size.y, m_treeBounds.center.y + m_treeBounds.size.y};
 
@@ -47,11 +47,11 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
             }
 
             centerSteer -= current.position;
-            centerSteer = current.steer(centerSteer);
+            centerSteer = steer(current.velocity, centerSteer);
         }
 
         Vector fullSpeed = current.velocity;
-        fullSpeed = current.steer(fullSpeed);
+        fullSpeed = steer(current.velocity, fullSpeed);
 
         Vector separation{0.0f, 0.0f};
         Vector alignment{0.0f, 0.0f};
@@ -61,7 +61,7 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
 
         m_results.clear();
         //m_tree.search(searchBound, m_results);
-        m_tree.search(&previous, searchBound, m_results);
+        search(m_tree, &previous, searchBound, m_results);
         //for(const auto j: m_results) {
         for (Boid const &other : m_results) {
             //if (current.position == other.position) {
@@ -86,17 +86,18 @@ void QuadtreeAlgorithm::update(DoubleBuffer<Boid> &boids, float delta) {
 
         if (disruptiveTotal > 0) {
             separation /= static_cast<float>(disruptiveTotal);
-            separation = current.steer(separation);
+            //separation = current.steer(separation);
+            separation = steer(current.velocity, separation);
         }
 
         if (cohesiveTotal > 0) {
             const float countFactor = 1.0f / static_cast<float>(cohesiveTotal);
             alignment *= countFactor;
-            alignment = current.steer(alignment);
+            alignment = steer(current.velocity, alignment);
 
             cohesion *= countFactor;
             cohesion -= current.position;
-            cohesion = current.steer(cohesion);
+            cohesion = steer(current.velocity, cohesion);
         }
 
         Vector acceleration{0.0f, 0.0f};

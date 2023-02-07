@@ -41,6 +41,7 @@ target_sources(
         World/Boid.hpp
         World/Boid.cpp
         World/Boidtree.hpp
+        World/Boidtree.cpp
         World/Flock.hpp
         World/Flock.cpp
 
