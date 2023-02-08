@@ -114,7 +114,7 @@ void run_startup_script(
 
 int run() {
     size_t flock_size = 1024;
-    float world_bound = 450.0f;
+    float world_bound = 500.0f;
     app::WindowConfiguration window_configuration {800, 450};
 
     auto &L {lua::VirtualMachine::get()};
@@ -123,7 +123,8 @@ int run() {
     lua::Function lua_on_frame_start {L.function("OnFrameStart", 1, 0)};
 
     Window &window {Window::get()};
-    window.create("Ultimate Flox", {window_configuration.width, window_configuration.height, 1, false});
+    const auto [width, height] = window_configuration;
+    window.create("Ultimate Flox", window::Hints {width, height, 0, window::Flags {true, true, false}});
     if (!window.created()) { return -1; }
 
     lwvl::Program::clear();
@@ -144,6 +145,8 @@ int run() {
 #endif
 
     // Move all of this to Register type variables
+    // . LuaRegister/LuaBoolean
+    //   ? Doom 3 Reg(ister)Expressions to run lua code on update?
     bool console_open = false;
     bool paused = false;
     bool debug_visual = false;
@@ -152,7 +155,7 @@ int run() {
     bool render_quadtree_colored = false;
     bool render_quadtree_lines = false;
 
-    const float aspect = static_cast<float>(window_configuration.width) / static_cast<float>(window_configuration.height);
+    const float aspect = static_cast<float>(width) / static_cast<float>(height);
     const Vector bounds {
         aspect >= 1.0f ? world_bound * aspect : world_bound,
         aspect < 1.0f ? world_bound * aspect : world_bound
@@ -277,12 +280,8 @@ int run() {
             switch (concrete.type) {
                 using
                 enum Event::Type;
-                case KeyPress:
                 case KeyRelease:
-                case KeyRepeat:
                     [&](KeyboardEvent &event, Event::Type type) {
-                        if (type != KeyRelease) { return; }
-
                         //if (event.mods & GLFW_MOD_SHIFT && event.key == GLFW_KEY_ESCAPE) {
                         if (event.key == GLFW_KEY_ESCAPE) {
                             window.should_close(true);
@@ -294,45 +293,55 @@ int run() {
                             return;
                         }
 
-                        if (!console_open) {
-                            // Boid keybinds.
-                            if (event.key == GLFW_KEY_SPACE) {
+                        if (console_open) {
+                            return;
+                        }
+
+                        switch (event.key) {
+                            case GLFW_KEY_SPACE:
                                 paused ^= true;
-                            } else if (event.key == GLFW_KEY_1) {
+                                return;
+                            case GLFW_KEY_1:
                                 if (active_model == &filled_model && active_shader == &default_boid_shader) {
                                     default_boid_shader.nextColor();
                                 } else {
                                     active_model = &filled_model;
                                 }
-                            } else if (event.key == GLFW_KEY_2) {
+                                return;
+                            case GLFW_KEY_2:
                                 if (active_model == &classic_model && active_shader == &default_boid_shader) {
                                     default_boid_shader.nextColor();
                                 } else {
                                     active_model = &classic_model;
                                 }
-                            } else if (event.key == GLFW_KEY_B) {
+                                return;
+                            case GLFW_KEY_B:
                                 render_boids ^= true;
-                            } else if (event.key == GLFW_KEY_V) {
+                                return;
+                            case GLFW_KEY_V:
                                 render_vision ^= true;
-                            } else if (event.key == GLFW_KEY_Q) {
+                                return;
+                            case GLFW_KEY_Q:
                                 render_quadtree_lines ^= true;
-                            } else if (event.key == GLFW_KEY_C) {
+                                return;
+                            case GLFW_KEY_C:
                                 render_quadtree_colored ^= true;
-                            } else if (event.key == GLFW_KEY_S) {
+                                return;
+                            case GLFW_KEY_S:
                                 debug_visual ^= true;
                                 if (debug_visual) {
                                     active_shader = &speed_debug_shader;
                                 } else {
                                     active_shader = &default_boid_shader;
                                 }
-                            }
+                                return;
+                            default:return;
                         }
                     }(std::get<KeyboardEvent>(concrete.event), concrete.type);
-                    break;
+                case KeyPress:
+                case KeyRepeat:
                 case Event::Type::TextInput:
-
                 case Event::Type::MouseMotion:
-
                 case Event::Type::MouseDown:
                 case Event::Type::MouseUp:break;
             }
@@ -446,6 +455,7 @@ int run() {
 }
 
 #ifdef WIN32
+
 //#ifdef NDEBUG
 //#include <windows.h>
 //int WINAPI wWinMain(

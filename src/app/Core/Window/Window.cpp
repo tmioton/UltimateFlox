@@ -2,6 +2,29 @@
 #include "Window.hpp"
 
 
+// ****** Flags ******
+window::Flags::Flags(bool v, bool d, bool t) {
+    m_flags.set(0, v);
+    m_flags.set(1, d);
+    m_flags.set(2, t);
+}
+
+bool window::Flags::vsync() const { return m_flags.test(0); }
+bool window::Flags::decorated() const { return m_flags.test(1); }
+bool window::Flags::transparent() const { return m_flags.test(2); }
+
+
+// ****** Hints ******
+window::Hints::Hints(const int width, const int height, const int s, Flags f):
+    m_dimensions(width, height), m_samples(static_cast<uint8_t>(s)), flags(f)
+{}
+
+int window::Hints::width() const { return m_dimensions.x; }
+int window::Hints::height() const { return m_dimensions.y; }
+int window::Hints::samples() const { return m_samples; }
+
+
+// ****** Window ******
 window::Window &window::Window::get() {
     static Window instance;
     return instance;
@@ -60,8 +83,8 @@ void window::Window::update() {
     glfwPollEvents();
 }
 
-void window::Window::create(const char *title, const window::Config &config) {
-    m_state = std::make_unique<details::GLFWState>(title, config);
+void window::Window::create(const char *title, const window::Hints &hints) {
+    m_state = std::make_unique<details::GLFWState>(title, hints);
     m_state->set_user_pointer(this);
     m_state->set_key_callback(
         [](GLFWwindow *window, int key, int scancode, int action, int mods) {

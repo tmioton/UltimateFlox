@@ -5,12 +5,37 @@
 
 
 namespace window {
-    struct Config {
-        int width;
-        int height;
+    class Flags {
+    public:
+        explicit Flags(
+            bool vsync = true,
+            bool decorated = true,
+            bool transparent = true
+        );
 
-        uint8_t samples = 0;
-        bool resizable = false;  // This can be converted to a flag bit type thing when additional features are required.
+        [[nodiscard]] bool vsync() const;
+        [[nodiscard]] bool transparent() const;
+        [[nodiscard]] bool decorated() const;
+    private:
+        std::bitset<3> m_flags {};
+    };
+
+
+    typedef glm::ivec2 Dimensions;
+    typedef glm::ivec2 Position;
+
+
+    class Hints {
+    public:
+        Hints(int width, int height, int samples = 0, Flags flags = Flags {});
+        [[nodiscard]] int width() const;
+        [[nodiscard]] int height() const;
+        [[nodiscard]] int samples() const;
+    private:
+        Dimensions m_dimensions;
+        uint8_t m_samples;
+    public:
+        Flags flags;
     };
 
 
@@ -36,7 +61,7 @@ namespace window {
         //           . Do we just want errors instead of messages?
         //             . Errors will be disabled or turned into messages buried in a log somewhere.
         struct GLFWStateAbstract {
-            virtual void set_user_pointer(void*) = 0;
+            virtual void set_user_pointer(void *) = 0;
             virtual void set_key_callback(GLFWkeyfun) = 0;
             virtual void set_cursor_callback(GLFWcursorposfun) = 0;
             virtual void set_mouse_callback(GLFWmousebuttonfun) = 0;
@@ -51,10 +76,11 @@ namespace window {
             virtual ~GLFWStateAbstract() = default;
         };
 
+
         struct GLFWStateEmpty final : public GLFWStateAbstract {
             GLFWStateEmpty() = default;
 
-            void set_user_pointer(void*) override;
+            void set_user_pointer(void *) override;
             void set_key_callback(GLFWkeyfun) override;
             void set_cursor_callback(GLFWcursorposfun) override;
             void set_mouse_callback(GLFWmousebuttonfun) override;
@@ -67,12 +93,13 @@ namespace window {
             bool created() override;
         };
 
+
         class GLFWState final : public GLFWStateAbstract {
             void destroy();
         public:
-            GLFWState(const char* title, Config const&);
+            GLFWState(const char *title, Hints const &);
 
-            void set_user_pointer(void*) override;
+            void set_user_pointer(void *) override;
             void set_key_callback(GLFWkeyfun) override;
             void set_cursor_callback(GLFWcursorposfun) override;
             void set_mouse_callback(GLFWmousebuttonfun) override;
@@ -84,17 +111,18 @@ namespace window {
             void clear() override;
             bool created() override;
         private:
-            GLFWwindow* m_state;
+            GLFWwindow *m_state;
         };
     }
 
+    // GLFW will make a window fullscreen on its own sometimes, we need to handle that.
 
     class Window {
     public:
         static Window &get();
     private:
         static void glfw_init();
-        static Window* get_state(GLFWwindow*);
+        static Window *get_state(GLFWwindow *);
         static constexpr size_t DefaultEventStackCapacity = 8;
 
         Window();
@@ -103,7 +131,7 @@ namespace window {
         Window(Window &&) = delete;
         ~Window();
 
-        void create(const char* title, Config const&);
+        void create(const char *title, Hints const &);
         bool created();
 
         bool should_close();

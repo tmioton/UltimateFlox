@@ -12,6 +12,7 @@
 #include <utility>
 #include <thread>
 #include <chrono>
+#include <bitset>
 
 // EXTERNAL
 #include <glad/glad.h>
