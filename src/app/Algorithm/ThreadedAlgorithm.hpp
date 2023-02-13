@@ -5,7 +5,7 @@
 #include "World/Boidtree.hpp"
 
 
-class ThreadedAlgorithm : public Algorithm {
+class ThreadedAlgorithm final : public Algorithm {
     struct ThreadWork {
         ThreadedAlgorithm *algorithm;
         int id;

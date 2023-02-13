@@ -5,7 +5,7 @@
 #include "World/Boidtree.hpp"
 
 // Expose tree for rendering
-class QuadtreeAlgorithm : public Algorithm {
+class QuadtreeAlgorithm final : public Algorithm {
 public:
     explicit QuadtreeAlgorithm(Vector bounds);
 
