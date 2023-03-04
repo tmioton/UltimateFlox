@@ -1,0 +1,130 @@
+#version 460 core
+
+struct Boid {
+    vec2 position;
+    vec2 velocity;
+};
+
+struct Rectangle {
+    vec2 center;
+    vec2 size;
+};
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) writeonly restrict buffer writeData {
+    Boid write[];
+};
+
+layout(std430, binding = 1) readonly restrict buffer readData {
+    Boid read[];
+};
+
+uniform float u_delta;
+uniform vec2  u_bounds;
+uniform float u_max_speed;
+uniform float u_max_force;
+uniform float u_cohesive_radius;
+uniform float u_disruptive_radius;
+
+const float Epsilon = 1.19209e-07;
+
+Rectangle create(const vec2 size) {
+    Rectangle r;
+    r.center = vec2(0);
+    r.size = size;
+    return r;
+}
+
+bool contains(const Rectangle r, const vec2 p) {
+    return !(
+        (p.x < (r.center.x - r.size.x)) ||
+        (p.x > (r.center.x + r.size.x)) ||
+        (p.y < (r.center.y - r.size.y)) ||
+        (p.y > (r.center.y + r.size.y))
+    );
+}
+
+vec2 magnitude(const vec2 vec, const float mag) {
+    return vec * inversesqrt(dot(vec, vec) + Epsilon) * mag;
+}
+
+vec2 truncate(const vec2 vec, const float max) {
+    const float i = max * inversesqrt(dot(vec, vec) + Epsilon);
+    const bool do_truncate = i < 1.0;
+    return vec * (i * float(do_truncate) + float(!do_truncate));
+}
+
+vec2 steer(const vec2 vec, const vec2 velocity) {
+//    return truncate(magnitude(vec, u_max_speed) - velocity, u_max_force);
+    return magnitude(vec, u_max_speed) - velocity;
+}
+
+
+void main() {
+    const uint id = gl_WorkGroupID.x;
+    const Rectangle center_bound = create(u_bounds * 0.75);
+    const vec2 velocity = read[id].velocity;
+    const vec2 position = read[id].position;
+
+    vec2 center_steer = vec2(0);
+    if (!contains(center_bound, position)) {
+        center_steer = center_steer - position;
+        center_steer = steer(center_steer, velocity);
+    }
+
+    const vec2 full_speed = steer(velocity, velocity);
+
+    vec2 alignment = vec2(0);
+    vec2 cohesion = vec2(0);
+    vec2 separation = vec2(0);
+
+    const float cr2 = u_cohesive_radius * u_cohesive_radius;
+    const float dr2 = u_disruptive_radius * u_disruptive_radius;
+
+    uint cohesive_total = 0;
+    uint disruptive_total = 0;
+    for (uint jd = 0; jd < gl_NumWorkGroups.x; ++jd) {
+        const vec2 other_velocity = read[jd].velocity;
+        const vec2 other_position = read[jd].position;
+
+        const vec2 offset = other_position - position;
+        const float d2 = dot(offset, offset);
+
+        const uint is_cohesive   = uint(d2 < cr2);
+        const uint is_disruptive = uint(d2 < dr2);
+
+        alignment  += float(is_cohesive) * other_velocity;
+        cohesion   += float(is_cohesive) * other_position;
+        separation += float(is_disruptive) * (offset / (d2 + Epsilon));
+
+        cohesive_total   = cohesive_total   + is_cohesive;
+        disruptive_total = disruptive_total + is_disruptive;
+    }
+
+    if (cohesive_total > 0) {
+//        const float count_factor = 1.0 / float(cohesive_total);
+        const float cohesive_factor = float(cohesive_total);
+        alignment = alignment / cohesive_factor;
+        cohesion  -= position * cohesive_factor;
+
+        alignment = steer(alignment, velocity);
+        cohesion  = steer(cohesion, velocity);
+    }
+
+    if (disruptive_total > 0) {
+        separation /= float(disruptive_total);
+        separation = steer(separation, velocity);
+    }
+
+    const vec2 acceleration = vec2(
+        center_steer * 0.4000
+        + alignment  * 0.3750
+        + cohesion   * 0.1250
+//        + separation * 0.75
+        + full_speed * 0.0625
+    );
+
+    write[id].velocity = velocity + truncate(acceleration, u_max_force);
+    write[id].position = position + velocity * u_delta;
+}
