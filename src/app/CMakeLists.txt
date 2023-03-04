@@ -35,8 +35,8 @@ target_sources(
         Structures/DoubleBuffer.hpp
         Structures/Quadtree.hpp
         Structures/RawArray.hpp
-        Structures/StringArray.hpp
-        Structures/StringArray.cpp
+#        Structures/StringArray.hpp
+#        Structures/StringArray.cpp
 
         # WORLD
         World/Boid.hpp
