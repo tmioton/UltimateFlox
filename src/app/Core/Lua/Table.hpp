@@ -8,7 +8,7 @@ namespace lua {
 
     class Table {
         template<typename T, typename luaT>
-        T toValue(const char* key, int* isNum, luaT(*lua_get)(lua_State*, int, int*)) {
+        T to_value(const char* key, int* isNum, luaT(*lua_get)(lua_State*, int, int*)) {
             lua_pushstring(m_state, key);
             lua_gettable(m_state, m_index);
             const T value = static_cast<T>(lua_get(m_state, -1, isNum));
@@ -17,7 +17,7 @@ namespace lua {
         }
 
         template<typename T, typename luaT>
-        T toValueBackup(const char* key, T backup, luaT(*lua_get)(lua_State*, int, int*)) {
+        T to_value_backup(const char* key, T backup, luaT(*lua_get)(lua_State*, int, int*)) {
             lua_pushstring(m_state, key);
             lua_gettable(m_state, m_index);
             int isNum;
@@ -43,25 +43,25 @@ namespace lua {
         bool push();
         bool pop();
 
-        void pushInteger(const char *key, lua_Integer);
-        void pushNumber(const char *key, lua_Number);
-        void pushString(const char *key, const char*);
+        void push_integer(const char *key, lua_Integer value);
+        void push_number(const char *key, lua_Number value);
+        void push_string(const char *key, const char* value);
 
-        [[nodiscard]] lua_Integer toInteger(const char *key, int* isNum = nullptr);
-        [[nodiscard]] lua_Number toNumber(const char *key, int* isNum = nullptr);
-        [[nodiscard]] std::string toString(const char *key);
+        [[nodiscard]] lua_Integer to_integer(const char *key, int* isNum = nullptr);
+        [[nodiscard]] lua_Number to_number(const char *key, int* isNum = nullptr);
+        [[nodiscard]] std::string to_string(const char *key);
 
         template<std::integral T>
-        [[nodiscard]] T toInteger(const char *key, T backup) {
-            return toValueBackup(key, backup, lua_tointegerx);
+        [[nodiscard]] T to_integer(const char *key, T backup) {
+            return to_value_backup(key, backup, lua_tointegerx);
         }
 
         template<std::floating_point T>
-        [[nodiscard]] T toNumber(const char *key, T backup) {
-            return toValueBackup(key, backup, lua_tonumberx);
+        [[nodiscard]] T to_number(const char *key, T backup) {
+            return to_value_backup(key, backup, lua_tonumberx);
         }
 
-        [[nodiscard]] std::string toString(const char *key, std::string const& backup);
+        [[nodiscard]] std::string to_string(const char *key, std::string const& backup);
 
         [[nodiscard]] std::string const& name() const;
 

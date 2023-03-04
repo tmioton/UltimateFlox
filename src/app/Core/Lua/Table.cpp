@@ -35,33 +35,33 @@ std::string const &lua::Table::name() const {
     return m_name;
 }
 
-void lua::Table::pushInteger(const char *key, lua_Integer value) {
+void lua::Table::push_integer(const char *key, lua_Integer value) {
     lua_pushstring(m_state, key);
     lua_pushinteger(m_state, value);
     lua_settable(m_state, m_index);
 }
 
-void lua::Table::pushNumber(const char *key, lua_Number value) {
+void lua::Table::push_number(const char *key, lua_Number value) {
     lua_pushstring(m_state, key);
     lua_pushnumber(m_state, value);
     lua_settable(m_state, m_index);
 }
 
-void lua::Table::pushString(const char *key, const char *value) {
+void lua::Table::push_string(const char *key, const char *value) {
     lua_pushstring(m_state, key);
     lua_pushstring(m_state, value);
     lua_settable(m_state, m_index);
 }
 
-lua_Integer lua::Table::toInteger(const char *key, int* isNum) {
-    return toValue<lua_Integer>(key, isNum, lua_tointegerx);
+lua_Integer lua::Table::to_integer(const char *key, int* isNum) {
+    return to_value<lua_Integer>(key, isNum, lua_tointegerx);
 }
 
-lua_Number lua::Table::toNumber(const char *key, int *isNum) {
-    return toValue<lua_Number>(key, isNum, lua_tonumberx);
+lua_Number lua::Table::to_number(const char *key, int *isNum) {
+    return to_value<lua_Number>(key, isNum, lua_tonumberx);
 }
 
-std::string lua::Table::toString(const char *key) {
+std::string lua::Table::to_string(const char *key) {
     lua_pushstring(m_state, key);
     lua_gettable(m_state, m_index);
     std::size_t length;
@@ -71,7 +71,7 @@ std::string lua::Table::toString(const char *key) {
     return value;
 }
 
-std::string lua::Table::toString(const char *key, const std::string &backup) {
+std::string lua::Table::to_string(const char *key, const std::string &backup) {
     lua_pushstring(m_state, key);
     lua_gettable(m_state, m_index);
     std::size_t length;

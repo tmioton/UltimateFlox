@@ -8,10 +8,10 @@ lua::VirtualMachine &lua::VirtualMachine::get() {
 }
 
 lua::VirtualMachine::VirtualMachine() {
-    lua::LuaVector::addToLua(state);
+    lua::LuaVector::add_to_lua(state);
 }
 
-void lua::VirtualMachine::addBasicLibraries() const {
+void lua::VirtualMachine::add_basic_libraries() const {
     luaL_openlibs(state);
 }
 
@@ -48,31 +48,31 @@ lua::Function lua::VirtualMachine::function(std::string name, int arguments, int
     return {state, std::move(name), arguments, results};
 }
 
-void lua::VirtualMachine::pushGlobal(const Table &table) const {
-    lua_setglobal(state, table.name().c_str());
+void lua::VirtualMachine::push_global(const Table &value) const {
+    lua_setglobal(state, value.name().c_str());
 }
 
-void lua::VirtualMachine::pushNumber(lua_Number value) const {
+void lua::VirtualMachine::push_number(lua_Number value) const {
     lua_pushnumber(state, value);
 }
 
-void lua::VirtualMachine::pushInteger(lua_Integer value) const {
+void lua::VirtualMachine::push_integer(lua_Integer value) const {
     lua_pushinteger(state, value);
 }
 
-void lua::VirtualMachine::pushString(const char *value) const {
+void lua::VirtualMachine::push_string(const char *value) const {
     lua_pushstring(state, value);
 }
 
-lua_Integer lua::VirtualMachine::toInteger(int* isNum) {
-    return toValue<lua_Integer>(isNum, lua_tointegerx);
+lua_Integer lua::VirtualMachine::to_integer(int* isNum) {
+    return to_value<lua_Integer>(isNum, lua_tointegerx);
 }
 
-lua_Number lua::VirtualMachine::toNumber(int *isNum) {
-    return toValue<lua_Number>(isNum, lua_tonumberx);
+lua_Number lua::VirtualMachine::to_number(int *isNum) {
+    return to_value<lua_Number>(isNum, lua_tonumberx);
 }
 
-std::string lua::VirtualMachine::toString() {
+std::string lua::VirtualMachine::to_string() {
     std::size_t length;
     const char* internal = lua_tolstring(state, -1, &length);
     std::string value{internal, length};
@@ -80,7 +80,7 @@ std::string lua::VirtualMachine::toString() {
     return value;
 }
 
-std::string lua::VirtualMachine::toString(const std::string &backup) {
+std::string lua::VirtualMachine::to_string(const std::string &backup) {
     std::size_t length;
     const char* internal_string = lua_tolstring(state, -1, &length);
     if (length == 0) {

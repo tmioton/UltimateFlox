@@ -11,12 +11,11 @@ namespace lua {
         // Vector using double because Lua operates in doubles
         using Vector_t = glm::vec<Vector::length(), double, glm::defaultp>;
 
-        static Vector toVector(Vector_t *);
+        static Vector to_vector(Vector_t *val);
 
-        static void addToLua(lua_State *);
+        static void add_to_lua(lua_State *L);
     private:
         friend VirtualMachine;
-
 
         static int create(lua_State *);
 

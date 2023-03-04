@@ -1,7 +1,7 @@
 #include "pch.hpp"
 #include "LuaVector.hpp"
 
-void lua::LuaVector::addToLua(lua_State* L) {
+void lua::LuaVector::add_to_lua(lua_State* L) {
     lua_pushcfunction(L, create);
     lua_setglobal(L, "CreateVector");
     luaL_newmetatable(L, "Vector");
@@ -23,8 +23,8 @@ void lua::LuaVector::addToLua(lua_State* L) {
     lua_pop(L, 1);
 }
 
-Vector lua::LuaVector::toVector(lua::LuaVector::Vector_t *other) {
-    return Vector{static_cast<float>(other->x), static_cast<float>(other->y)};
+Vector lua::LuaVector::to_vector(lua::LuaVector::Vector_t *val) {
+    return Vector{static_cast<float>(val->x), static_cast<float>(val->y)};
 }
 
 int lua::LuaVector::create(lua_State *L) {
