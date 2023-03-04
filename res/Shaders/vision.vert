@@ -3,6 +3,7 @@
 layout(location = 0) in vec4 position;
 layout(location = 1) in vec2 offset;
 
+uniform mat4 view = mat4(1.0);
 uniform mat4 projection = mat4(1.0);
 uniform float scale = 10.0;
 

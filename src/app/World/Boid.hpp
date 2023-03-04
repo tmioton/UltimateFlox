@@ -5,11 +5,11 @@
 
 constexpr std::size_t BoidColorCount = 5;
 constexpr Color BoidColors[BoidColorCount] {
-    Color {1.00000f, 1.00000f, 1.00000f},  // White
-    Color {0.76471f, 0.04314f, 0.30588f},  // Pictoral Carmine
-    Color {1.00000f, 0.00000f, 0.00000f},  // Red
-    Color {0.94118f, 0.63529f, 0.00784f},  // Marigold
-    Color {0.05098f, 0.19608f, 0.30196f},  // Prussian Blue
+    Color {1.00000f, 1.00000f, 1.00000f, 1.0f},  // White
+    Color {0.76471f, 0.04314f, 0.30588f, 1.0f},  // Pictoral Carmine
+    Color {1.00000f, 0.00000f, 0.00000f, 1.0f},  // Red
+    Color {0.94118f, 0.63529f, 0.00784f, 1.0f},  // Marigold
+    Color {0.05098f, 0.19608f, 0.30196f, 1.0f},  // Prussian Blue
 };
 
 

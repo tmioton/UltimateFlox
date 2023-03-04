@@ -96,6 +96,10 @@ int lwvl::Uniform::location() const {
     return m_location;
 }
 
+bool lwvl::Uniform::exists() const {
+    return m_location > -1;
+}
+
 
 /* ****** Shader ****** */
 GLuint lwvl::Program::ID::reserve() {
@@ -107,18 +111,7 @@ lwvl::Program::ID::~ID() {
 }
 
 int lwvl::Program::uniformLocation(const char *name) const {
-    const int location = glGetUniformLocation(id(), name);
-    if (location == -1) {
-#ifdef _WIN32
-        std::stringstream msg;
-        msg << "Uniform " << name << " not found.";
-        throw std::exception(msg.str().c_str());
-#else
-        std::cerr << "Uniform " << name << " not found.\n";
-        throw std::exception();
-#endif
-    }
-    return location;
+    return glGetUniformLocation(id(), name);
 }
 
 GLuint lwvl::Program::id() const {

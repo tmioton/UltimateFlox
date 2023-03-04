@@ -34,6 +34,10 @@ Boid const *Flock::boids() {
     return m_flock.read();
 }
 
+std::size_t Flock::count() {
+    return m_count;
+}
+
 void Flock::resize(size_t size) {
     if (size > m_count) {
 

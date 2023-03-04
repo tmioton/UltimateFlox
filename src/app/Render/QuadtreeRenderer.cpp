@@ -1,6 +1,7 @@
 #include "pch.hpp"
 #include "QuadtreeRenderer.hpp"
 
+
 glm::vec4 lch_to_lab(glm::vec4 color) {
     float a = glm::cos(glm::radians(color.b)) * color.g;
     float b = glm::sin(glm::radians(color.b)) * color.g;
@@ -78,49 +79,63 @@ QuadtreeRenderer::QuadtreeRenderer(Projection &proj) {
     m_layout.attribute(0, 0, 2, lwvl::ByteFormat::Float, offsetof(QuadtreeVertex, position));
     m_layout.attribute(0, 1, 1, lwvl::ByteFormat::UnsignedInt, offsetof(QuadtreeVertex, depth));
 
-    m_vertices.store<QuadtreeVertex>(nullptr, m_bufferSize, lwvl::bits::Dynamic);
-    m_colors.store<glm::vec4>(DepthColors, sizeof(DepthColors));
+    m_vertices.store<QuadtreeVertex>(nullptr, m_buffer_size, lwvl::bits::Dynamic);
+    m_colors.store<glm::vec4>(DEPTH_COLORS, sizeof(DEPTH_COLORS));
 
     lwvl::VertexShader vs = lwvl::VertexShader::fromFile("Data/Shaders/quadtree.vert");
     lwvl::GeometryShader gs = lwvl::GeometryShader::fromFile("Data/Shaders/quadtree.geom");
     lwvl::FragmentShader fs = lwvl::FragmentShader::fromFile("Data/Shaders/default.frag");
 
-    m_linesControl.attach(vs);
-    m_linesControl.attach(gs);
-    m_linesControl.attach(fs);
-    m_linesControl.link();
-    m_linesControl.detach(vs);
-    m_linesControl.detach(gs);
-    m_linesControl.detach(fs);
+    m_lines_control.attach(vs);
+    m_lines_control.attach(gs);
+    m_lines_control.attach(fs);
+    m_lines_control.link();
+    m_lines_control.detach(vs);
+    m_lines_control.detach(gs);
+    m_lines_control.detach(fs);
 
-    m_colorControl.link(
+    m_color_control.link(
         lwvl::VertexShader::fromFile("Data/Shaders/colorquadtree.vert"),
         lwvl::FragmentShader::fromFile("Data/Shaders/colorquadtree.frag")
     );
 
-    m_linesControl.bind();
-    m_linesControl.uniform("projection").matrix4F(&proj[0][0]);
+    m_lines_control.bind();
+    u_lines_view = m_lines_control.uniform("view");
+    m_lines_control.uniform("projection").matrix4F(&proj[0][0]);
     //m_linesControl.uniform("alpha").setF(0.1f);
 
-    m_colorControl.bind();
-    m_colorControl.uniform("projection").matrix4F(&proj[0][0]);
+    m_color_control.bind();
+    u_color_view = m_color_control.uniform("view");
+    m_color_control.uniform("projection").matrix4F(&proj[0][0]);
 }
 
-void QuadtreeRenderer::draw(bool drawColors, bool drawLines) const {
+void QuadtreeRenderer::update_camera(const Camera &view) {
+    if (u_lines_view.location() > -1) {
+        m_lines_control.bind();
+        u_lines_view.matrix4F(view.data());
+    }
+
+    if (u_color_view.location() > -1) {
+        m_color_control.bind();
+        u_color_view.matrix4F(view.data());
+    }
+}
+
+void QuadtreeRenderer::draw(bool draw_colors, bool draw_lines) const {
     //m_control.draw(this, [](const void* user_ptr){
     //    const auto* renderer = static_cast<const QuadtreeRenderer*>(user_ptr);
     //    renderer->m_layout.drawElements(lwvl::PrimitiveMode::Triangles, renderer->m_primitiveCount * 3, lwvl::ByteFormat::UnsignedInt);
     //});
 
-    if (drawColors) {
+    if (draw_colors) {
         m_colors.bind(lwvl::Buffer::IndexedTarget::ShaderStorage, 0);
-        m_colorControl.bind();
-        m_layout.drawArrays(lwvl::PrimitiveMode::Triangles, m_primitiveCount * 3);
+        m_color_control.bind();
+        m_layout.drawArrays(lwvl::PrimitiveMode::Triangles, m_primitive_count * 3);
     }
 
-    if (drawLines) {
-        m_linesControl.bind();
-        m_layout.drawArrays(lwvl::PrimitiveMode::Triangles, m_primitiveCount * 3);
+    if (draw_lines) {
+        m_lines_control.bind();
+        m_layout.drawArrays(lwvl::PrimitiveMode::Triangles, m_primitive_count * 3);
     }
     lwvl::Program::clear();
 }

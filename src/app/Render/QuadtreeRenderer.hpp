@@ -3,6 +3,8 @@
 #include "pch.hpp"
 #include "Structures/Quadtree.hpp"
 #include "Geometry/QuadtreeGeometry.hpp"
+#include "Math/Camera.hpp"
+
 
 glm::vec4 lch_to_lab(glm::vec4 color);
 glm::vec4 lab_to_xyz(glm::vec4 color);
@@ -38,36 +40,36 @@ get = lambda ccs: print(f"constexpr glm::vec4 DepthColors[{len(ccs)}] {{",",\n".
 //};
 
 // Blue 12
-//constexpr glm::vec4 DepthColors[12] {
-//    {0.43137f, 0.64314f, 0.74902f, 1.0f},
-//    {0.40392f, 0.60000f, 0.70588f, 1.0f},
-//    {0.36863f, 0.55294f, 0.65490f, 1.0f},
-//    {0.33725f, 0.50196f, 0.60000f, 1.0f},
-//    {0.30196f, 0.45098f, 0.54510f, 1.0f},
-//    {0.26667f, 0.40000f, 0.49020f, 1.0f},
-//    {0.23137f, 0.34902f, 0.43529f, 1.0f},
-//    {0.19216f, 0.29804f, 0.38039f, 1.0f},
-//    {0.15686f, 0.24706f, 0.32549f, 1.0f},
-//    {0.12157f, 0.20000f, 0.27059f, 1.0f},
-//    {0.08627f, 0.15294f, 0.21569f, 1.0f},
-//    {0.05098f, 0.10588f, 0.16471f, 1.0f}
-//};
-
-// Mesa 12
-constexpr glm::vec4 DepthColors[12] {
-    {0.94118f, 0.63529f, 0.00784f, 1.0f},
-    {0.95294f, 0.54902f, 0.14118f, 1.0f},
-    {0.94118f, 0.45490f, 0.23137f, 1.0f},
-    {0.89804f, 0.37255f, 0.30196f, 1.0f},
-    {0.82353f, 0.30588f, 0.36078f, 1.0f},
-    {0.72157f, 0.26275f, 0.40392f, 1.0f},
-    {0.60392f, 0.23922f, 0.42353f, 1.0f},
-    {0.47059f, 0.22745f, 0.41961f, 1.0f},
-    {0.33725f, 0.20784f, 0.38824f, 1.0f},
-    {0.21176f, 0.18431f, 0.32941f, 1.0f},
-    {0.11373f, 0.14902f, 0.25098f, 1.0f},
+constexpr glm::vec4 DEPTH_COLORS[12] {
+    {0.43137f, 0.64314f, 0.74902f, 1.0f},
+    {0.40392f, 0.60000f, 0.70588f, 1.0f},
+    {0.36863f, 0.55294f, 0.65490f, 1.0f},
+    {0.33725f, 0.50196f, 0.60000f, 1.0f},
+    {0.30196f, 0.45098f, 0.54510f, 1.0f},
+    {0.26667f, 0.40000f, 0.49020f, 1.0f},
+    {0.23137f, 0.34902f, 0.43529f, 1.0f},
+    {0.19216f, 0.29804f, 0.38039f, 1.0f},
+    {0.15686f, 0.24706f, 0.32549f, 1.0f},
+    {0.12157f, 0.20000f, 0.27059f, 1.0f},
+    {0.08627f, 0.15294f, 0.21569f, 1.0f},
     {0.05098f, 0.10588f, 0.16471f, 1.0f}
 };
+
+//Mesa 12
+//constexpr glm::vec4 DepthColors[12] {
+//    {0.94118f, 0.63529f, 0.00784f, 1.0f},
+//    {0.95294f, 0.54902f, 0.14118f, 1.0f},
+//    {0.94118f, 0.45490f, 0.23137f, 1.0f},
+//    {0.89804f, 0.37255f, 0.30196f, 1.0f},
+//    {0.82353f, 0.30588f, 0.36078f, 1.0f},
+//    {0.72157f, 0.26275f, 0.40392f, 1.0f},
+//    {0.60392f, 0.23922f, 0.42353f, 1.0f},
+//    {0.47059f, 0.22745f, 0.41961f, 1.0f},
+//    {0.33725f, 0.20784f, 0.38824f, 1.0f},
+//    {0.21176f, 0.18431f, 0.32941f, 1.0f},
+//    {0.11373f, 0.14902f, 0.25098f, 1.0f},
+//    {0.05098f, 0.10588f, 0.16471f, 1.0f}
+//};
 
 
 class QuadtreeRenderer {
@@ -77,39 +79,44 @@ public:
     template<class T>
     void update(structures::Quadtree<T> const &tree) {
         int nodes = static_cast<int>(tree.size());
-        int vertexCount = nodes * static_cast<int>(QuadtreeNodeVertexCount);
-        m_primitiveCount = nodes * 2;
-        m_vertexData.resize(vertexCount); {
-            QuadtreeGeometry<T> geometry{tree};
-            geometry(m_vertexData.data());
+        int vertex_count = nodes * static_cast<int>(QuadtreeNodeVertexCount);
+        m_primitive_count = nodes * 2;
+        m_vertex_data.resize(vertex_count);
+        {
+            QuadtreeGeometry<T> geometry {tree};
+            geometry(m_vertex_data.data());
         }
 
-        auto bufferSize = static_cast<GLsizeiptr>(vertexCount * sizeof(QuadtreeVertex));
-        if (bufferSize > m_bufferSize) {
+        auto buffer_size = static_cast<GLsizeiptr>(vertex_count * sizeof(QuadtreeVertex));
+        if (buffer_size > m_buffer_size) {
             // Create a new fixed-length buffer and set it as the array buffer of the layout.
             // This is probably how glCreateBuffer supports variable-length buffers behind the scenes.
             m_vertices = lwvl::Buffer();
-            m_bufferSize = bufferSize + 1024; // 1024 bytes of headroom before growing again.
+            m_buffer_size = buffer_size + 1024; // 1024 bytes of headroom before growing again.
             m_vertices.store<QuadtreeVertex>(
-                nullptr, static_cast<GLsizeiptr>(m_bufferSize), lwvl::bits::Dynamic
+                nullptr, static_cast<GLsizeiptr>(m_buffer_size), lwvl::bits::Dynamic
             );
             m_layout.array(m_vertices, 0, 0, sizeof(QuadtreeVertex));
         }
 
-        m_vertices.update(m_vertexData.begin(), m_vertexData.end());
+        m_vertices.update(m_vertex_data.begin(), m_vertex_data.end());
     }
 
-    void draw(bool drawColors = false, bool drawLines = false) const;
+    void update_camera(const Camera &view);
+
+    void draw(bool draw_colors = false, bool draw_lines = false) const;
 
 private:
-    lwvl::Program m_linesControl;
-    lwvl::Program m_colorControl;
+    lwvl::Program m_lines_control;
+    lwvl::Program m_color_control;
     lwvl::VertexArray m_layout;
     lwvl::Buffer m_vertices;
     lwvl::Buffer m_colors;
+    lwvl::Uniform u_lines_view;
+    lwvl::Uniform u_color_view;
 
-    std::vector<QuadtreeVertex> m_vertexData;
+    std::vector<QuadtreeVertex> m_vertex_data;
 
-    int m_primitiveCount = 0;
-    GLsizeiptr m_bufferSize = 1024 * QuadtreeNodeVertexCount * sizeof(QuadtreeVertex);
+    int m_primitive_count = 0;
+    GLsizeiptr m_buffer_size = 1024 * QuadtreeNodeVertexCount * sizeof(QuadtreeVertex);
 };

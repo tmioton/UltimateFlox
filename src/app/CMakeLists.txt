@@ -5,6 +5,10 @@ target_sources(
 
         # ALGORITHM
         Algorithm/Algorithm.hpp
+#        Algorithm/DirectComputeAlgorithm.hpp
+#        Algorithm/DirectComputeAlgorithm.cpp
+#        Algorithm/Compute/OpenGL/DirectComputeAgent.hpp
+#        Algorithm/Compute/OpenGL/DirectComputeAgent.cpp
 #        Algorithm/DirectLoopAlgorithm.hpp
 #        Algorithm/DirectLoopAlgorithm.cpp
 #        Algorithm/QuadtreeAlgorithm.hpp
@@ -14,6 +18,8 @@ target_sources(
         Algorithm/ThreadWork.cpp
 
         # MATH
+        Math/Camera.hpp
+        Math/Camera.cpp
         Math/Rectangle.hpp
         Math/Rectangle.cpp
 
@@ -31,6 +37,8 @@ target_sources(
         Render/Geometry/QuadtreeGeometry.cpp
         Render/QuadtreeRenderer.hpp
         Render/QuadtreeRenderer.cpp
+        Render/RectangleRenderer.hpp
+        Render/RectangleRenderer.cpp
 
         # STRUCTURES
         Structures/DoubleBuffer.hpp

@@ -523,10 +523,10 @@ namespace lwvl {
                 if (result == GL_FALSE) {
                     int length;
                     glGetShaderiv(so, GL_INFO_LOG_LENGTH, &length);
-                    char *infoLog = new char[length];
-                    glGetShaderInfoLog(so, length, &length, infoLog);
+                    std::unique_ptr<char[]> log = std::make_unique<char[]>(length);
+                    glGetShaderInfoLog(so, length, &length, log.get());
                     std::stringstream error;
-                    error << "Failed to compile " << target << " shader:" << std::endl << infoLog << std::endl;
+                    error << "Failed to compile " << target << " shader:\n" << log.get() << '\n';
                     throw std::invalid_argument(error.str().c_str());
                 }
             }
@@ -678,6 +678,7 @@ namespace lwvl {
         void ortho2D(float aspect);
 
         [[nodiscard]] GLint location() const;
+        [[nodiscard]] bool exists() const;
     };
 
     /*
@@ -726,7 +727,7 @@ namespace lwvl {
         void array(lwvl::Buffer const &, GLuint binding, GLintptr offset, GLsizei stride);
 
         // Set the format for a section of a buffer.
-        void attribute(GLuint index, uint8_t dimensions, ByteFormat type, GLuint offset);
+        void attribute(GLuint attribute, uint8_t dimensions, ByteFormat type, GLuint offset);
 
         void attribute(GLuint binding, GLuint attribute, uint8_t dimensions, ByteFormat type, GLuint offset);
 

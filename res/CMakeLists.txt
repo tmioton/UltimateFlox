@@ -45,9 +45,13 @@ export_resources(
         default.vert
         quadtree.geom
         quadtree.vert
+        rectangle.vert
+        rectangle.frag
         speeddebug.frag
         speeddebug.vert
         vision.vert
+
+        direct.compute
 )
 
 export_resources(

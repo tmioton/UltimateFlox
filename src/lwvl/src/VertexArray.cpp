@@ -50,10 +50,10 @@ void lwvl::VertexArray::element(lwvl::Buffer const &buffer) {
     glVertexArrayElementBuffer(id(), buffer.id());
 }
 
-void lwvl::VertexArray::attribute(GLuint index, uint8_t dimensions, lwvl::ByteFormat type, GLuint offset) {
+void lwvl::VertexArray::attribute(GLuint attribute, uint8_t dimensions, lwvl::ByteFormat type, GLuint offset) {
     const GLuint vao = id();
-    glEnableVertexArrayAttrib(vao, index);  // One would assume setting a format enables it.
-    _format(vao, index, dimensions, type, offset);
+    glEnableVertexArrayAttrib(vao, attribute);  // One would assume setting a format enables it.
+    _format(vao, attribute, dimensions, type, offset);
 }
 
 void lwvl::VertexArray::attribute(

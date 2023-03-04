@@ -5,15 +5,17 @@
 namespace window {
     struct KeyboardEvent { int scancode; int16_t key, mods; };
     struct TextEvent { unsigned int codepoint; };
-    struct MouseMotionEvent { double xpos, ypos; };
+    struct MouseMotionEvent { double x_pos, y_pos; };
     struct MouseButtonEvent { int button, mods; };
+    struct ScrollEvent { double x_offset, y_offset; };
 
     using AnonymousEvent = \
 std::variant<
         KeyboardEvent,
         TextEvent,
         MouseMotionEvent,
-        MouseButtonEvent
+        MouseButtonEvent,
+        ScrollEvent
     >;
 
 
@@ -33,7 +35,10 @@ std::variant<
 
             // MouseButtonEvent
             MouseDown,
-            MouseUp
+            MouseUp,
+
+            // ScrollEvent
+            Scroll
         };
 
         Type type;

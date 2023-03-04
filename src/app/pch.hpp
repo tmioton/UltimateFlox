@@ -1,6 +1,7 @@
 #pragma once
 
 // STL
+#include <exception>
 #include <iostream>
 #include <optional>
 #include <functional>

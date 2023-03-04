@@ -104,7 +104,12 @@ void window::Window::create(const char *title, const window::Hints &hints) {
                         Event::Type::KeyRepeat, KeyboardEvent {scancode, (int16_t) key, (int16_t) mods}
                     );
                     return;
-                default: unexpected();
+                default:
+#ifndef WIN32
+                    std::unexpected();
+#else
+                    unexpected();
+#endif
             }
         }
     );
@@ -130,14 +135,31 @@ void window::Window::create(const char *title, const window::Hints &hints) {
                     );
                     return;
                 }
-                default: unexpected();
+                default:
+#ifndef WIN32
+                    std::unexpected();
+#else
+                    unexpected();
+#endif
             }
+        }
+    );
+
+    m_state->set_cursor_callback(
+        [](GLFWwindow *window, double xpos, double ypos) {
+            Window::get_state(window)->m_events.emplace_back(Event::Type::MouseMotion, MouseMotionEvent{xpos, ypos});
         }
     );
 
     m_state->set_text_callback(
         [](GLFWwindow *window, unsigned int codepoint) {
             Window::get_state(window)->m_events.emplace_back(Event::Type::TextInput, TextEvent {codepoint});
+        }
+    );
+
+    m_state->set_scroll_callback(
+        [](GLFWwindow *window, double x_offset, double y_offset) {
+            Window::get_state(window)->m_events.emplace_back(Event::Type::Scroll, ScrollEvent{x_offset, y_offset});
         }
     );
 }
@@ -154,4 +176,8 @@ std::optional<window::Event> window::Window::poll_event() {
         m_events.pop_back();
         return event;
     }
+}
+
+window::Dimensions window::Window::real_size() {
+    return m_state->real_size();
 }

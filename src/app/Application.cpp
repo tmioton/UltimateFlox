@@ -5,10 +5,13 @@
 //#include "Algorithm/DirectLoopAlgorithm.hpp"
 //#include "Algorithm/QuadtreeAlgorithm.hpp"
 #include "Algorithm/ThreadedAlgorithm.hpp"
+//#include "Algorithm/DirectComputeAlgorithm.hpp"
 #include "Render/Boid/FlockRenderer.hpp"
 #include "Render/QuadtreeRenderer.hpp"
+#include "Render/RectangleRenderer.hpp"
 
 #include "binary_default_lua.cpp"
+#include "Math/Camera.hpp"
 
 //#define FLOX_DEBUG_TIMINGS
 
@@ -18,6 +21,7 @@ using namespace window;
 
 
 /* Ideas:
+  . Singular "Systems" global class that stores the other classes we would have made globals.
   . Job system with local and global queues https://www.youtube.com/watch?v=1ZMasi_9g_A
   . Background texture displaying the path of the boid?
   . Compute shaders
@@ -34,8 +38,8 @@ spdlog is just a less readable output to the console.
  When we have something special to output to, then we'll use spdlog.
 
 How do we handle Lua hooks? I want to be able to hook into the code before and after each step of making a frame.
-  . Global state object?
-  . State object passed to important objects?
+. Global state object?
+. State object passed to important objects?
 
 VM::call("<name of function in lua>")
 
@@ -69,45 +73,45 @@ void run_startup_script(
     lua::VirtualMachine &L, size_t &flock_size, float &world_bound,
     app::WindowConfiguration &window
 ) {
-    L.addBasicLibraries();
+    L.add_basic_libraries();
 
     // Create config table for Lua customization.
-    lua::Table appConfig {L.table("flox")};
-    appConfig.create(4, 0);
-    appConfig.pushInteger("flock_size", static_cast<int>(flock_size));
-    appConfig.pushNumber("world_bound", world_bound);
-    appConfig.pushInteger("width", window.width);
-    appConfig.pushInteger("height", window.height);
-    L.pushGlobal(appConfig);
+    lua::Table app_config {L.table("flox")};
+    app_config.create(4, 0);
+    app_config.push_integer("flock_size", static_cast<int>(flock_size));
+    app_config.push_number("world_bound", world_bound);
+    app_config.push_integer("width", window.width);
+    app_config.push_integer("height", window.height);
+    L.push_global(app_config);
 
-    const bool validLua = [](lua::VirtualMachine &L) {
-        lua::CodeFile customStart {"Data/Scripts/flox.lua"};
-        int r = L.run(customStart);
+    const bool valid_lua = [](lua::VirtualMachine &L) {
+        lua::CodeFile custom_start {"Data/Scripts/flox.lua"};
+        int r = L.run(custom_start);
         if (r == LUA_OK) {
             return true;
         }
 
         // Pop error message.
-        std::cout << "Error from external script file:\n    " << L.toString() << std::endl;
+        std::cout << "Error from external script file:\n    " << L.to_string() << std::endl;
 
-        lua::CodeBuffer defaultStart {(const char *) (FLOX_DEFAULT_LUA_SCRIPT), FLOX_DEFAULT_LUA_SCRIPT_LENGTH};
-        r = L.run(defaultStart);
+        lua::CodeBuffer default_start {(const char *) (FLOX_DEFAULT_LUA_SCRIPT), FLOX_DEFAULT_LUA_SCRIPT_LENGTH};
+        r = L.run(default_start);
         if (r == LUA_OK) {
             return true;
         }
 
         // Pop error message.
-        std::cout << "Error from default script:\n    " << L.toString() << std::endl;
+        std::cout << "Error from default script:\n    " << L.to_string() << std::endl;
 
         return false;
     }(L);
 
-    if (validLua && appConfig.push()) {
-        flock_size = appConfig.toInteger("flock_size", flock_size);
-        world_bound = appConfig.toNumber("world_bound", world_bound);
-        window.width = appConfig.toInteger("width", window.width);
-        window.height = appConfig.toInteger("height", window.height);
-        appConfig.pop();
+    if (valid_lua && app_config.push()) {
+        flock_size = app_config.to_integer("flock_size", flock_size);
+        world_bound = app_config.to_number("world_bound", world_bound);
+        window.width = app_config.to_integer("width", window.width);
+        window.height = app_config.to_integer("height", window.height);
+        app_config.pop();
     }
 }
 
@@ -119,13 +123,26 @@ int run() {
 
     auto &L {lua::VirtualMachine::get()};
     run_startup_script(L, flock_size, world_bound, window_configuration);
-
     lua::Function lua_on_frame_start {L.function("OnFrameStart", 1, 0)};
 
     Window &window {Window::get()};
-    const auto [width, height] = window_configuration;
-    window.create("Ultimate Flox", window::Hints {width, height, 0, window::Flags {true, true, false}});
+    window.create(
+        "Ultimate Flox", window::Hints {
+            window_configuration.width,
+            window_configuration.height, 0,
+            window::Flags {
+                false,
+                true,
+                false
+            }
+        }
+    );
+
     if (!window.created()) { return -1; }
+
+    const auto [width, height] = [](window::Dimensions window_size) {
+        return std::tuple<int, int>(window_size.x, window_size.y);
+    }(window.real_size());
 
     lwvl::Program::clear();
 #ifdef FLOX_SHOW_DEBUG_INFO
@@ -154,23 +171,32 @@ int run() {
     bool render_vision = false;
     bool render_quadtree_colored = false;
     bool render_quadtree_lines = false;
+    bool render_debug_rectangles = false;
+    bool mouse_1_pressed = false;
+    Vector cursor_position {0.0f, 0.0f};
+    Color clear_color {0.0f, 0.0f, 0.0f, 1.0f};
 
     const float aspect = static_cast<float>(width) / static_cast<float>(height);
     const Vector bounds {
         aspect >= 1.0f ? world_bound * aspect : world_bound,
         aspect < 1.0f ? world_bound * aspect : world_bound
     };
+    const Rectangle bounding_box {bounds};
+
     Flock flock {flock_size};
 
     // Unused algorithms are dead code, but having them as components allows easier testing.
     //DirectLoopAlgorithm direct_loop_algorithm{bounds};
     //QuadtreeAlgorithm quadtree_algorithm{bounds};
     ThreadedAlgorithm threaded_algorithm {bounds};
+    //DirectComputeAlgorithm compute_algorithm {bounding_box};
+    //structures::Quadtree<std::ptrdiff_t> quadtree {bounding_box};
 
     //Algorithm* algorithm = &direct_loop_algorithm;
     //QuadtreeAlgorithm *qt_algorithm = &quadtree_algorithm;
     ThreadedAlgorithm *qt_algorithm = &threaded_algorithm;
-    Algorithm *algorithm = qt_algorithm;
+    Algorithm *algorithm = &threaded_algorithm;
+    //Algorithm *algorithm = &compute_algorithm;
 
     Projection projection {
         1.0f / bounds.x, 0.0f, 0.0f, 0.0f,
@@ -179,8 +205,19 @@ int run() {
         0.0f, 0.0f, 0.0f, 1.0f
     };
 
+    // Lay out test points for the 4 sides of the screen. Passing them is how we test if the camera is too far.
+    Camera camera {bounding_box, bounds};
+    Camera static_camera{bounding_box, bounds};
+
+    //Camera &active_camera {camera};
+    Camera &active_camera {static_camera};
+
     FlockRenderer renderer {flock_size};
     QuadtreeRenderer quadtree_renderer {projection};
+    RectangleRenderer rectangle_renderer {projection, 2};
+
+    rectangle_renderer.push(bounding_box);
+    auto camera_rectangle_link = rectangle_renderer.push(bounding_box, Color {0.94118f, 0.63529f, 0.00784f, 1.0f});
 
     Model classic_model {
         loadObject(
@@ -189,6 +226,7 @@ int run() {
             lwvl::PrimitiveMode::Lines
         ), flock_size
     };
+
     Model filled_model {
         loadObject(
             boidShape.data(), boidShape.size(),
@@ -196,6 +234,7 @@ int run() {
             lwvl::PrimitiveMode::Triangles
         ), flock_size
     };
+
     Model vision_model {
         loadObject(
             visionShape.data(), visionShape.size(),
@@ -203,6 +242,7 @@ int run() {
             lwvl::PrimitiveMode::Lines
         ), flock_size
     };
+
     Model *active_model = &filled_model;
 
     renderer.attachData(&classic_model);
@@ -254,7 +294,7 @@ int run() {
 
 
         if (lua_on_frame_start.push()) {
-            L.pushNumber(dt);
+            L.push_number(dt);
             //L.validate(onFrameStart.call());
             L.log(lua_on_frame_start.call());
             // Nothing left on stack after call.
@@ -280,8 +320,37 @@ int run() {
             switch (concrete.type) {
                 using
                 enum Event::Type;
+                case Scroll:
+                    [&](const ScrollEvent &event) {
+                        constexpr float zoom_multiplier = 0.5f;
+                        const float current_zoom {active_camera.zoom()};
+                        const auto offset = static_cast<float>(event.y_offset) * zoom_multiplier;
+                        float new_zoom = current_zoom;
+
+                        // Figure out a good multiplier for scroll zoom.
+                        if (current_zoom + offset < 1.0f) {
+                            new_zoom = 1.0f;
+                        } else if (current_zoom + offset > 25.0f) {
+                            new_zoom = 25.0f;
+                        } else {
+                            new_zoom += offset;
+                        }
+
+                        if (new_zoom == current_zoom) {
+                            return;
+                        }
+
+                        active_camera.zoom(new_zoom);
+                        camera_rectangle_link.get().rectangle = active_camera.box();
+                    }(std::get<ScrollEvent>(concrete.event));
+                    continue;
+                case KeyPress:
                 case KeyRelease:
-                    [&](KeyboardEvent &event, Event::Type type) {
+                    [&](const KeyboardEvent &event, const Event::Type type) {
+                        if (type != KeyRelease) {
+                            return;
+                        }
+
                         //if (event.mods & GLFW_MOD_SHIFT && event.key == GLFW_KEY_ESCAPE) {
                         if (event.key == GLFW_KEY_ESCAPE) {
                             window.should_close(true);
@@ -298,8 +367,7 @@ int run() {
                         }
 
                         switch (event.key) {
-                            case GLFW_KEY_SPACE:
-                                paused ^= true;
+                            case GLFW_KEY_SPACE:paused ^= true;
                                 return;
                             case GLFW_KEY_1:
                                 if (active_model == &filled_model && active_shader == &default_boid_shader) {
@@ -315,20 +383,15 @@ int run() {
                                     active_model = &classic_model;
                                 }
                                 return;
-                            case GLFW_KEY_B:
-                                render_boids ^= true;
+                            case GLFW_KEY_B:render_boids ^= true;
                                 return;
-                            case GLFW_KEY_V:
-                                render_vision ^= true;
+                            case GLFW_KEY_V:render_vision ^= true;
                                 return;
-                            case GLFW_KEY_Q:
-                                render_quadtree_lines ^= true;
+                            case GLFW_KEY_Q:render_quadtree_lines ^= true;
                                 return;
-                            case GLFW_KEY_C:
-                                render_quadtree_colored ^= true;
+                            case GLFW_KEY_C:render_quadtree_colored ^= true;
                                 return;
-                            case GLFW_KEY_S:
-                                debug_visual ^= true;
+                            case GLFW_KEY_S:debug_visual ^= true;
                                 if (debug_visual) {
                                     active_shader = &speed_debug_shader;
                                 } else {
@@ -338,12 +401,52 @@ int run() {
                             default:return;
                         }
                     }(std::get<KeyboardEvent>(concrete.event), concrete.type);
-                case KeyPress:
+                    continue;
+                case MouseDown:
+                case MouseUp:
+                    [&](const MouseButtonEvent &event, const Event::Type type) {
+                        if (event.button == GLFW_MOUSE_BUTTON_1 && type == MouseDown) {
+                            mouse_1_pressed = true;
+                            return;
+                        }
+
+                        if (event.button == GLFW_MOUSE_BUTTON_1 && type == MouseUp) {
+                            mouse_1_pressed = false;
+                            return;
+                        }
+                    }(std::get<MouseButtonEvent>(concrete.event), concrete.type);
+                    continue;
+                case MouseMotion:
+                    [&](const MouseMotionEvent &event) {
+                        const Vector cursor_previous_position = cursor_position;
+                        {
+                            const auto x_pos = static_cast<float>(event.x_pos) / static_cast<float>(width);
+                            const auto y_pos = 1.0f - (static_cast<float>(event.y_pos) / static_cast<float>(height));
+                            cursor_position = Vector {
+                                (x_pos * 2.0f - 1.0f) * bounds.x,
+                                (y_pos * 2.0f - 1.0f) * bounds.y
+                            };
+                        }
+
+                        if (!mouse_1_pressed) {
+                            return;
+                        }
+
+                        const Vector cursor_delta {cursor_position - cursor_previous_position};
+
+                        // Can't move left if the left edge of the camera would extend too far off the space.
+                        // bounds / zoom level is acceptable camera space?
+                        // Extra: Camera is context-aware. Quadtree can grow the allowed camera space.
+
+                        const Vector slowdown {1.0f / (glm::log(active_camera.zoom_vector()) * 3.0f + 1.0f + Epsilon)};
+                        const Vector camera_delta {-cursor_delta * slowdown};
+
+                        active_camera.move(camera_delta);
+                        camera_rectangle_link.get().rectangle = active_camera.box();
+                    }(std::get<MouseMotionEvent>(concrete.event));
+                    continue;
                 case KeyRepeat:
-                case Event::Type::TextInput:
-                case Event::Type::MouseMotion:
-                case Event::Type::MouseDown:
-                case Event::Type::MouseUp:break;
+                case TextInput:continue;
             }
         }
 
@@ -361,6 +464,14 @@ int run() {
         if (do_updates) {
             flock.update(algorithm, dt);
         }
+
+        //if (render_quadtree_colored || render_quadtree_lines) {
+        //    const auto qt_flock_count_temp {static_cast<std::ptrdiff_t>(flock.count())};
+        //    const Boid* qt_flock_read_temp {flock.boids()};
+        //    for (std::ptrdiff_t i = 0; i < qt_flock_count_temp; ++i) {
+        //        quadtree.insert(i, qt_flock_read_temp[i].position);
+        //    }
+        //}
 
 #ifdef FLOX_DEBUG_TIMINGS
         auto update_delta = duration_cast<microseconds>(
@@ -388,6 +499,12 @@ int run() {
 
         if (render_quadtree_colored || render_quadtree_lines) {
             quadtree_renderer.update(qt_algorithm->tree());
+            //quadtree_renderer.update(quadtree);
+            //quadtree.clear();
+        }
+
+        if (render_debug_rectangles) {
+            rectangle_renderer.update();
         }
 
 #ifdef FLOX_SHOW_DEBUG_INFO
@@ -395,13 +512,20 @@ int run() {
         average_start = high_resolution_clock::now();
 #endif
 
+        if (!render_quadtree_colored) {
+            glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
+        } else {
+            glClearColor(0.43137f, 0.64314f, 0.74902f, 1.0f);
+        }
         lwvl::clear();
 
         if (render_quadtree_colored || render_quadtree_lines) {
+            quadtree_renderer.update_camera(static_camera);
             quadtree_renderer.draw(render_quadtree_colored, render_quadtree_lines);
         }
 
         if (render_vision) {
+            vision_shader.update_camera(static_camera);
             vision_shader.radius(Boid::cohesiveRadius);
             FlockRenderer::draw(&vision_model, &vision_shader);
             vision_shader.radius(Boid::disruptiveRadius);
@@ -409,7 +533,13 @@ int run() {
         }
 
         if (render_boids) {
+            active_shader->update_camera(static_camera);
             FlockRenderer::draw(active_model, active_shader);
+        }
+
+        if (render_debug_rectangles) {
+            rectangle_renderer.update_camera(static_camera);
+            rectangle_renderer.draw();
         }
 
         window.swap_buffers();
@@ -477,7 +607,9 @@ int main()
         std::cerr << "Unable to allocate memory for program. Exiting." << std::endl;
         return -1;
     } catch (const std::exception &e) {
+#ifdef WIN32
         std::cerr << e.what() << std::endl;
+#endif
         return -1;
     }
 }

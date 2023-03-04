@@ -2,6 +2,7 @@
 
 #include "pch.hpp"
 #include "Models.hpp"
+#include "Math/Camera.hpp"
 
 // Determine whether these should have to be passed shader strings
 
@@ -9,6 +10,7 @@ class BoidShader {
 public:
     virtual ~BoidShader() = default;
 
+    void update_camera(const Camera &view);
     void draw(Model const *) const;
 
 protected:

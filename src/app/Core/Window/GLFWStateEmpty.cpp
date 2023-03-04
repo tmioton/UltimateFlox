@@ -27,6 +27,15 @@ void window::details::GLFWStateEmpty::set_text_callback(GLFWcharfun) {
     called_empty_state("set_text_callback(GLFWcharfun)");
 }
 
+void window::details::GLFWStateEmpty::set_scroll_callback(GLFWscrollfun) {
+    called_empty_state("set_scroll_callback(GLFWscrollfun");
+}
+
+window::Dimensions window::details::GLFWStateEmpty::real_size() {
+    called_empty_state("real_size()");
+    return { 0, 0 };
+}
+
 bool window::details::GLFWStateEmpty::should_close() {
     called_empty_state("should_close()");
     return true;

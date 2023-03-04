@@ -1,7 +1,9 @@
 #pragma once
+
 #include "pch.hpp"
 #include "Geometry.hpp"
 #include "Structures/Quadtree.hpp"
+
 
 static constexpr size_t QuadtreeNodeVertexCount = 6;
 
@@ -12,22 +14,25 @@ struct QuadtreeVertex {
 
 void addToArray(QuadtreeVertex *array, size_t depth, Rectangle const &bound);
 
+
 template<typename T>
 class QuadtreeGeometry : public Geometry {
     using QuadtreeType = structures::Quadtree<T>;
-    QuadtreeType const& m_tree;
+    QuadtreeType const &m_tree;
 public:
     explicit QuadtreeGeometry(QuadtreeType const &tree) : m_tree(tree) {}
+
     ~QuadtreeGeometry() override = default;
-    void operator()(void* in) override {
+
+    void operator()(void *in) override {
         // I can imagine dfs should work backwards from quadrants 4 to 1, but the ordering of the data probably doesn't matter here?
-        auto array = static_cast<QuadtreeVertex*>(in);
+        auto array = static_cast<QuadtreeVertex *>(in);
 
         size_t indices[QuadtreeType::MaxDepth + 1];
         indices[0] = 0;
         indices[1] = m_tree.node_child(0, 0);
         Rectangle bounds[QuadtreeType::MaxDepth + 1];
-        bounds[0] = Rectangle{m_tree.bounds};
+        bounds[0] = Rectangle {m_tree.bounds};
         addToArray(array, 0, bounds[0]);
         if (!indices[1]) { return; }
         uint64_t quadrant_memory = 0;
@@ -42,7 +47,7 @@ public:
 
             // Critical operations happen when descending the tree
             if (!ascended) {
-                Rectangle newBound{bounds[depth - 1]};
+                Rectangle newBound {bounds[depth - 1]};
                 newBound.size = newBound.size * 0.5f;
                 newBound.center = newBound.center + newBound.size * structures::QuadrantOffsets[quadrant];
                 bounds[depth] = newBound;

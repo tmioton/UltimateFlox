@@ -17,5 +17,7 @@ public:
 
     Boid const *boids();
 
+    std::size_t count();
+
     void resize(size_t new_count);
 };

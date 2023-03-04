@@ -31,6 +31,7 @@ window::details::GLFWState::GLFWState(const char *title, const window::Hints &hi
     //  may fail if you change this hint. This can be resolved by having it load functions via glfwGetProcAddress.
     // Maybe have to change for linux.
     glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
+    //glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_OSMESA_CONTEXT_API);
     //glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
 
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);  // Disable deprecated OpenGL operations.
@@ -67,7 +68,7 @@ window::details::GLFWState::GLFWState(const char *title, const window::Hints &hi
     glfwWindowHint(GLFW_DECORATED, glfw_enable[hints.flags.decorated()]);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_TRUE);
-    glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+    glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
     glfwWindowHint(GLFW_MAXIMIZED, GLFW_FALSE);
     glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, glfw_enable[hints.flags.transparent()]);
@@ -133,6 +134,16 @@ void window::details::GLFWState::set_mouse_callback(GLFWmousebuttonfun callback)
 
 void window::details::GLFWState::set_text_callback(GLFWcharfun callback) {
     glfwSetCharCallback(m_state, callback);
+}
+
+void window::details::GLFWState::set_scroll_callback(GLFWscrollfun callback) {
+    glfwSetScrollCallback(m_state, callback);
+}
+
+window::Dimensions window::details::GLFWState::real_size() {
+    int width, height;
+    glfwGetWindowSize(m_state, &width, &height);
+    return { width, height };
 }
 
 bool window::details::GLFWState::should_close() {

@@ -2,6 +2,14 @@
 #include "World/Boid.hpp"
 #include "Controls.hpp"
 
+void BoidShader::update_camera(const Camera &view) {
+    control.bind();
+    lwvl::Uniform u_view {control.uniform("view")};
+    if (u_view.location() > -1) {
+        u_view.matrix4F(view.data());
+    }
+}
+
 void BoidShader::draw(Model const *model) const {
     control.bind();
     model->draw();

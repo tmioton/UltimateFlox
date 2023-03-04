@@ -1,6 +1,8 @@
 #version 430 core
 
 layout(location = 0) in vec4 position;
+
+uniform mat4 view = mat4(1.0);
 uniform mat4 projection = mat4(1.0);
 uniform vec3 offset = vec3(0.0);
 uniform float scale = 1.0f;
@@ -13,5 +15,5 @@ void main() {
         offset.x, offset.y, offset.z, 1.0
     );
 
-    gl_Position = projection * model * position;
+    gl_Position = projection * view * model * position;
 }

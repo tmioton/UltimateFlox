@@ -66,12 +66,14 @@ namespace window {
             virtual void set_cursor_callback(GLFWcursorposfun) = 0;
             virtual void set_mouse_callback(GLFWmousebuttonfun) = 0;
             virtual void set_text_callback(GLFWcharfun) = 0;
+            virtual void set_scroll_callback(GLFWscrollfun) = 0;
 
             virtual bool should_close() = 0;
             virtual void should_close(bool) = 0;
             virtual void swap_buffers() = 0;
             virtual void clear() = 0;
             virtual bool created() = 0;
+            virtual Dimensions real_size() = 0;
 
             virtual ~GLFWStateAbstract() = default;
         };
@@ -85,12 +87,14 @@ namespace window {
             void set_cursor_callback(GLFWcursorposfun) override;
             void set_mouse_callback(GLFWmousebuttonfun) override;
             void set_text_callback(GLFWcharfun) override;
+            void set_scroll_callback(GLFWscrollfun) override;
 
             bool should_close() override;
             void should_close(bool) override;
             void swap_buffers() override;
             void clear() override;
             bool created() override;
+            Dimensions real_size() override;
         };
 
 
@@ -110,6 +114,8 @@ namespace window {
             void swap_buffers() override;
             void clear() override;
             bool created() override;
+            void set_scroll_callback(GLFWscrollfun callback) override;
+            Dimensions real_size() override;
         private:
             GLFWwindow *m_state;
         };
@@ -134,6 +140,7 @@ namespace window {
         void create(const char *title, Hints const &);
         bool created();
 
+        Dimensions real_size();
         bool should_close();
         void should_close(bool);
         void swap_buffers();
