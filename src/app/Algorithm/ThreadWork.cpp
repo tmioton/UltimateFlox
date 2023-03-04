@@ -15,20 +15,18 @@ void ThreadedAlgorithm::ThreadWork::operator()() const {
     const Rectangle center_bound {bounds * 0.75f};
     const Rectangle hard_bound {bounds * 0.90f};
 
-    Rectangle boid_bound {Vector {Boid::scale}};
     Rectangle search_bound {Vector {Boid::cohesiveRadius}};
     for (ptrdiff_t i = start; i < start + count; ++i) {
-        Boid &current = write[i];
+        const Boid current = read[i];
         const Boid *previous = read + i;
 
-        boid_bound.center = current.position;
         search_bound.center = current.position;
         Vector center_steer {0.0f, 0.0f};
 
-        const bool in_center = center_bound.intersects(boid_bound);
+        const bool in_center = center_bound.contains(current.position);
         float center_steer_weight = Boid::primadonnaWeight;
         if (!in_center) {
-            if (!hard_bound.intersects(boid_bound)) {
+            if (!hard_bound.contains(current.position)) {
                 center_steer_weight *= 2.0f;
             }
 
@@ -36,8 +34,7 @@ void ThreadedAlgorithm::ThreadWork::operator()() const {
             center_steer = steer(center_steer, current.velocity);
         }
 
-        Vector full_speed = current.velocity;
-        full_speed = steer(full_speed, current.velocity);
+        const Vector full_speed = steer(current.velocity, current.velocity);
 
         results.clear();
         search(tree, previous, search_bound, results);
@@ -106,8 +103,8 @@ void ThreadedAlgorithm::ThreadWork::operator()() const {
             Boid::maxForce
         );
 
-        current.velocity += acceleration;
-        current.position += current.velocity * delta;
+        write[i].velocity += acceleration;
+        write[i].position += current.velocity * delta;
     }
 }
 
