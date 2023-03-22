@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 /* GEOMETRY CONCEPT
  * Use a subclass of Geometry to return the primitives used to visualize structures that are not inherently visual.
  */

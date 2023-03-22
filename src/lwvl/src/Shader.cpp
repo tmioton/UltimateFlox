@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 #include "lwvl/lwvl.hpp"
 #ifndef _WIN32
 #include <iostream>

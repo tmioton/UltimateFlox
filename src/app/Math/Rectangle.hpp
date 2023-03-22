@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 #pragma once
 
 class Rectangle {
@@ -20,7 +22,8 @@ public:
 
     [[nodiscard]] bool contains(Vector point) const;
 
-    [[nodiscard]] bool intersects(Rectangle &) const;
+    [[nodiscard]] bool has_intersection_with(const Rectangle &other) const;
+    [[nodiscard]] bool no_intersection_with(const Rectangle &other) const;
 
     [[nodiscard]] int quadrant(Vector point) const;
 

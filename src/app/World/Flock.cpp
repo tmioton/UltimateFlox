@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 #include "pch.hpp"
 #include "Flock.hpp"
 
@@ -32,10 +34,6 @@ void Flock::update(Algorithm *algorithm, float dt) {
 
 Boid const *Flock::boids() {
     return m_flock.read();
-}
-
-std::size_t Flock::count() {
-    return m_count;
 }
 
 void Flock::resize(size_t size) {

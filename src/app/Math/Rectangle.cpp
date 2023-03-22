@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 #include "Rectangle.hpp"
 
 Rectangle::Rectangle(Vector c, Vector s) : center(c), size(s) {}
@@ -13,8 +15,17 @@ bool Rectangle::contains(Vector p) const {
     );
 }
 
-bool Rectangle::intersects(Rectangle &other) const {
+bool Rectangle::has_intersection_with(const Rectangle &other) const {
     return !(
+        other.center.x + other.size.x < center.x - size.x ||
+        other.center.x - other.size.x > center.x + size.x ||
+        other.center.y + other.size.y < center.y - size.y ||
+        other.center.y - other.size.y > center.y + size.y
+    );
+}
+
+bool Rectangle::no_intersection_with(const Rectangle &other) const {
+    return (
         other.center.x + other.size.x < center.x - size.x ||
         other.center.x - other.size.x > center.x + size.x ||
         other.center.y + other.size.y < center.y - size.y ||

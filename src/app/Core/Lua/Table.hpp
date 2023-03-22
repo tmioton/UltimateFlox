@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 #pragma once
 #include "pch.hpp"
 #include "Common.hpp"

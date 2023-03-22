@@ -1,3 +1,5 @@
+# Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 # We define this target over the individual resource targets so they can all be built together,
 # rather than shaders then GLFW, then fonts, then Glad
 add_custom_target(resources)

@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 #pragma once
 
 // Figure out how to make this library independent.

@@ -1,3 +1,5 @@
+# Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 target_sources(
     ${PROJECT_NAME} PRIVATE
         Application.cpp
@@ -60,6 +62,9 @@ target_sources(
         Core/Window/GLFWStateEmpty.cpp
         Core/Window/Event.hpp
         Core/Window/Event.cpp
+
+        # EVENT
+        Core/Event/Event.hpp
 
         # LUA
         Core/Lua/Common.hpp

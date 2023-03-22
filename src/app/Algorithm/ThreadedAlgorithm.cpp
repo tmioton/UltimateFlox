@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 #include "pch.hpp"
 #include "ThreadedAlgorithm.hpp"
 #include "Structures/RawArray.hpp"

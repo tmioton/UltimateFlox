@@ -1,3 +1,5 @@
+# Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 # TODO: Automate compiling these files
 target_sources(
     ${PROJECT_NAME} PRIVATE

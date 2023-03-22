@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 #include "pch.hpp"
 #include "Core/Window/Window.hpp"
 #include "Core/Lua/VirtualMachine.hpp"
@@ -33,6 +35,18 @@ using namespace window;
     . Attach small objects to one "pipeline", can be easily swapped out
     . Helps with the "attach camera to every shader" issue.
     ? Objects like uniforms have "Static", "Dynamic", and "Stream" properties to mark how often they should be updated.
+  . Event System
+    . Systems have inheritance wrappers that take a reference to the system.
+    . Is it on the event system to know what event was fired? Can it be discovered from other sources?
+        ? Central Event store.
+        ? Events don't have special state, just a: "am I already handled" flag.
+        . Systems can subscribe to receive certain messages.
+        . System checks its mail before it runs.
+        . System can mark an event as finished before it gets to the other systems.
+        ? Deferred flag?
+  . How do we tie all the rendering systems together?
+    . What if we want to add a texture to a shader? How do we link it?
+  . Global settings are multiple arrays, and we have macro named indices into those arrays.
 
 spdlog is just a less readable output to the console.
  When we have something special to output to, then we'll use spdlog.
@@ -292,7 +306,6 @@ int run() {
         }
 #endif
 
-
         if (lua_on_frame_start.push()) {
             L.push_number(dt);
             //L.validate(onFrameStart.call());
@@ -443,7 +456,7 @@ int run() {
 
                         active_camera.move(camera_delta);
                         camera_rectangle_link.get().rectangle = active_camera.box();
-                    }(std::get<MouseMotionEvent>(concrete.event));
+                    } (std::get<MouseMotionEvent>(concrete.event));
                     continue;
                 case KeyRepeat:
                 case TextInput:continue;

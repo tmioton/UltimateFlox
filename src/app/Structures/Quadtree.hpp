@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 #pragma once
 
 #include "pch.hpp"
@@ -204,7 +206,7 @@ namespace structures {
 
         // Default search for T
         void search(Rectangle area, std::vector<T> &search_results) const {
-            if (bounds.intersects(area)) {
+            if (bounds.has_intersection_with(area)) {
                 int32_t indices[MaxDepth + 1];
                 indices[0] = 0;
                 indices[1] = node_child(0, 0);
@@ -232,12 +234,12 @@ namespace structures {
                         new_bound.center = new_bound.center + new_bound.size * QuadrantOffsets[quadrant];
                         terrace[depth] = new_bound;
 
-                        if (node_has_children(node_index) && new_bound.intersects(area)) {
+                        if (node_has_children(node_index) && new_bound.has_intersection_with(area)) {
                             indices[++depth] = node_child(node_index, 0);
                             // Shift left 2 bits to go down
                             quadrant_memory <<= 2;
                             continue;
-                        } else if (new_bound.intersects(area)) {
+                        } else if (new_bound.has_intersection_with(area)) {
                             // Bottom. Add my contents to the search.
                             push(area, node_index, search_results);
                         }

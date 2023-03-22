@@ -1,3 +1,5 @@
+# Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 cmake_minimum_required(VERSION 3.17)
 project(UltimateFlox VERSION 1.5.4 LANGUAGES CXX)
 

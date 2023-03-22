@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Tate "Xak Nitram" Mioton
+
 #include "lwvl/lwvl.hpp"
 
 GLuint lwvl::Buffer::ID::reserve() {
