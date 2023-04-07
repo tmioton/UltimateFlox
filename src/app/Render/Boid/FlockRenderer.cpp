@@ -2,7 +2,7 @@
 #include "FlockRenderer.hpp"
 
 FlockRenderer::FlockRenderer(size_t size) : flockSize(size) {
-    data.store<float>(nullptr, size * sizeof(Boid), lwvl::bits::Dynamic);
+    data.store<float>(nullptr, size * sizeof(Boid), lwvl::bits::Dynamic | lwvl::bits::Client);
 }
 
 void FlockRenderer::update(Boid const array[]) {
@@ -10,7 +10,7 @@ void FlockRenderer::update(Boid const array[]) {
 }
 
 void FlockRenderer::resize(size_t size) {
-    data.store<float>(nullptr, size * sizeof(Boid), lwvl::bits::Dynamic);
+    data.store<float>(nullptr, size * sizeof(Boid), lwvl::bits::Dynamic | lwvl::bits::Client);
     flockSize = size;
 }
 

@@ -147,7 +147,7 @@ namespace lwvl {
             MapWrite = GL_MAP_WRITE_BIT,
             MapPersistent = GL_MAP_PERSISTENT_BIT,
             MapCoherent = GL_MAP_COHERENT_BIT,
-            Client = GL_MAP_COHERENT_BIT
+            Client = GL_CLIENT_STORAGE_BIT
         } UsageBits;
     }
 
