@@ -1,12 +1,12 @@
-#pragma once
-
+module;
 #include "pch.hpp"
+export module DoubleBuffer;
 
 
-template<typename T>
+export template<typename T>
 class DoubleBuffer {
 public:
-    explicit DoubleBuffer(size_t initial_count) :
+    explicit DoubleBuffer(const size_t initial_count) :
         m_reserved(initial_count), m_count(initial_count),
         m_primary(new T[initial_count]),
         m_secondary(new T[initial_count])
@@ -29,7 +29,7 @@ public:
         return m_primary;
     }
 
-    void resize(size_t new_count) {
+    void resize(const size_t new_count) {
         if (new_count > m_reserved) {
             T *new_primary = new T[new_count];
             T *new_secondary = new T[new_count];
@@ -49,7 +49,7 @@ public:
         m_count = new_count;
     }
 
-    size_t count() {
+    [[nodiscard]] size_t count() const {
         return m_count;
     }
 
@@ -60,3 +60,4 @@ public:
     T *m_primary;
     T *m_secondary;
 };
+

@@ -1,11 +1,12 @@
-#pragma once
-
+module;
 #include "pch.hpp"
-#include "World/Boid.hpp"
-#include "Structures/DoubleBuffer.hpp"
+export module Algorithm;
+
+import DoubleBuffer;
+import Boid;
 
 
-class Algorithm {
+export class Algorithm {
 public:
     virtual ~Algorithm() = default;
 

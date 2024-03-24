@@ -1,57 +1,8 @@
 target_sources(
-    ${PROJECT_NAME} PRIVATE
+    ${PROJECT_NAME}
+    PRIVATE
         Application.cpp
         Common.hpp
-
-        # ALGORITHM
-        Algorithm/Algorithm.hpp
-#        Algorithm/DirectComputeAlgorithm.hpp
-#        Algorithm/DirectComputeAlgorithm.cpp
-#        Algorithm/Compute/OpenGL/DirectComputeAgent.hpp
-#        Algorithm/Compute/OpenGL/DirectComputeAgent.cpp
-#        Algorithm/DirectLoopAlgorithm.hpp
-#        Algorithm/DirectLoopAlgorithm.cpp
-#        Algorithm/QuadtreeAlgorithm.hpp
-#        Algorithm/QuadtreeAlgorithm.cpp
-        Algorithm/ThreadedAlgorithm.hpp
-        Algorithm/ThreadedAlgorithm.cpp
-        Algorithm/ThreadWork.cpp
-
-        # MATH
-        Math/Camera.hpp
-        Math/Camera.cpp
-        Math/Rectangle.hpp
-        Math/Rectangle.cpp
-
-        # RENDER
-        Render/Boid/Object.hpp
-        Render/Boid/Object.cpp
-        Render/Boid/Controls.hpp
-        Render/Boid/Controls.cpp
-        Render/Boid/Models.hpp
-        Render/Boid/Models.cpp
-        Render/Boid/FlockRenderer.hpp
-        Render/Boid/FlockRenderer.cpp
-        Render/Geometry/Geometry.hpp
-        Render/Geometry/QuadtreeGeometry.hpp
-        Render/Geometry/QuadtreeGeometry.cpp
-        Render/QuadtreeRenderer.hpp
-        Render/QuadtreeRenderer.cpp
-        Render/RectangleRenderer.hpp
-        Render/RectangleRenderer.cpp
-
-        # STRUCTURES
-        Structures/DoubleBuffer.hpp
-        Structures/Quadtree.hpp
-        Structures/RawArray.hpp
-
-        # WORLD
-        World/Boid.hpp
-        World/Boid.cpp
-        World/Boidtree.hpp
-        World/Boidtree.cpp
-        World/Flock.hpp
-        World/Flock.cpp
 
         # WINDOW
         Core/Window/Window.hpp
@@ -78,6 +29,31 @@ target_sources(
         # LUA TYPES
         Core/Lua/Types/LuaVector.hpp
         Core/Lua/Types/LuaVector.cpp
+    PRIVATE FILE_SET CXX_MODULES FILES
+        # ALGORITHM
+        Algorithm/Algorithm.cppm
+        Algorithm/ThreadedAlgorithm.cppm
+
+        # MATH
+        Math/Camera.cppm
+        Math/Rectangle.cppm
+
+        # RENDER
+        Render/FlockRenderer.cppm
+        Render/Geometry/Geometry.cppm
+        Render/Geometry/QuadtreeGeometry.cppm
+        Render/QuadtreeRenderer.cppm
+        Render/RectangleRenderer.cppm
+
+        # STRUCTURES
+        Structures/DoubleBuffer.cppm
+        Structures/Quadtree.cppm
+        Structures/RawArray.cppm
+
+        # WORLD
+        World/Boid.cppm
+        World/Boidtree.cppm
+        World/Flock.cppm
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

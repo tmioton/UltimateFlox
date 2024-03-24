@@ -1,19 +1,24 @@
 #include "pch.hpp"
-#include "Core/Window/Window.hpp"
 #include "Core/Lua/VirtualMachine.hpp"
-#include "World/Flock.hpp"
-//#include "Algorithm/DirectLoopAlgorithm.hpp"
-//#include "Algorithm/QuadtreeAlgorithm.hpp"
-#include "Algorithm/ThreadedAlgorithm.hpp"
-//#include "Algorithm/DirectComputeAlgorithm.hpp"
-#include "Render/Boid/FlockRenderer.hpp"
-#include "Render/QuadtreeRenderer.hpp"
-#include "Render/RectangleRenderer.hpp"
+#include "Core/Window/Window.hpp"
+
+// #include "Algorithm/DirectLoopAlgorithm.hpp"
+// #include "Algorithm/QuadtreeAlgorithm.hpp"
+// #include "Algorithm/ThreadedAlgorithm.hpp"
+// #include "Algorithm/DirectComputeAlgorithm.hpp"
 
 #include "binary_default_lua.cpp"
-#include "Math/Camera.hpp"
 
-//#define FLOX_DEBUG_TIMINGS
+// #define FLOX_DEBUG_TIMINGS
+
+import Boid;
+import Camera;
+import Flock;
+import FlockRenderer;
+import Rectangle;
+import RectangleRenderer;
+import ThreadedAlgorithm;
+import QuadtreeRenderer;
 
 using namespace lwvl::debug;
 using namespace std::chrono;

@@ -1,8 +1,16 @@
+module;
 #include "pch.hpp"
-#include "Boidtree.hpp"
+export module Boidtree;
+
+import Quadtree;
+import Rectangle;
+import Boid;
 
 
-void search(const Boidtree &tree, const Boid *self, Rectangle area, std::vector<Boid> &search_results) {
+export typedef Quadtree<const Boid*> Boidtree;
+
+// Needs a self parameter to perform an identity check before dereference copy
+export void search(const Boidtree &tree, const Boid *self, Rectangle area, std::vector<Boid> &search_results) {
     if (tree.bounds.intersects(area)) {
         size_t indices[Boidtree::MaxDepth + 1];
         indices[0] = 0;
@@ -26,7 +34,7 @@ void search(const Boidtree &tree, const Boid *self, Rectangle area, std::vector<
             if (!ascended) {
                 Rectangle new_bound{terrace[depth - 1]};
                 new_bound.size = new_bound.size * 0.5f;
-                new_bound.center = new_bound.center + new_bound.size * structures::QuadrantOffsets[quadrant];
+                new_bound.center = new_bound.center + new_bound.size * QuadrantOffsets[quadrant];
                 terrace[depth] = new_bound;
 
                 if (tree.node_has_children(node_index) && new_bound.intersects(area)) {
@@ -60,7 +68,7 @@ void search(const Boidtree &tree, const Boid *self, Rectangle area, std::vector<
 
             ++quadrant;
 
-            if (quadrant >= structures::QuadtreeChildCount) {
+            if (quadrant >= QuadtreeChildCount) {
                 // Shift right 2 bits to go up
                 quadrant_memory >>= 2;
                 ascended = true;
@@ -77,3 +85,5 @@ void search(const Boidtree &tree, const Boid *self, Rectangle area, std::vector<
         }
     }
 }
+
+

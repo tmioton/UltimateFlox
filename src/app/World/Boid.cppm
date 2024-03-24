@@ -1,10 +1,10 @@
-#pragma once
-
+module;
 #include "pch.hpp"
+export module Boid;
 
 
-constexpr std::size_t BoidColorCount = 5;
-constexpr Color BoidColors[BoidColorCount] {
+export constexpr std::size_t BoidColorCount = 5;
+export constexpr Color BoidColors[BoidColorCount] {
     Color {1.00000f, 1.00000f, 1.00000f, 1.0f},  // White
     Color {0.76471f, 0.04314f, 0.30588f, 1.0f},  // Pictoral Carmine
     Color {1.00000f, 0.00000f, 0.00000f, 1.0f},  // Red
@@ -13,7 +13,7 @@ constexpr Color BoidColors[BoidColorCount] {
 };
 
 
-struct Boid {
+export struct Boid {
     static float scale;
     static float maxSpeed, maxForce;
     static float disruptiveRadius, cohesiveRadius;
@@ -29,7 +29,16 @@ struct Boid {
     Vector position, velocity;
 };
 
-inline float fastInverseSqrt(const float d) {
+float Boid::scale {5.0f};
+float Boid::maxSpeed {100.0f};
+float Boid::maxForce {3.0f};
+
+// Update these when scale is changed.
+float Boid::disruptiveRadius = Boid::scale + 5.0f;
+float Boid::cohesiveRadius = 2.0f * Boid::disruptiveRadius;
+
+
+export inline float fastInverseSqrt(const float d) {
     constexpr std::uint32_t magic = 0x5f3759df;
     // reinterpret_cast doesn't appear to have too much effect compared to *(long*)&d
     const std::uint32_t i = magic - (*reinterpret_cast<std::uint32_t*>(const_cast<float*>(&d)) >> 1);
@@ -37,17 +46,17 @@ inline float fastInverseSqrt(const float d) {
     return y * (1.5f - (d * 0.5f * y * y));
 }
 
-inline Vector magnitude(const Vector vec, const float mag) {
+export inline Vector magnitude(const Vector vec, const float mag) {
     return vec * fastInverseSqrt(glm::dot(vec, vec)) * mag;
 }
 
-inline Vector truncate(const Vector vec, const float max) {
+export inline Vector truncate(const Vector vec, const float max) {
     const float i = max * fastInverseSqrt(glm::dot(vec, vec));
     const bool do_truncate = i < 1.0f;
     return vec * (i * FloatEnable[do_truncate] + FloatDisable[do_truncate]);
     //return vec * (i < 1.0f ? i : 1.0f);  ~7% slower with branch
 }
 
-inline Vector steer(const Vector vec, const Vector velocity) {
+export inline Vector steer(const Vector vec, const Vector velocity) {
     return truncate(magnitude(vec, Boid::maxSpeed) - velocity, Boid::maxForce);
 }

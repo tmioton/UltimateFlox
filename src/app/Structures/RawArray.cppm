@@ -1,8 +1,9 @@
-#pragma once
-
+module;
 #include "pch.hpp"
+export module RawArray;
 
-template<typename T>
+
+export template<typename T>
 class RawArray {
     struct iterator {
         using iterator_category = std::contiguous_iterator_tag;

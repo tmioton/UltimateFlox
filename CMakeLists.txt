@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.28)
 project(UltimateFlox VERSION 1.5.4 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)

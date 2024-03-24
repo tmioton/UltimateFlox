@@ -1,23 +1,30 @@
-#pragma once
-
+module;
 #include "pch.hpp"
-#include "Geometry.hpp"
-#include "Structures/Quadtree.hpp"
+export module QuadtreeGeometry;
 
+import Rectangle;
+import Quadtree;
+import Geometry;
 
-static constexpr size_t QuadtreeNodeVertexCount = 6;
+export constexpr size_t QuadtreeNodeVertexCount = 6;
 
-struct QuadtreeVertex {
+export struct QuadtreeVertex {
     Vector position;
     uint32_t depth;
 };
 
-void addToArray(QuadtreeVertex *array, size_t depth, Rectangle const &bound);
+export void addToArray(QuadtreeVertex *array, size_t depth, Rectangle const &bound) {
+    constexpr int quadrants[QuadtreeNodeVertexCount] {2, 3, 0, 0, 1, 2};
+    for (int i = 0; i < QuadtreeNodeVertexCount; i++) {
+        array[i].position = bound.center + bound.size * QuadrantOffsets[quadrants[i]];
+        array[i].depth = static_cast<uint32_t>(depth);
+    }
+}
 
 
-template<typename T>
-class QuadtreeGeometry : public Geometry {
-    using QuadtreeType = structures::Quadtree<T>;
+export template<typename T>
+class QuadtreeGeometry final : public Geometry {
+    using QuadtreeType = Quadtree<T>;
     QuadtreeType const &m_tree;
 public:
     explicit QuadtreeGeometry(QuadtreeType const &tree) : m_tree(tree) {}
@@ -49,7 +56,7 @@ public:
             if (!ascended) {
                 Rectangle newBound {bounds[depth - 1]};
                 newBound.size = newBound.size * 0.5f;
-                newBound.center = newBound.center + newBound.size * structures::QuadrantOffsets[quadrant];
+                newBound.center = newBound.center + newBound.size * QuadrantOffsets[quadrant];
                 bounds[depth] = newBound;
                 addToArray(array + count++ * QuadtreeNodeVertexCount, depth, newBound);
 
@@ -63,7 +70,7 @@ public:
 
             ++quadrant;
 
-            if (quadrant >= structures::QuadtreeChildCount) {
+            if (quadrant >= QuadtreeChildCount) {
                 // Shift right 2 bits to go up
                 quadrant_memory >>= 2;
                 ascended = true;
@@ -80,3 +87,4 @@ public:
         }
     }
 };
+
