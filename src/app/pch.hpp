@@ -20,7 +20,10 @@
 #include <GLFW/glfw3.h>
 #include <lwvl/lwvl.hpp>
 #include <glm/vec2.hpp>
+#include <glm/matrix.hpp>
+#include <glm/trigonometric.hpp>
 #include <glm/gtc/constants.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/fast_square_root.hpp>
 #include <glm/gtx/norm.hpp>
 #include <lua/lua.hpp>
