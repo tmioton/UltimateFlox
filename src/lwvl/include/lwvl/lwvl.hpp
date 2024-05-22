@@ -135,8 +135,7 @@ namespace lwvl {
         TriangleStrip = GL_TRIANGLE_STRIP,
         TriangleStripAdjacency = GL_TRIANGLE_STRIP_ADJACENCY,
         TrianglesAdjacency = GL_TRIANGLES_ADJACENCY,
-        Quads = GL_QUADS,
-        QuadStrip = GL_QUAD_STRIP
+        Quads = GL_QUADS
     };
 
     namespace bits {
