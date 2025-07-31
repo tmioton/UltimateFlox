@@ -15,5 +15,5 @@ void main() {
     offset.x, offset.y, 0.0, 1.0
     );
 
-    gl_Position = projection * model * position;
+    gl_Position = projection * view * model * position;
 }
