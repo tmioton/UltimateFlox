@@ -1,6 +1,8 @@
 #pragma once
 
 // STL
+#include <malloc.h>
+#include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <optional>
