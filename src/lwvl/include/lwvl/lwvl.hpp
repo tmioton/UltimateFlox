@@ -1,7 +1,7 @@
 #pragma once
 
 // Figure out how to make this library independent.
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 #include <memory>
 #include <string>

@@ -1,33 +1,21 @@
 #pragma once
 
 // STL
+#include <array>
 #include <exception>
 #include <iostream>
-#include <optional>
-#include <functional>
+#include <stdexcept>
 #include <variant>
-#include <iterator>
-#include <vector>
-#include <array>
-#include <unordered_map>
-#include <utility>
-#include <thread>
-#include <chrono>
-#include <bitset>
 
 // EXTERNAL
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
-#include <lwvl/lwvl.hpp>
-#include <glm/vec2.hpp>
-#include <glm/matrix.hpp>
-#include <glm/trigonometric.hpp>
-#include <glm/gtc/constants.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/fast_square_root.hpp>
-#include <glm/gtx/norm.hpp>
-#include <lua/lua.hpp>
-#include <thread-pool/ThreadPool.hpp>
 
-// APPLICATION
-#include "Common.hpp"
+#include <glm/glm.hpp>
+
+#include "imgui/imgui.h"
+
+#include "ext/imgui_impl_glfw.h"
+#include "ext/imgui_impl_opengl3.h"
+
+#include <entt/entt.hpp>

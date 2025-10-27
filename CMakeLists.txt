@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
-project(UltimateFlox VERSION 1.5.4 LANGUAGES CXX)
+project(UltimateFloxRework VERSION 1.5.4 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 #if (MSVC)
 #    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 ##    set(BUILD_SHARED_LIBS TRUE)
@@ -14,10 +14,10 @@ add_executable(${PROJECT_NAME})
 #    add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE)
 #endif()
 
-# Mark the project as C++ 20 and set the output directory.
+# Set the C++ standard and set the output directory.
 set_target_properties(
     ${PROJECT_NAME} PROPERTIES
-    CXX_STANDARD 20
+    CXX_STANDARD ${CMAKE_CXX_STANDARD}
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 
@@ -26,6 +26,6 @@ set_target_properties(
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/
 )
 
-add_subdirectory(vendor)
+add_subdirectory(ext)
 add_subdirectory(src)
 add_subdirectory(res)
