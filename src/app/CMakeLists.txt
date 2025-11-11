@@ -14,7 +14,11 @@ target_sources(
         # CORE
         core/input/Event.cppm
         core/input/Input.cppm
+        core/InputDispatcher.cppm
         core/Window.cppm
+
+        # STRUCTURES
+        structures/DoubleBuffer.cppm
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

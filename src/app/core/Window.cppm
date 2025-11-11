@@ -4,6 +4,7 @@ export module Window;
 
 import Input;
 import Event;
+import InputDispatcher;
 
 namespace window {
     export class Window;
@@ -89,7 +90,7 @@ namespace window {
         GLFWwindow *glfw_window;
 
     private:
-        entt::dispatcher *m_dispatcher;
+        core::InputDispatcher* m_dispatcher;
         glm::dvec2        m_cursor{0.0, 0.0};
 
     public:
@@ -229,7 +230,7 @@ namespace window {
         }
 
     public:
-        explicit Window(entt::dispatcher *dispatcher, const Hints &hints) noexcept
+        explicit Window(core::InputDispatcher *dispatcher, const Hints &hints) noexcept
             : glfw_window(create(hints)), m_dispatcher(dispatcher) {
             glfwSetWindowUserPointer(glfw_window, this);
         }
