@@ -24,34 +24,38 @@ public:
     }
 };
 
-struct UIData {
-    bool show_demo_window {false};
-};
 
-class App {
-public:
-    entt::dispatcher &dispatcher;
-    core::InputDispatcher input_dispatcher {};
-    std::unique_ptr<window::Window> window;
-    std::unique_ptr<KeyHandler> key_handler;
-    std::unique_ptr<UIData> ui_data;
+class ImGUI {
+    ImGuiContext* ctx;
+    const window::Window* window;
 
-    App() : dispatcher{entt::locator<entt::dispatcher>::emplace()} {
-        const auto main_scale = window::get_primary_monitor_scale();
-
-        const int     width = static_cast<int>(main_scale * 800);
-        const int     height = static_cast<int>(main_scale * 600);
-        window::Hints hints{"Ultimate Flox", width, height};
-        hints.resizable = true;
-        window = std::make_unique<window::Window>(&input_dispatcher, hints);
-
-        key_handler = std::make_unique<KeyHandler>();
-        input_dispatcher.push_layer(key_handler.get());
-
-        // Set up Dear ImGui context
+    static ImGuiContext* setup() {
         IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        ImGuiIO &io = ImGui::GetIO();
+        return ImGui::CreateContext();
+    }
+
+    class ContextGuard {
+        ImGuiContext* prev {nullptr};
+    public:
+        explicit ContextGuard(ImGuiContext* ctx) : prev(ImGui::GetCurrentContext()) {
+            ImGui::SetCurrentContext(ctx);
+        }
+
+        ContextGuard(ContextGuard&&) = delete;
+        ContextGuard& operator=(ContextGuard&&) = delete;
+        ContextGuard(const ContextGuard&) = delete;
+        ContextGuard& operator=(const ContextGuard&) = delete;
+
+        ~ContextGuard() {
+            if (prev != nullptr) {
+                ImGui::SetCurrentContext(prev);
+            }
+        }
+    };
+public:
+    explicit ImGUI(const window::Window* const window) : ctx(setup()), window(window) {
+        const auto cg {activate()};
+        auto& io {ImGui::GetIO()};
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
@@ -69,49 +73,115 @@ public:
         // }
 
         // Set up scaling
+        const auto scale {window->scale().x};
         ImGuiStyle &style      = ImGui::GetStyle();
-        style.ScaleAllSizes(main_scale);
-        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
-        style.FontScaleDpi = main_scale;
+        style.ScaleAllSizes(scale);
+        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style and calling this again)
+        style.FontScaleDpi = scale;
         // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
 
         ImGui_ImplGlfw_InitForOpenGL(window->glfw_window, true);
         ImGui_ImplOpenGL3_Init("#version 460");
-
-        ui_data = std::make_unique<UIData>();
     }
 
-    void update() const {
-        window->update();
-        window->poll_events();
+    ContextGuard activate() const {
+        return ContextGuard(ctx);
+    }
+
+    void new_frame() const {
+        const auto cg {activate()};
+
         // Start the Dear ImGui frame.
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-
-        if (ui_data->show_demo_window) ImGui::ShowDemoWindow(&ui_data->show_demo_window);
-
-        // Rendering
-        ImGui::Render();
-        const auto resolution = window->resolution();
-        glViewport(0, 0, resolution.x, resolution.y);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        window->swap_buffers();
     }
 
-    ~App() {
-        input_dispatcher.clear();
+    void construct() const {
+        const auto cg {activate()};
+        ImGui::Render();
+    }
+
+    void render() const {
+        const auto cg {activate()};
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    }
+
+    ~ImGUI() {
+        const auto cg {activate()};
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
     }
 };
 
+
+class Engine {
+public:
+    entt::dispatcher &dispatcher;
+    core::InputDispatcher input_dispatcher {};
+    std::unique_ptr<window::Window> window;
+    std::unique_ptr<ImGUI> im_gui;
+    std::unique_ptr<KeyHandler> key_handler;
+
+    explicit Engine(window::Hints &&hints) : dispatcher{entt::locator<entt::dispatcher>::emplace()} {
+        window = std::make_unique<window::Window>(&input_dispatcher, hints);
+        key_handler = std::make_unique<KeyHandler>();
+        input_dispatcher.push_layer(key_handler.get());
+        im_gui = std::make_unique<ImGUI>(window.get());
+    }
+
+    ~Engine() {
+        input_dispatcher.clear();
+    }
+};
+
+struct UIData {
+    bool show_demo_window {true};
+};
+
+class App {
+public:
+    std::unique_ptr<Engine> engine;
+    std::unique_ptr<UIData> ui_data;
+
+    static window::Hints config() {
+        const auto main_scale = window::get_primary_monitor_scale();
+
+        const int     width = static_cast<int>(main_scale * 800);
+        const int     height = static_cast<int>(main_scale * 600);
+        window::Hints hints{"Ultimate Flox", width, height};
+        hints.resizable = true;
+        return std::move(hints);
+    }
+
+    App() : engine{std::make_unique<Engine>(config())} {
+        ui_data = std::make_unique<UIData>();
+    }
+
+    void update() const {
+        engine->window->update();
+        engine->window->poll_events();
+
+        const auto cg {engine->im_gui->activate()};
+        engine->im_gui->new_frame();
+
+        if (ui_data->show_demo_window) ImGui::ShowDemoWindow(&ui_data->show_demo_window);
+
+        // Rendering
+        engine->im_gui->construct();
+        const auto resolution = engine->window->resolution();
+        glViewport(0, 0, resolution.x, resolution.y);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        engine->im_gui->render();
+        engine->window->swap_buffers();
+    }
+};
+
 int run() {
     const App app {};
-    while (!app.window->should_close()) {
+    while (!app.engine->window->should_close()) {
         app.update();
     }
     return 0;

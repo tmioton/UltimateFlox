@@ -101,6 +101,12 @@ namespace window {
             return {width, height};
         }
 
+        [[nodiscard]] glm::fvec2 scale() const noexcept {
+            float x, y;
+            glfwGetWindowContentScale(glfw_window, &x, &y);
+            return {x, y};
+        }
+
         void swap_buffers() const noexcept { glfwSwapBuffers(glfw_window); }
 
         void update() noexcept {
